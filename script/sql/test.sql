@@ -1,0 +1,5 @@
+VAR rc REFCURSOR;
+
+EXEC USER_GET_ALL(:rc);
+
+PRINT rc;

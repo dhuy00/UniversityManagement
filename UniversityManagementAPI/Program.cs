@@ -15,6 +15,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     )
 );
 
+builder.Services.AddScoped<IDbConnectionFactory, OracleConnectionFactory>();
+
+// User
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IDbConnectionFactory, OracleConnectionFactory>();
+
 var app = builder.Build();
 
 // Configure pipeline
