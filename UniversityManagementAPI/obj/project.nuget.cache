@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "0Z/nhUwIY8Y=",
+  "success": true,
+  "projectFilePath": "D:\\SourceCode\\ReactJS\\.NET\\UniversityManagementAPI\\UniversityManagementAPI.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\HUY\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.8\\microsoft.aspnetcore.openapi.10.0.8.nupkg.sha512",
+    "C:\\Users\\HUY\\.nuget\\packages\\microsoft.openapi\\2.0.0\\microsoft.openapi.2.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
