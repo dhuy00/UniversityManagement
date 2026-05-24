@@ -11,7 +11,7 @@ END;
 
 -- Get user's privilege
 CREATE OR REPLACE PROCEDURE USER_GET_PRIVILEGE (
-    p_user_id IN VARCHAR2,
+    p_username IN VARCHAR2,
     p_cursor  OUT SYS_REFCURSOR
 ) AS
 BEGIN
@@ -23,7 +23,7 @@ BEGIN
             PRIVILEGE,
             GRANTABLE
         FROM SYS.DBA_TAB_PRIVS
-        WHERE GRANTEE = UPPER(p_user_id);
+        WHERE GRANTEE = UPPER(p_username);
 END;
 /
 

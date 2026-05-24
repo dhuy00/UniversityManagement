@@ -43,7 +43,7 @@ public class UserRepository : IUserRepository
     return users;
   }
 
-  public async Task<List<UserPrivilegeDto>> GetUserPrivilege(int userId)
+  public async Task<List<UserPrivilegeDto>> GetUserPrivilege(string username)
   {
     var userPrivilege = new List<UserPrivilegeDto>();
 
@@ -57,7 +57,7 @@ public class UserRepository : IUserRepository
 
     command.CommandType = CommandType.StoredProcedure;
 
-    command.Parameters.Add("p_user_id", OracleDbType.Int32).Value = userId;
+    command.Parameters.Add("p_username", OracleDbType.Varchar2).Value = username;
 
     command.Parameters.Add(
         "p_cursor",

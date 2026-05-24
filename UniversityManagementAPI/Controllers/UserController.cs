@@ -11,10 +11,17 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
-    [HttpGet("all")]
+    [HttpGet]
     public async Task<IActionResult> GetAll()
     {
         var users = await _userService.GetAllUsersAsync();
+        return Ok(users);
+    }
+
+    [HttpGet("privilege/{username}")]
+    public async Task<IActionResult> GetUserPrivilege([FromRoute] string username)
+    {
+        var users = await _userService.GetUserPrivilege(username);
         return Ok(users);
     }
 }

@@ -14,4 +14,11 @@ public class UserService : IUserService
 
         return users;
     }
+
+    public async Task<List<UserPrivilegeDto>> GetUserPrivilege(string username)
+    {
+        var privileges = await _userRepository.GetUserPrivilege(username);
+
+        return privileges;
+    }
 }

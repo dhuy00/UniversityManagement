@@ -3,3 +3,7 @@ VAR rc REFCURSOR;
 EXEC USER_GET_ALL(:rc);
 
 PRINT rc;
+
+SELECT * FROM DBA_TAB_PRIVS;
+
+select * from DBA_ROLES;
