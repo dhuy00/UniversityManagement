@@ -21,4 +21,9 @@ public class UserService : IUserService
 
         return privileges;
     }
+
+    public async Task<ApiResponse<object>> CreateUser(string username, string password)
+    {
+        return await _userRepository.CreateUser(username, password);
+    }
 }

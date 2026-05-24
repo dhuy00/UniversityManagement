@@ -1,5 +1,8 @@
 using Oracle.ManagedDataAccess.Client;
 using System.Data;
+using Oracle.ManagedDataAccess.Client;
+using BCrypt.Net;
+using System.Data;
 
 public class UserRepository : IUserRepository
 {
@@ -79,5 +82,47 @@ public class UserRepository : IUserRepository
     }
 
     return userPrivilege;
+  }
+
+  public async Task<ApiResponse<object>> CreateUser(string username, string password)
+  {
+    try
+    {
+      using var connection = _connectionFactory.CreateConnection();
+
+      await connection.OpenAsync();
+
+      using var command = new OracleCommand(
+          "USER_CREATE",
+          connection);
+
+      command.CommandType = CommandType.StoredProcedure;
+
+      command.Parameters.Add(
+          "p_username",
+          OracleDbType.Varchar2).Value = username;
+
+      command.Parameters.Add(
+          "p_password",
+          OracleDbType.Varchar2).Value = password;
+
+      await command.ExecuteNonQueryAsync();
+
+      return new ApiResponse<object>
+      {
+        Success = false,
+        Message = "User created successfully",
+        Data = null
+      };
+    }
+    catch (Exception ex)
+    {
+      return new ApiResponse<object>
+      {
+        Success = false,
+        Message = ex.Message,
+        Data = null
+      };
+    }
   }
 }
