@@ -7,3 +7,11 @@ PRINT rc;
 SELECT * FROM DBA_TAB_PRIVS;
 
 select * from DBA_ROLES;
+
+VAR rc REFCURSOR;
+
+EXEC ROLE_GET_ALL(:rc);
+
+PRINT rc;
+
+SELECT * from ROLE_TAB_PRIVS;

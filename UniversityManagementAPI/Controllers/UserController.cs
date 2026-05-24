@@ -21,7 +21,7 @@ public class UserController : ControllerBase
     [HttpGet("privilege/{username}")]
     public async Task<IActionResult> GetUserPrivilege([FromRoute] string username)
     {
-        var users = await _userService.GetUserPrivilege(username);
-        return Ok(users);
+        var privileges = await _userService.GetUserPrivilege(username);
+        return Ok(privileges);
     }
 }

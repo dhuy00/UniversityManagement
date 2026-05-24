@@ -20,7 +20,10 @@ builder.Services.AddScoped<IDbConnectionFactory, OracleConnectionFactory>();
 // User
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IDbConnectionFactory, OracleConnectionFactory>();
+
+// Role
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
 var app = builder.Build();
 
