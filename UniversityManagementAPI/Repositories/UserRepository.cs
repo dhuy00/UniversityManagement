@@ -110,7 +110,7 @@ public class UserRepository : IUserRepository
 
       return new ApiResponse<object>
       {
-        Success = false,
+        Success = true,
         Message = "User created successfully",
         Data = null
       };

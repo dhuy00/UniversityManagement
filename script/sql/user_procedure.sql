@@ -28,9 +28,9 @@ END;
 /
 
 -- Create a new user
-CREATE OR REPLACE PROCEDURE create_user (
-    pi_username IN VARCHAR2,
-    pi_password IN VARCHAR2
+CREATE OR REPLACE PROCEDURE USER_CREATE (
+    p_username IN VARCHAR2,
+    p_password IN VARCHAR2
 )
 IS
     v_user   VARCHAR2(128);
@@ -38,7 +38,7 @@ IS
     v_exists NUMBER;
 BEGIN
     -- Normalize username
-    v_user := UPPER(TRIM(pi_username));
+    v_user := UPPER(TRIM(p_username));
 
     -- Check user existence (more reliable than COUNT)
     SELECT COUNT(*)
@@ -55,7 +55,7 @@ BEGIN
     -- Create user 
     v_sql :=
         'CREATE USER ' || DBMS_ASSERT.SIMPLE_SQL_NAME(v_user) ||
-        ' IDENTIFIED BY "' || REPLACE(pi_password, '"', '""') || '"' ||
+        ' IDENTIFIED BY "' || REPLACE(p_password, '"', '""') || '"' ||
         ' DEFAULT TABLESPACE USERS';
 
     EXECUTE IMMEDIATE v_sql;
