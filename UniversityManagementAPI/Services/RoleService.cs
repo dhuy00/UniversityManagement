@@ -21,4 +21,9 @@ public class RoleService : IRoleService
 
         return privileges;
     }
+
+    public async Task<ApiResponse<object>> CreateRole(string rolename, string password)
+    {
+        return await _roleRepository.CreateRole(rolename, password);
+    }
 }

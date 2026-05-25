@@ -81,4 +81,37 @@ public class RoleRepository : IRoleRepository
 
     return rolePrivilege;
   }
+
+  public async Task<ApiResponse<object>> CreateRole(string rolename, string password)
+  {
+    try
+    {
+      using var connection = _connectionFactory.CreateConnection();
+      await connection.OpenAsync();
+
+      using var command = new OracleCommand("ROLE_CREATE", connection);
+      command.CommandType = CommandType.StoredProcedure;
+
+      command.Parameters.Add("p_rolename", OracleDbType.Varchar2).Value = rolename;
+      command.Parameters.Add("p_password", OracleDbType.Varchar2).Value = password;
+
+      await command.ExecuteNonQueryAsync();
+
+      return new ApiResponse<object>
+      {
+        Success = true,
+        Message = "Role created successfully",
+        Data = null
+      };
+    }
+    catch (Exception ex)
+    {
+      return new ApiResponse<object>
+      {
+        Success = false,
+        Message = ex.Message,
+        Data = null
+      };
+    }
+  }
 }

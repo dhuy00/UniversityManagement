@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
+using UniversityManagementAPI.DTOs.Requests;
 
 [ApiController]
 [Route("api/role")]
 public class RoleController : ControllerBase
 {
     private readonly IRoleService _roleService;
+    private readonly IRoleRepository _roleRepository;
 
-    public RoleController(IRoleService roleService)
+    public RoleController(IRoleService roleService, IRoleRepository roleRepository)
     {
         _roleService = roleService;
+        _roleRepository = roleRepository;
     }
 
     [HttpGet]
@@ -24,4 +27,27 @@ public class RoleController : ControllerBase
         var privileges = await _roleService.GetRolePrivilege(rolename);
         return Ok(privileges);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateRole([FromBody] CreateRoleRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Rolename) || string.IsNullOrWhiteSpace(request.Password))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Rolename and password are required",
+            });
+        }
+
+        var result = await _roleRepository.CreateRole(request.Rolename, request.Password);
+
+        if(!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
 }
