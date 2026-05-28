@@ -3,8 +3,7 @@ CREATE OR REPLACE PROCEDURE PERMISSION_GRANT (
     p_tablename           IN VARCHAR2,
     p_target_name         IN VARCHAR2,
     p_is_grant_option     IN NUMBER,
-    p_column_name_select  IN VARCHAR2,
-    p_column_name_update  IN VARCHAR2
+    p_column_name         IN VARCHAR2
 )
 AS
     v_sql               VARCHAR2(4000);
@@ -92,12 +91,12 @@ BEGIN
     IF v_permission_type = 'SELECT' THEN
 
         -- COLUMN LEVEL SELECT
-        IF p_column_name_select IS NOT NULL THEN
+        IF p_column_name IS NOT NULL THEN
 
             -- VALIDATE COLUMN LIST
             v_column_list :=
                 Validate_Column_List(
-                    p_column_name_select
+                    p_column_name
                 );
 
             -- SAFE VIEW NAME
@@ -152,11 +151,11 @@ BEGIN
     -- UPDATE PRIVILEGE
     ELSIF v_permission_type = 'UPDATE' THEN
         -- COLUMN LEVEL UPDATE
-        IF p_column_name_update IS NOT NULL THEN
+        IF p_column_name IS NOT NULL THEN
 
             v_column_list :=
                 Validate_Column_List(
-                    p_column_name_update
+                    p_column_name
                 );
 
             v_sql :=
