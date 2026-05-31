@@ -6,10 +6,12 @@ using UniversityManagementAPI.DTOs.Requests;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IUserRepository _userRepository;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IUserRepository userRepository)
     {
         _userService = userService;
+        _userRepository = userRepository;
     }
 
     [HttpGet]
@@ -46,6 +48,69 @@ public class UserController : ControllerBase
             request.Password);
 
         if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteRole([FromBody] DeleteUserRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Username are required",
+            });
+        }
+
+        var result = await _userRepository.DeleteUser(request.Username);
+
+        if(!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPost("revoke_privilege")]
+    public async Task<IActionResult> RevokeUserPrivilege([FromBody] RevokeUserPrivilegeRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Username are required",
+            });
+        }
+
+        if (request.Privilege.Length == 0 || request.Privilege == null)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "At least one privilege is required",
+            });
+        }
+
+        ApiResponse<object> result;
+        string transformPrivilege = _userService.TransformPrivileges(request.Privilege);
+
+        if(request.TableName != null && request.TableName != "")
+        {
+            result = await _userRepository.RevokeUserPrivilege(request.Username, transformPrivilege, request.TableName);
+        }
+        else
+        {
+            result = await _userRepository.RevokeUserPrivilege(request.Username, transformPrivilege);
+        }
+
+        if(!result.Success)
         {
             return BadRequest(result);
         }

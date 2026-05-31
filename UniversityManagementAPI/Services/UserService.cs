@@ -26,4 +26,14 @@ public class UserService : IUserService
     {
         return await _userRepository.CreateUser(username, password);
     }
+
+    public string TransformPrivileges(string[] privileges)
+    {
+        if (privileges == null || privileges.Length == 0)
+        {
+            throw new ArgumentException("At least one privilege is required.", nameof(privileges));
+        }
+
+        return string.Join(", ", privileges);
+    }
 }
