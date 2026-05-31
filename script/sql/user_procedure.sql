@@ -75,3 +75,32 @@ EXCEPTION
         RAISE;
 END;
 /
+
+
+--DELETE A USER
+CREATE OR REPLACE PROCEDURE USER_DELETE (
+    p_username IN VARCHAR2
+)
+AS
+    v_username VARCHAR2(128);
+    v_count    NUMBER;
+BEGIN
+    v_username := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(TRIM(p_username)));
+
+    SELECT COUNT(*)
+    INTO v_count
+    FROM dba_users
+    WHERE username = v_username;
+
+    IF v_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'User does not exist');
+    END IF;
+
+    EXECUTE IMMEDIATE
+        'DROP USER ' || v_username;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Failed to drop user: ' || SQLERRM);
+END;
+/

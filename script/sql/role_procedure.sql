@@ -73,3 +73,69 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE('Role created successfully');
 END;
 /
+
+-- GRANT ROLE TO USER
+CREATE OR REPLACE PROCEDURE ROLE_GRANT_TO_USER (
+    p_username IN VARCHAR2,
+    p_rolename IN VARCHAR2
+)
+AS
+    v_username VARCHAR2(128);
+    v_rolename VARCHAR2(128);
+
+    v_count NUMBER;
+BEGIN
+    v_username := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(TRIM(p_username)));
+    v_rolename := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(TRIM(p_rolename)));
+
+    SELECT COUNT(*)
+    INTO v_count
+    FROM DBA_USERS
+    WHERE USERNAME = v_username;
+
+    IF v_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'User does not exists');
+    END IF;
+
+    SELECT COUNT(*)
+    INTO v_count
+    FROM DBA_ROLES
+    WHERE ROLE = v_rolename;
+
+    IF v_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Role does not exists');
+    END IF;
+    
+    EXECUTE IMMEDIATE 'GRANT ' || v_rolename || ' TO ' || v_username;
+END;
+/
+
+--DELETE A ROLE
+CREATE OR REPLACE PROCEDURE ROLE_DELETE (
+    p_rolename IN VARCHAR2
+)
+AS
+    v_rolename VARCHAR2(128);
+    v_count    NUMBER;
+BEGIN
+    v_rolename := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(TRIM(p_rolename)));
+
+    SELECT COUNT(*)
+    INTO v_count
+    FROM dba_roles
+    WHERE role = v_rolename;
+
+    IF v_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Role does not exist');
+    END IF;
+
+    EXECUTE IMMEDIATE
+        'DROP ROLE ' || v_rolename;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Failed to drop role: ' || SQLERRM);
+END;
+/
+
+

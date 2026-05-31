@@ -50,4 +50,48 @@ public class RoleController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("grant")]
+    public async Task<IActionResult> GrantRoleToUser([FromBody] GrantRoleRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Rolename))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Username and Rolename are required",
+            });
+        }
+
+        var result = await _roleRepository.GrantRoleToUser(request.Username, request.Rolename);
+
+        if(!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteRole([FromBody] DeleteRoleRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Rolename))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Rolename are required",
+            });
+        }
+
+        var result = await _roleRepository.DeleteRole(request.Rolename);
+
+        if(!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
 }

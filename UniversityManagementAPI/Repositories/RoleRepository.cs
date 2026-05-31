@@ -114,4 +114,69 @@ public class RoleRepository : IRoleRepository
       };
     }
   }
+
+  public async Task<ApiResponse<object>> GrantRoleToUser(string username, string rolename)
+  {
+    try
+    {
+      using var connection = _connectionFactory.CreateConnection();
+      await connection.OpenAsync();
+
+      using var command = new OracleCommand("ROLE_GRANT_TO_USER", connection);
+      command.CommandType = CommandType.StoredProcedure;
+
+      command.Parameters.Add("p_username", OracleDbType.Varchar2).Value = username;
+      command.Parameters.Add("p_rolename", OracleDbType.Varchar2).Value = rolename;
+
+      await command.ExecuteNonQueryAsync();
+
+      return new ApiResponse<object>
+      {
+        Success = true,
+        Message = "Role granted successfully",
+        Data = null
+      };
+    }
+    catch (Exception ex)
+    {
+      return new ApiResponse<object>
+      {
+        Success = false,
+        Message = ex.Message,
+        Data = null
+      };
+    }
+  }
+
+  public async Task<ApiResponse<object>> DeleteRole(string rolename)
+  {
+    try
+    {
+      using var connection = _connectionFactory.CreateConnection();
+      await connection.OpenAsync();
+
+      using var command = new OracleCommand("ROLE_DELETE", connection);
+      command.CommandType = CommandType.StoredProcedure;
+
+      command.Parameters.Add("p_rolename", OracleDbType.Varchar2).Value = rolename;
+
+      await command.ExecuteNonQueryAsync();
+
+      return new ApiResponse<object>
+      {
+        Success = true,
+        Message = "Role deleted successfully",
+        Data = null
+      };
+    }
+    catch (Exception ex)
+    {
+      return new ApiResponse<object>
+      {
+        Success = false,
+        Message = ex.Message,
+        Data = null
+      };
+    }
+  }
 }

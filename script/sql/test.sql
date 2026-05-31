@@ -8,6 +8,8 @@ SELECT * FROM DBA_TAB_PRIVS;
 
 select * from DBA_ROLES;
 
+select * from dba_users;
+
 VAR rc REFCURSOR;
 
 EXEC ROLE_GET_ALL(:rc);
@@ -27,3 +29,7 @@ BEGIN
     );
 END;
 /
+
+    SELECT COUNT(*)
+    FROM DBA_USERS
+    WHERE USERNAME = 'USER_TEST_AGAIN';
