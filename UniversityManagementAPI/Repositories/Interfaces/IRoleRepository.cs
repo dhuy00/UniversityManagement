@@ -5,4 +5,5 @@ public interface IRoleRepository
     Task<ApiResponse<object>> CreateRole(string rolename, string password);
     Task<ApiResponse<object>> GrantRoleToUser(string username, string rolename);
     Task<ApiResponse<object>> DeleteRole(string rolename);
+    Task<ApiResponse<object>> RevokeRolePrivilege(string rolename, string privilege, string? table_name = null);
 }

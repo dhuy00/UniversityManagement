@@ -94,4 +94,44 @@ public class RoleController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("revoke-privilege")]
+    public async Task<IActionResult> RevokeRolePrivilege([FromBody] RevokeRolePrivilegeRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Rolename))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Rolename are required",
+            });
+        }
+
+        if (request.Privilege.Length == 0 || request.Privilege == null)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "At least one privilege is required",
+            });
+        }
+
+        ApiResponse<object> result;
+        string transformPrivilege = _roleService.TransformPrivileges(request.Privilege);
+
+        if(request.TableName != null && request.TableName != "")
+        {
+            result = await _roleRepository.RevokeRolePrivilege(request.Rolename, transformPrivilege, request.TableName);
+        }
+        else
+        {
+            result = await _roleRepository.RevokeRolePrivilege(request.Rolename, transformPrivilege);
+        }
+
+        if(!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
 }

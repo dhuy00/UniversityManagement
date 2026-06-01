@@ -77,7 +77,7 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("revoke_privilege")]
+    [HttpPost("revoke-privilege")]
     public async Task<IActionResult> RevokeUserPrivilege([FromBody] RevokeUserPrivilegeRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Username))

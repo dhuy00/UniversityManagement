@@ -139,3 +139,102 @@ END;
 /
 
 
+-- revoke a role's privilege
+CREATE OR REPLACE PROCEDURE ROLE_REVOKE_PRIVILEGE (
+    p_rolename   IN VARCHAR2,
+    p_privileges IN VARCHAR2,
+    p_table_name IN VARCHAR2 DEFAULT NULL
+)
+AS
+    v_rolename        VARCHAR2(128);
+    v_table_name      VARCHAR2(128);
+    v_privilege       VARCHAR2(50);
+    v_privilege_list  VARCHAR2(4000);
+    v_sql             VARCHAR2(4000);
+BEGIN
+    v_rolename := DBMS_ASSERT.SIMPLE_SQL_NAME(
+        UPPER(TRIM(p_rolename))
+    );
+
+    IF p_table_name IS NOT NULL THEN
+        v_table_name := DBMS_ASSERT.SIMPLE_SQL_NAME(
+            UPPER(TRIM(p_table_name))
+        );
+    END IF;
+
+    -- Validate privileges and build list
+    FOR rec IN (
+        SELECT TRIM(
+                   REGEXP_SUBSTR(
+                       UPPER(p_privileges),
+                       '[^,]+',
+                       1,
+                       LEVEL
+                   )
+               ) privilege
+        FROM dual
+        CONNECT BY REGEXP_SUBSTR(
+                       UPPER(p_privileges),
+                       '[^,]+',
+                       1,
+                       LEVEL
+                   ) IS NOT NULL
+    )
+    LOOP
+        v_privilege := rec.privilege;
+
+        IF v_privilege NOT IN (
+            'SELECT',
+            'INSERT',
+            'UPDATE',
+            'DELETE',
+            'EXECUTE',
+            'REFERENCES',
+            'ALTER',
+            'INDEX',
+            'CREATE SESSION',
+            'CREATE TABLE',
+            'CREATE VIEW',
+            'CREATE PROCEDURE'
+        ) THEN
+            RAISE_APPLICATION_ERROR(
+                -20001,
+                'Invalid privilege: ' || v_privilege
+            );
+        END IF;
+
+        IF v_privilege_list IS NULL THEN
+            v_privilege_list := v_privilege;
+        ELSE
+            v_privilege_list := v_privilege_list || ', ' || v_privilege;
+        END IF;
+    END LOOP;
+
+    IF v_privilege_list IS NULL THEN
+        RAISE_APPLICATION_ERROR(
+            -20003,
+            'No privileges specified'
+        );
+    END IF;
+
+    IF v_table_name IS NOT NULL THEN
+        v_sql :=
+            'REVOKE ' || v_privilege_list ||
+            ' ON ' || v_table_name ||
+            ' FROM ' || v_rolename;
+    ELSE
+        v_sql :=
+            'REVOKE ' || v_privilege_list ||
+            ' FROM ' || v_rolename;
+    END IF;
+
+    EXECUTE IMMEDIATE v_sql;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(
+            -20002,
+            'Failed to revoke privilege(s): ' || SQLERRM
+        );
+END;
+/

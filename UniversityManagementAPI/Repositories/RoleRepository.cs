@@ -179,4 +179,43 @@ public class RoleRepository : IRoleRepository
       };
     }
   }
+
+  public async Task<ApiResponse<object>> RevokeRolePrivilege(string rolename, string privilege, string? table_name = null)
+  {
+    try
+    {
+      using var connection = _connectionFactory.CreateConnection();
+      await connection.OpenAsync();
+
+      using var command = new OracleCommand("ROLE_REVOKE_PRIVILEGE", connection);
+      command.CommandType = CommandType.StoredProcedure;
+
+      command.Parameters.Add("p_username", OracleDbType.Varchar2).Value = rolename;
+      command.Parameters.Add("p_privileges", OracleDbType.Varchar2).Value = privilege;
+      if(table_name != null)
+      {
+        command.Parameters.Add("p_table_name", OracleDbType.Varchar2).Value = table_name;
+      }
+
+      await command.ExecuteNonQueryAsync();
+
+      return new ApiResponse<object>
+      {
+        Success = true,
+        Message = "Privilege revoked successfully",
+        Data = null
+      };
+    }
+    catch (Exception ex)
+    {
+      return new ApiResponse<object>
+      {
+        Success = false,
+        Message = ex.Message,
+        Data = null
+      };
+    }
+  }
+
+  
 }
