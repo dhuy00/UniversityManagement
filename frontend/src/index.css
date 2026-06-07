@@ -5,7 +5,9 @@
   --color-background-primary: #E8E5D8;
   --color-background-secondary: #F5F5EB;
   --color-background-tertiary: #28536B;
+  --color-bakcground-tertiary-hover: #23485D;
   --color-background-input: #ECEEF8;
+  --color-background-table: #FFFFFF;
 
   --color-text-primary: #1A2332;
   --color-text-secondary: #4A5568;
@@ -13,6 +15,7 @@
   --color-text-subtitle: #6B7280;
 
   --color-border-primary: #8E9DCC4D;
+  --color-border-primary-focus: #8E9DCC80;
 
   --text-normal: 13px;
   --text-small: 11px;
@@ -20,4 +23,5 @@
   --font-inter: "Inter", sans-serif;
 
   --shadow-small: 0 1px 3px 0 rgba(0, 0, 0, 0.10), 0 1px 2px -1px rgba(0, 0, 0, 0.10);
+  --drop-shadow-small: 0 1px 3px 0 rgba(0, 0, 0, 0.10), 0 1px 2px -1px rgba(0, 0, 0, 0.10);
 }

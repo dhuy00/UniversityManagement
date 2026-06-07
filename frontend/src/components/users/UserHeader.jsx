@@ -1,7 +1,5 @@
-import React from "react";
 import SearchBar from "./SearchBar";
 import { FaRegBell } from "react-icons/fa";
-
 
 const UserHeader = () => {
   return (
@@ -16,11 +14,11 @@ const UserHeader = () => {
         <SearchBar />
         <div
           className="relative flex items-center justify-center w-8 h-8 bg-background-input rounded-lg
-          border border-border-primary"
+          border border-border-primary cursor-pointer"
         >
           <FaRegBell size={15} color="#4a5568" />
           <div
-            className="absolute rounded-full w-2 h-2 bg-[#28536b] top-1 left-5"
+            className="absolute rounded-full w-[8px] h-[8px] bg-[#28536b] top-[6px] right-[6px]"
           
           />
         </div>
