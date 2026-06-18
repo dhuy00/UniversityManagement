@@ -4,6 +4,8 @@ import { FaShieldAlt } from "react-icons/fa";
 import { IoIosSettings } from "react-icons/io";
 import { IoLogOutOutline } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+
 
 const Sidebar = () => {
   const [activeLink, setActiveLink] = useState(1);

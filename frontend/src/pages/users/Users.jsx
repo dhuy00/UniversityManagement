@@ -1,8 +1,12 @@
-import React from 'react'
+import React, { useState } from 'react'
 import UserHeader from '../../components/users/UserHeader'
 import UserTable from '../../components/users/UserTable'
+import { Button } from "@/components/ui/button"
+import UserDialog from '@/components/common/UserDialog'
 
 const Users = () => {
+  const [openDialog, setOpenDialog] = useState(false);
+
   return (
     <div className='bg-background-secondary flex-1 w-full h-screen'>
       <UserHeader/>
@@ -14,11 +18,11 @@ const Users = () => {
             <span className='text-text-primary font-semibold text-[14px]'>All users</span>
             <span className='text-small text-text-secondary'>8 members total</span>
           </div>
-          <button className='bg-background-tertiary h-fit text-white px-4 py-1.5 rounded-md text-small
-          cursor-pointer hover:bg-bakcground-tertiary-hover transition-colors'>Create user</button>
+          <Button className='py-2 text-[12px]'  onClick={() => setOpenDialog(true)}>Create user</Button>
         </div>
         <UserTable/>
       </div>
+      <UserDialog open={openDialog} setOpen={setOpenDialog} />
     </div>
   )
 }
