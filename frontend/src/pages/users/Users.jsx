@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import UserHeader from '../../components/users/UserHeader'
 import UserTable from '../../components/users/UserTable'
 import { Button } from "@/components/ui/button"
-import UserDialog from '@/components/common/UserDialog'
+import UserDialog from '@/components/users/UserDialog'
 
 const Users = () => {
   const [openDialog, setOpenDialog] = useState(false);
