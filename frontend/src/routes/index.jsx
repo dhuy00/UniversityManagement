@@ -24,6 +24,7 @@ export default function AppRoutes() {
                 </Route>
                 <Route element={<MainLayout />}>
                     <Route path="/users" element={<Users />} />
+                    <Route path="/roles" element={<Users />} />
                 </Route>
             </Route>
         </Routes>

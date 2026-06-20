@@ -1,146 +1,208 @@
-import { AiOutlineDelete } from "react-icons/ai";
-import { HiOutlineDocumentText } from "react-icons/hi2";
-import { FiEdit3 } from "react-icons/fi";
-import { mockUsers as users } from "../../mock/mockUsers";
-import Pagination from "../common/Pagination";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-const fields = [
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { Button } from "@/components/ui/button";
+
+import {
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+
+const users = [
   {
     id: 1,
-    name: "NO",
+    name: "John Doe",
+    email: "john@gmail.com",
+    role: "Admin",
+    status: "active",
+    avatar: "https://i.pravatar.cc/150?img=1",
+    lastLogin: "3 hours ago",
   },
   {
     id: 2,
-    name: "NAME",
+    name: "Jane Smith",
+    email: "jane@gmail.com",
+    role: "User",
+    status: "active",
+    avatar: "https://i.pravatar.cc/150?img=2",
+    lastLogin: "3 hours ago",
   },
   {
     id: 3,
-    name: "ROLE",
+    name: "Michael Lee",
+    email: "michael@gmail.com",
+    role: "Manager",
+    status: "active",
+    avatar: "https://i.pravatar.cc/150?img=3",
+    lastLogin: "3 hours ago",
   },
   {
     id: 4,
-    name: "STATUS",
+    name: "Sarah Wilson",
+    email: "sarah@gmail.com",
+    role: "User",
+    status: "inactive",
+    avatar: "https://i.pravatar.cc/150?img=4",
+    lastLogin: "3 hours ago",
   },
   {
     id: 5,
-    name: "LAST LOGIN",
+    name: "David Brown",
+    email: "david@gmail.com",
+    role: "Admin",
+    status: "inactive",
+    avatar: "https://i.pravatar.cc/150?img=5",
+    lastLogin: "3 hours ago",
   },
   {
     id: 6,
-    name: "ACTION",
-    className: "w-[10%]",
+    name: "Emma Taylor",
+    email: "emma@gmail.com",
+    role: "User",
+    status: "active",
+    avatar: "https://i.pravatar.cc/150?img=6",
+    lastLogin: "3 hours ago",
   },
 ];
 
-export default function UserTable() {
-  const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 5;
 
-  const [currentPage, setCurrentPage] = useState(1);
+export default function UserTable() {
+  const [page, setPage] = useState(1);
 
   const totalPages = Math.ceil(users.length / ITEMS_PER_PAGE);
 
-  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+  const currentUsers = users.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE,
+  );
 
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const getRoleVariant = (role) => {
+    switch (role) {
+      case "inactive":
+        return "secondary";
+      default:
+        return "default";
+    }
+  };
 
-  const currentUsers = users.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const handleEdit = (user) => {
+    console.log("Edit:", user);
+  };
 
-  useEffect(() => {
-    console.log("current page: ", currentPage);
-  }, [currentPage]);
-
-  useEffect(() => {
-    console.log("total pages: ", totalPages);
-  }, [totalPages]);
-
-  useEffect(() => {
-    console.log("start index: ", startIndex);
-  }, [startIndex]);
-
-  useEffect(() => {
-    console.log("currentUsers: ", currentUsers);
-  }, [currentUsers]);
+  const handleDelete = (user) => {
+    console.log("Delete:", user);
+  };
 
   return (
-    <>
-      <div className="overflow-hidden rounded-b-xl border border-border-primary bg-white">
-        <div className="overflow-y-auto max-h-[500px]">
-          <table className="w-full text-left">
-            <thead className="sticky top-0 bg-gray-50">
-              <tr>
-                {fields.map((item) => (
-                  <th
-                    key={item.id}
-                    className={`px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500 ${
-                      item.className || ""
-                    }`}
-                  >
-                    {item.name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
+    <div className="space-y-4">
+      <div className="rounded-b-lg border bg-background">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>USERNAME</TableHead>
+              <TableHead>ROLE</TableHead>
+              <TableHead>STATUS</TableHead>
+              <TableHead>LAST LOGIN</TableHead>
+              <TableHead className="w-[80px] text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
 
-            <tbody className="divide-y divide-gray-100">
-              {currentUsers.map((user, index) => (
-                <tr
-                  key={user.id}
-                  className="transition-colors hover:bg-gray-50"
-                >
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {user.id}
-                  </td>
+          <TableBody>
+            {currentUsers.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <p className="font-medium">{user.id}</p>
+                    </div>
+                  </div>
+                </TableCell>
 
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {user.name}
-                  </td>
+                <TableCell>{user.name}</TableCell>
 
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {user.role}
-                  </td>
+                <TableCell>{user.role}</TableCell>
 
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                        user.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
+                <TableCell>
+                  <Badge variant={getRoleVariant(user.status)}>
+                    {user.status}
+                  </Badge>
+                </TableCell>
+
+                <TableCell>{user.lastLogin}</TableCell>
+
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                    className={`bg-stone-100 hover:bg-stone-200`}
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(user)}
                     >
-                      {user.status}
-                    </span>
-                  </td>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
 
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {user.lastLogin}
-                  </td>
-
-                  <td className="flex items-center gap-2 px-6 py-4 text-lg">
-                    <button className="btn-action btn-detail">
-                      <HiOutlineDocumentText />
-                    </button>
-
-                    <button className="btn-action btn-edit">
-                      <FiEdit3 />
-                    </button>
-
-                    <button className="btn-action btn-delete">
-                      <AiOutlineDelete />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-500 hover:text-red-600 hover:bg-red-200 bg-red-100"
+                      onClick={() => handleDelete(user)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
-      <Pagination
-        pages={pages}
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-      />
-    </>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Page {page} of {totalPages}
+        </p>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={page === 1}
+            onClick={() => setPage((prev) => prev - 1)}
+          >
+            <ChevronLeft size={16} />
+          </Button>
+
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={page === totalPages}
+            onClick={() => setPage((prev) => prev + 1)}
+          >
+            <ChevronRight size={16} />
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

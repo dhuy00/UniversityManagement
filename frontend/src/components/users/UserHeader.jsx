@@ -1,4 +1,8 @@
 import SearchBar from "./SearchBar";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { FaRegBell } from "react-icons/fa";
 
 const UserHeader = () => {
@@ -11,17 +15,13 @@ const UserHeader = () => {
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <SearchBar />
-        <div
-          className="relative flex items-center justify-center w-8 h-8 bg-background-input rounded-lg
-          border border-border-primary cursor-pointer"
-        >
-          <FaRegBell size={15} color="#4a5568" />
-          <div
-            className="absolute rounded-full w-[8px] h-[8px] bg-[#28536b] top-[6px] right-[6px]"
-          
-          />
-        </div>
+        <Field>
+          <ButtonGroup>
+            <Input className={`bg-background placeholder:text-[12px]`} id="input-button-group" placeholder="Type to search..." />
+            <Button className={`text-[13px]`} variant="outline">Search</Button>
+          </ButtonGroup>
+        </Field>
+      
       </div>
     </div>
   );
