@@ -39,7 +39,11 @@ public class UserRepository : IUserRepository
       users.Add(new UserDto
       {
         Username = reader["USERNAME"].ToString()!,
-        Status = reader["ACCOUNT_STATUS"].ToString()!
+        Status = reader["ACCOUNT_STATUS"].ToString()!,
+        UserId = reader["USER_ID"].ToString()!,
+        LastLogin = reader["LAST_LOGIN"] == DBNull.Value
+        ? null
+        : ((DateTimeOffset)reader["LAST_LOGIN"]).LocalDateTime,
       });
     }
 
@@ -170,7 +174,7 @@ public class UserRepository : IUserRepository
 
       command.Parameters.Add("p_username", OracleDbType.Varchar2).Value = username;
       command.Parameters.Add("p_privileges", OracleDbType.Varchar2).Value = privilege;
-      if(table_name != null)
+      if (table_name != null)
       {
         command.Parameters.Add("p_table_name", OracleDbType.Varchar2).Value = table_name;
       }

@@ -10,22 +10,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
 import { Button } from "@/components/ui/button";
 
-import {
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 
 const users = [
   {
@@ -86,7 +73,7 @@ const users = [
 
 const ITEMS_PER_PAGE = 5;
 
-export default function UserTable() {
+export default function UserTable({ users }) {
   const [page, setPage] = useState(1);
 
   const totalPages = Math.ceil(users.length / ITEMS_PER_PAGE);
@@ -113,6 +100,23 @@ export default function UserTable() {
     console.log("Delete:", user);
   };
 
+  const getTimeAgo = (dateString) => {
+    if (!dateString) return "Never";
+
+    const date = new Date(dateString);
+    const diffMs = Date.now() - date.getTime();
+
+    const minutes = Math.floor(diffMs / 60000);
+    const hours = Math.floor(diffMs / 3600000);
+    const days = Math.floor(diffMs / 86400000);
+
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes} min ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+
+    return `${days} day${days > 1 ? "s" : ""} ago`;
+  };
+
   return (
     <div className="space-y-4">
       <div className="rounded-b-lg border bg-background">
@@ -130,16 +134,16 @@ export default function UserTable() {
 
           <TableBody>
             {currentUsers.map((user) => (
-              <TableRow key={user.id}>
+              <TableRow key={user.userId}>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div>
-                      <p className="font-medium">{user.id}</p>
+                      <p className="font-medium">{user.userId}</p>
                     </div>
                   </div>
                 </TableCell>
 
-                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.username}</TableCell>
 
                 <TableCell>{user.role}</TableCell>
 
@@ -149,12 +153,12 @@ export default function UserTable() {
                   </Badge>
                 </TableCell>
 
-                <TableCell>{user.lastLogin}</TableCell>
+                <TableCell>{getTimeAgo(user.lastLogin)}</TableCell>
 
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
                     <Button
-                    className={`bg-stone-100 hover:bg-stone-200`}
+                      className={`bg-stone-100 hover:bg-stone-200`}
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(user)}

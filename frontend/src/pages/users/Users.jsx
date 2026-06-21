@@ -1,11 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import UserHeader from '../../components/users/UserHeader'
 import UserTable from '../../components/users/UserTable'
 import { Button } from "@/components/ui/button"
 import UserDialog from '@/components/users/UserDialog'
+import { getUsers } from '@/api/userApi'
 
 const Users = () => {
   const [openDialog, setOpenDialog] = useState(false);
+  const [users, setUsers] = useState([]);
+
+    useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await getUsers();
+        setUsers(res.data)
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   return (
     <div className='bg-background-secondary flex-1 w-full h-screen'>
@@ -20,7 +35,7 @@ const Users = () => {
           </div>
           <Button className='py-2 text-[12px]'  onClick={() => setOpenDialog(true)}>Create user</Button>
         </div>
-        <UserTable/>
+        <UserTable users={users}/>
       </div>
       <UserDialog open={openDialog} setOpen={setOpenDialog} />
     </div>

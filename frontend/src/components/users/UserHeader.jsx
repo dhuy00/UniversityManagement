@@ -1,9 +1,7 @@
-import SearchBar from "./SearchBar";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { FaRegBell } from "react-icons/fa";
 
 const UserHeader = () => {
   return (

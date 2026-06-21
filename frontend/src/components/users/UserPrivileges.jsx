@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import {
   Table,
@@ -10,58 +10,15 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
-const initialPrivileges = [
-  {
-    tableName: "Users",
-    columns: ["id", "username", "email", "phone"],
-    select: true,
-    selectColumns: ["id", "username"],
-    update: false,
-    updateColumns: [],
-    delete: false,
-  },
-  {
-    tableName: "Roles",
-    columns: ["id", "name", "description"],
-    select: true,
-    selectColumns: ["id", "name"],
-    update: true,
-    updateColumns: ["name"],
-    delete: false,
-  },
-  {
-    tableName: "Permissions",
-    columns: ["id", "permission_name", "resource"],
-    select: false,
-    selectColumns: [],
-    update: false,
-    updateColumns: [],
-    delete: false,
-  },
-  {
-    tableName: "Products",
-    columns: ["id", "name", "price", "stock"],
-    select: true,
-    selectColumns: ["id", "name"],
-    update: true,
-    updateColumns: ["price"],
-    delete: true,
-  },
-  {
-    tableName: "Orders",
-    columns: ["id", "customer_id", "total", "status"],
-    select: true,
-    selectColumns: ["id", "status"],
-    update: false,
-    updateColumns: [],
-    delete: false,
-  },
-];
-
-const UserPrivileges = () => {
-  const [privileges, setPrivileges] = useState(initialPrivileges);
+const UserPrivileges = ({
+  privileges,
+  setPrivileges,
+  commonPrivileges,
+  setCommonPrivileges,
+  onColumnChange
+}) => {
   const [expandedRows, setExpandedRows] = useState({});
 
   const toggleExpanded = (tableName) => {
@@ -71,41 +28,12 @@ const UserPrivileges = () => {
     }));
   };
 
-  const handleCheckboxChange = (tableName, permission, checked) => {
-    setPrivileges((prev) =>
-      prev.map((row) =>
-        row.tableName === tableName
-          ? {
-              ...row,
-              [permission]: checked,
-              ...(permission === "select" && !checked
-                ? { selectColumns: [] }
-                : {}),
-              ...(permission === "update" && !checked
-                ? { updateColumns: [] }
-                : {}),
-            }
-          : row,
-      ),
-    );
-  };
 
-  const handleColumnChange = (tableName, permissionType, column, checked) => {
-    setPrivileges((prev) =>
-      prev.map((row) => {
-        if (row.tableName !== tableName) return row;
-
-        const key =
-          permissionType === "select" ? "selectColumns" : "updateColumns";
-
-        return {
-          ...row,
-          [key]: checked
-            ? [...row[key], column]
-            : row[key].filter((c) => c !== column),
-        };
-      }),
-    );
+  const handleCommonPrivilegeChange = (key) => (checked) => {
+    setCommonPrivileges((prev) => ({
+      ...prev,
+      [key]: !!checked,
+    }));
   };
 
   return (
@@ -132,8 +60,8 @@ const UserPrivileges = () => {
                 row={row}
                 expanded={expandedRows[row.tableName]}
                 toggleExpanded={toggleExpanded}
-                handleCheckboxChange={handleCheckboxChange}
-                handleColumnChange={handleColumnChange}
+                handleCheckboxChange={setPrivileges}
+                handleColumnChange={onColumnChange}
               />
             ))}
           </TableBody>
@@ -145,22 +73,39 @@ const UserPrivileges = () => {
       <div className="grid grid-cols-2 text-normal mt-2 gap-2">
         <div className="flex justify-between border-gray-300 border px-2 py-2 rounded-md">
           <span>CONNECT</span>
-          <Checkbox className="border-gray-400" />
+          <Checkbox
+            name="connect"
+            className="border-gray-400"
+            onCheckedChange={handleCommonPrivilegeChange("connect")}
+            value={commonPrivileges.connect}
+          />
         </div>
 
         <div className="flex justify-between border-gray-300 border px-2 py-2 rounded-md">
           <span>CREATE</span>
-          <Checkbox className="border-gray-400" />
+          <Checkbox
+            className="border-gray-400"
+            onCheckedChange={handleCommonPrivilegeChange("create")}
+            value={commonPrivileges.create}
+          />
         </div>
 
         <div className="flex justify-between border-gray-300 border px-2 py-2 rounded-md">
           <span>TEMPORARY</span>
-          <Checkbox className="border-gray-400" />
+          <Checkbox
+            className="border-gray-400"
+            onCheckedChange={handleCommonPrivilegeChange("temporary")}
+            value={commonPrivileges.temporary}
+          />
         </div>
 
         <div className="flex justify-between border-gray-300 border px-2 py-2 rounded-md">
           <span>EXECUTE</span>
-          <Checkbox className="border-gray-400" />
+          <Checkbox
+            className="border-gray-400"
+            onCheckedChange={handleCommonPrivilegeChange("execute")}
+            value={commonPrivileges.execute}
+          />
         </div>
       </div>
     </TabsContent>

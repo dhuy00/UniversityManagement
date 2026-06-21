@@ -33,3 +33,6 @@ END;
     SELECT COUNT(*)
     FROM DBA_USERS
     WHERE USERNAME = 'USER_TEST_AGAIN';
+
+select *
+from DBA_USERS;
