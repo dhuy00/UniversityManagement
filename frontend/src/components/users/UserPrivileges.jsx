@@ -16,6 +16,7 @@ const UserPrivileges = ({
   privileges,
   setPrivileges,
   commonPrivileges,
+  systemPrivileges = [],
   setCommonPrivileges,
   onColumnChange
 }) => {
@@ -37,17 +38,18 @@ const UserPrivileges = ({
   };
 
   return (
-    <TabsContent value="privileges" className="mt-4">
+    <TabsContent value="privileges" className="mt-4 max-h-[calc(100vh-220px)] overflow-y-auto pr-1">
       <span>Table Privileges</span>
 
-      <div className="rounded-lg border bg-background my-2 max-h-[300px] overflow-y-auto">
-        <Table>
+      <div className="rounded-lg border bg-background my-2 w-full max-w-full max-h-[260px] overflow-auto">
+        <Table className="min-w-[680px]">
           <TableHeader>
             <TableRow>
               <TableHead className="text-muted-foreground">
                 TABLE NAME
               </TableHead>
               <TableHead className="text-muted-foreground">SELECT</TableHead>
+              <TableHead className="text-muted-foreground">INSERT</TableHead>
               <TableHead className="text-muted-foreground">UPDATE</TableHead>
               <TableHead className="text-muted-foreground">DELETE</TableHead>
             </TableRow>
@@ -70,43 +72,20 @@ const UserPrivileges = ({
 
       <span>Common Privileges</span>
 
-      <div className="grid grid-cols-2 text-normal mt-2 gap-2">
-        <div className="flex justify-between border-gray-300 border px-2 py-2 rounded-md">
-          <span>CONNECT</span>
-          <Checkbox
-            name="connect"
-            className="border-gray-400"
-            onCheckedChange={handleCommonPrivilegeChange("connect")}
-            value={commonPrivileges.connect}
-          />
-        </div>
-
-        <div className="flex justify-between border-gray-300 border px-2 py-2 rounded-md">
-          <span>CREATE</span>
-          <Checkbox
-            className="border-gray-400"
-            onCheckedChange={handleCommonPrivilegeChange("create")}
-            value={commonPrivileges.create}
-          />
-        </div>
-
-        <div className="flex justify-between border-gray-300 border px-2 py-2 rounded-md">
-          <span>TEMPORARY</span>
-          <Checkbox
-            className="border-gray-400"
-            onCheckedChange={handleCommonPrivilegeChange("temporary")}
-            value={commonPrivileges.temporary}
-          />
-        </div>
-
-        <div className="flex justify-between border-gray-300 border px-2 py-2 rounded-md">
-          <span>EXECUTE</span>
-          <Checkbox
-            className="border-gray-400"
-            onCheckedChange={handleCommonPrivilegeChange("execute")}
-            value={commonPrivileges.execute}
-          />
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 text-normal mt-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
+        {systemPrivileges.map((privilege) => (
+          <label
+            key={privilege}
+            className="flex cursor-pointer justify-between border-gray-300 border px-2 py-2 rounded-md"
+          >
+            <span>{privilege}</span>
+            <Checkbox
+              className="border-gray-400"
+              checked={!!commonPrivileges[privilege]}
+              onCheckedChange={handleCommonPrivilegeChange(privilege)}
+            />
+          </label>
+        ))}
       </div>
     </TabsContent>
   );
@@ -154,6 +133,16 @@ const TableRowWrapper = ({
         <TableCell>
           <Checkbox
             className="border-gray-400"
+            checked={row.insert}
+            onCheckedChange={(checked) =>
+              handleCheckboxChange(row.tableName, "insert", !!checked)
+            }
+          />
+        </TableCell>
+
+        <TableCell>
+          <Checkbox
+            className="border-gray-400"
             checked={row.update}
             onCheckedChange={(checked) =>
               handleCheckboxChange(row.tableName, "update", !!checked)
@@ -173,7 +162,7 @@ const TableRowWrapper = ({
       </TableRow>
 
       <TableRow className="border-0">
-        <TableCell colSpan={4} className="p-0">
+        <TableCell colSpan={5} className="p-0">
           <div
             className={`
         overflow-hidden

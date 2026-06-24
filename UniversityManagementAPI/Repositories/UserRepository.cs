@@ -76,9 +76,11 @@ public class UserRepository : IUserRepository
     {
       userPrivilege.Add(new UserPrivilegeDto
       {
+        PrivilegeType = reader["PRIVILEGE_TYPE"].ToString()!,
         Grantee = reader["GRANTEE"].ToString()!,
-        Owner = reader["OWNER"].ToString()!,
-        TableName = reader["TABLE_NAME"].ToString()!,
+        Owner = reader["OWNER"] == DBNull.Value ? string.Empty : reader["OWNER"].ToString()!,
+        TableName = reader["TABLE_NAME"] == DBNull.Value ? string.Empty : reader["TABLE_NAME"].ToString()!,
+        ColumnName = reader["COLUMN_NAME"] == DBNull.Value ? string.Empty : reader["COLUMN_NAME"].ToString()!,
         Privilege = reader["PRIVILEGE"].ToString()!,
         Grantable = reader["GRANTABLE"].ToString()!,
       });

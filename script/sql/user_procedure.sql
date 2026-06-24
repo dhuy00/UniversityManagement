@@ -107,12 +107,36 @@ CREATE OR REPLACE PROCEDURE USER_GET_PRIVILEGE (
 BEGIN
     OPEN p_cursor FOR
         SELECT 
+            'TABLE' AS PRIVILEGE_TYPE,
             GRANTEE,
             OWNER,
             TABLE_NAME,
+            NULL AS COLUMN_NAME,
             PRIVILEGE,
             GRANTABLE
         FROM SYS.DBA_TAB_PRIVS
+        WHERE GRANTEE = UPPER(p_username)
+        UNION ALL
+        SELECT
+            'COLUMN' AS PRIVILEGE_TYPE,
+            GRANTEE,
+            OWNER,
+            TABLE_NAME,
+            COLUMN_NAME,
+            PRIVILEGE,
+            GRANTABLE
+        FROM SYS.DBA_COL_PRIVS
+        WHERE GRANTEE = UPPER(p_username)
+        UNION ALL
+        SELECT
+            'SYSTEM' AS PRIVILEGE_TYPE,
+            GRANTEE,
+            NULL AS OWNER,
+            NULL AS TABLE_NAME,
+            NULL AS COLUMN_NAME,
+            PRIVILEGE,
+            ADMIN_OPTION AS GRANTABLE
+        FROM SYS.DBA_SYS_PRIVS
         WHERE GRANTEE = UPPER(p_username);
 END;
 /

@@ -8,6 +8,10 @@ export const getUserById = (id) => {
   return api.get(`/user/${id}`);
 };
 
+export const getUserPrivileges = (username) => {
+  return api.get(`/user/privilege/${encodeURIComponent(username)}`);
+};
+
 export const createUser = (data) => {
   return api.post("/user", data);
 };

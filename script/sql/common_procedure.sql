@@ -214,3 +214,28 @@ EXCEPTION
         );
 END;
 /
+
+CREATE OR REPLACE PROCEDURE PERMISSION_GRANT_SYSTEM (
+    p_privilege_name IN VARCHAR2,
+    p_target_name    IN VARCHAR2
+)
+AS
+    v_privilege_name VARCHAR2(50);
+    v_target_name    VARCHAR2(128);
+    v_count          NUMBER;
+BEGIN
+    v_privilege_name := REPLACE(UPPER(TRIM(p_privilege_name)), '_', ' ');
+    v_target_name := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(TRIM(p_target_name)));
+
+    SELECT COUNT(*)
+    INTO v_count
+    FROM SYS.SYSTEM_PRIVILEGE_MAP
+    WHERE NAME = v_privilege_name;
+
+    IF v_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Invalid system privilege');
+    END IF;
+
+    EXECUTE IMMEDIATE 'GRANT ' || v_privilege_name || ' TO ' || v_target_name;
+END;
+/

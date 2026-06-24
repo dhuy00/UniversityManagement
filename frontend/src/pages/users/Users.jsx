@@ -3,6 +3,7 @@ import UserHeader from '../../components/users/UserHeader'
 import UserTable from '../../components/users/UserTable'
 import { Button } from "@/components/ui/button"
 import UserDialog from '@/components/users/UserDialog'
+import UserDeleteDialog from '@/components/users/UserDeleteDialog'
 import { deleteUser, getUsers } from '@/api/userApi'
 import { toast } from 'sonner'
 
@@ -11,7 +12,9 @@ const getErrorMessage = (error) =>
 
 const Users = () => {
   const [openDialog, setOpenDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [users, setUsers] = useState([]);
 
   const fetchUsers = async () => {
@@ -40,21 +43,30 @@ const Users = () => {
     setOpenDialog(true);
   };
 
-  const handleDeleteUser = async (user) => {
-    const confirmed = window.confirm(`Delete user ${user.username}?`);
-    if (!confirmed) return;
+  const handleDeleteUser = (user) => {
+    setSelectedUser(user);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedUser) return;
 
     try {
-      await deleteUser(user.username);
+      setDeleting(true);
+      await deleteUser(selectedUser.username);
       toast.success("User deleted", {
-        description: user.username,
+        description: selectedUser.username,
       });
+      setOpenDeleteDialog(false);
+      setSelectedUser(null);
       await fetchUsers();
     } catch (error) {
       console.error(error);
       toast.error("Failed to delete user", {
         description: getErrorMessage(error),
       });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -83,6 +95,13 @@ const Users = () => {
         mode={selectedUser ? "edit" : "create"}
         user={selectedUser}
         onSaved={fetchUsers}
+      />
+      <UserDeleteDialog
+        open={openDeleteDialog}
+        setOpen={setOpenDeleteDialog}
+        user={selectedUser}
+        deleting={deleting}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   )
