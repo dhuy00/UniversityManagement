@@ -77,6 +77,38 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPatch("status")]
+    public async Task<IActionResult> UpdateUserStatus([FromBody] UpdateUserStatusRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Status))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Username and status are required",
+            });
+        }
+
+        var status = request.Status.Trim().ToUpperInvariant();
+        if (status != "OPEN" && status != "LOCKED")
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Status must be OPEN or LOCKED",
+            });
+        }
+
+        var result = await _userRepository.UpdateUserStatus(request.Username, status);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
     [HttpPost("revoke-privilege")]
     public async Task<IActionResult> RevokeUserPrivilege([FromBody] RevokeUserPrivilegeRequest request)
     {

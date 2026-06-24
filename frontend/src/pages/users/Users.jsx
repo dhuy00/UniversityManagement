@@ -10,16 +10,16 @@ const Users = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [users, setUsers] = useState([]);
 
-    useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await getUsers();
-        setUsers(res.data)
-      } catch (error) {
-        console.error(error);
-      }
-    };
+  const fetchUsers = async () => {
+    try {
+      const res = await getUsers();
+      setUsers(res.data)
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
+  useEffect(() => {
     fetchUsers();
   }, []);
 
@@ -53,6 +53,7 @@ const Users = () => {
         setOpen={setOpenDialog}
         mode={selectedUser ? "edit" : "create"}
         user={selectedUser}
+        onSaved={fetchUsers}
       />
     </div>
   )

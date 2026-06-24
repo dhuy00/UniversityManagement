@@ -21,6 +21,42 @@ BEGIN
 END;
 /
 
+-- Update user's account status
+CREATE OR REPLACE PROCEDURE USER_UPDATE_STATUS (
+    p_username IN VARCHAR2,
+    p_status   IN VARCHAR2
+)
+AS
+    v_username VARCHAR2(128);
+    v_status   VARCHAR2(20);
+    v_count    NUMBER;
+BEGIN
+    v_username := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(TRIM(p_username)));
+    v_status := UPPER(TRIM(p_status));
+
+    SELECT COUNT(*)
+    INTO v_count
+    FROM dba_users
+    WHERE username = v_username;
+
+    IF v_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'User does not exist');
+    END IF;
+
+    IF v_status = 'OPEN' THEN
+        EXECUTE IMMEDIATE 'ALTER USER ' || v_username || ' ACCOUNT UNLOCK';
+    ELSIF v_status = 'LOCKED' THEN
+        EXECUTE IMMEDIATE 'ALTER USER ' || v_username || ' ACCOUNT LOCK';
+    ELSE
+        RAISE_APPLICATION_ERROR(-20002, 'Invalid status. Use OPEN or LOCKED');
+    END IF;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20003, 'Failed to update user status: ' || SQLERRM);
+END;
+/
+
 -- Get user's privilege
 CREATE OR REPLACE PROCEDURE USER_GET_PRIVILEGE (
     p_username IN VARCHAR2,

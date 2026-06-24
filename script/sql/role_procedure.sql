@@ -110,6 +110,33 @@ BEGIN
 END;
 /
 
+-- REVOKE ROLE FROM USER
+CREATE OR REPLACE PROCEDURE ROLE_REVOKE_FROM_USER (
+    p_username IN VARCHAR2,
+    p_rolename IN VARCHAR2
+)
+AS
+    v_username VARCHAR2(128);
+    v_rolename VARCHAR2(128);
+    v_count    NUMBER;
+BEGIN
+    v_username := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(TRIM(p_username)));
+    v_rolename := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(TRIM(p_rolename)));
+
+    SELECT COUNT(*)
+    INTO v_count
+    FROM DBA_ROLE_PRIVS
+    WHERE GRANTEE = v_username
+      AND GRANTED_ROLE = v_rolename;
+
+    IF v_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Role is not granted to user');
+    END IF;
+
+    EXECUTE IMMEDIATE 'REVOKE ' || v_rolename || ' FROM ' || v_username;
+END;
+/
+
 --DELETE A ROLE
 CREATE OR REPLACE PROCEDURE ROLE_DELETE (
     p_rolename IN VARCHAR2

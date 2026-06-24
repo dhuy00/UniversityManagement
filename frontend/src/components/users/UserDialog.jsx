@@ -11,6 +11,9 @@ import { Button } from "../ui/button";
 import UserBasicForm from "./UserBasicForm";
 import UserPrivileges from "./UserPrivileges";
 import { useEffect, useState } from "react";
+import { grantRoleToUser, getRoles, revokeRoleFromUser } from "@/api/roleApi";
+import { updateUserStatus } from "@/api/userApi";
+import UserRoleDialog from "./UserRoleDialog";
 
 const initialPrivileges = [
   {
@@ -60,12 +63,32 @@ const initialPrivileges = [
   },
 ];
 
+const splitRoles = (role) => {
+  if (!role || role === "No Role") return [];
+
+  if (Array.isArray(role)) {
+    return role.filter(Boolean);
+  }
+
+  return role
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const getEditableStatus = (status) => {
+  const normalizedStatus = status?.toUpperCase() ?? "";
+  return normalizedStatus.includes("LOCKED") ? "LOCKED" : "OPEN";
+};
+
 const createInitialFormData = (user = null) => ({
   name: user?.username ?? "",
   password: "",
   confirmPassword: "",
-  role: user?.role ?? "",
-  status: user?.status ?? "",
+  roles: splitRoles(user?.role),
+  originalRoles: splitRoles(user?.role),
+  selectedRole: "",
+  status: user ? getEditableStatus(user.status) : "OPEN",
 
   privileges: initialPrivileges,
 
@@ -77,9 +100,12 @@ const createInitialFormData = (user = null) => ({
   },
 });
 
-const UserDialog = ({ open, setOpen, mode = "create", user = null }) => {
+const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) => {
   const isEditMode = mode === "edit";
   const [formData, setFormData] = useState(createInitialFormData(user));
+  const [roles, setRoles] = useState([]);
+  const [openRoleDialog, setOpenRoleDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -87,7 +113,22 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null }) => {
     }
   }, [open, user]);
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    if (!open) return;
+
+    const fetchRoles = async () => {
+      try {
+        const res = await getRoles();
+        setRoles(res.data ?? []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchRoles();
+  }, [open]);
+
+  const handleSubmit = async () => {
     if (!formData.name.trim()) {
       alert("Name is required");
       return;
@@ -103,29 +144,69 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null }) => {
       return;
     }
 
-    const payload = {
-      username: formData.name,
-      password: formData.password,
-      role: formData.role,
+    const originalRoles = splitRoles(user?.role).map((role) => role.toUpperCase());
+    const rolesToGrant = formData.roles.filter(
+      (role) => !originalRoles.includes(role.toUpperCase()),
+    );
+    const selectedRoleKeys = formData.roles.map((role) => role.toUpperCase());
+    const rolesToRevoke = splitRoles(user?.role).filter(
+      (role) => !selectedRoleKeys.includes(role.toUpperCase()),
+    );
 
-      privileges: formData.privileges.map((table) => ({
-        tableName: table.tableName,
+    try {
+      setSaving(true);
 
-        select: table.select,
-        selectColumns: table.selectColumns,
+      if (isEditMode) {
+        await Promise.all([
+          updateUserStatus({
+            username: formData.name,
+            status: formData.status,
+          }),
+          ...rolesToGrant.map((role) =>
+            grantRoleToUser({
+              username: formData.name,
+              rolename: role,
+            }),
+          ),
+          ...rolesToRevoke.map((role) =>
+            revokeRoleFromUser({
+              username: formData.name,
+              rolename: role,
+            }),
+          ),
+        ]);
+      } else {
+        const payload = {
+          username: formData.name,
+          password: formData.password,
+          roles: formData.roles,
 
-        update: table.update,
-        updateColumns: table.updateColumns,
+          privileges: formData.privileges.map((table) => ({
+            tableName: table.tableName,
 
-        delete: table.delete,
-      })),
+            select: table.select,
+            selectColumns: table.selectColumns,
 
-      commonPrivileges: formData.commonPrivileges,
-    };
+            update: table.update,
+            updateColumns: table.updateColumns,
 
-    console.log(payload);
+            delete: table.delete,
+          })),
 
-    // setOpen(false);
+          commonPrivileges: formData.commonPrivileges,
+        };
+
+        console.log(payload);
+      }
+
+      await onSaved?.();
+      setOpen(false);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to save user changes");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSetPrivileges = (tableName, permission, checked) => {
@@ -208,6 +289,7 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null }) => {
             formData={formData}
             setFormData={setFormData}
             mode={mode}
+            onManageRoles={() => setOpenRoleDialog(true)}
           />
           <UserPrivileges
             privileges={formData.privileges}
@@ -219,11 +301,23 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null }) => {
         </Tabs>
         <DialogFooter>
           <DialogClose render={<Button variant="outline">Cancel</Button>} />
-          <Button onClick={handleSubmit} type="submit">
+          <Button onClick={handleSubmit} type="submit" disabled={saving}>
             {isEditMode ? "Update user" : "Save changes"}
           </Button>
         </DialogFooter>
       </DialogContent>
+      <UserRoleDialog
+        open={openRoleDialog}
+        setOpen={setOpenRoleDialog}
+        availableRoles={roles}
+        selectedRoles={formData.roles}
+        onApply={(nextRoles) =>
+          setFormData((prev) => ({
+            ...prev,
+            roles: nextRoles,
+          }))
+        }
+      />
     </Dialog>
   );
 };

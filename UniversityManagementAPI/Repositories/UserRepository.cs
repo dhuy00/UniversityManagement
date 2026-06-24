@@ -161,6 +161,39 @@ public class UserRepository : IUserRepository
     }
   }
 
+  public async Task<ApiResponse<object>> UpdateUserStatus(string username, string status)
+  {
+    try
+    {
+      using var connection = _connectionFactory.CreateConnection();
+      await connection.OpenAsync();
+
+      using var command = new OracleCommand("USER_UPDATE_STATUS", connection);
+      command.CommandType = CommandType.StoredProcedure;
+
+      command.Parameters.Add("p_username", OracleDbType.Varchar2).Value = username;
+      command.Parameters.Add("p_status", OracleDbType.Varchar2).Value = status;
+
+      await command.ExecuteNonQueryAsync();
+
+      return new ApiResponse<object>
+      {
+        Success = true,
+        Message = "User status updated successfully",
+        Data = null
+      };
+    }
+    catch (Exception ex)
+    {
+      return new ApiResponse<object>
+      {
+        Success = false,
+        Message = ex.Message,
+        Data = null
+      };
+    }
+  }
+
   public async Task<ApiResponse<object>> RevokeUserPrivilege(string username, string privilege, string? table_name = null)
   {
     try

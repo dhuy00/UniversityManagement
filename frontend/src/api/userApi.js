@@ -16,6 +16,10 @@ export const updateUser = (id, data) => {
   return api.put(`/user/${id}`, data);
 };
 
+export const updateUserStatus = (data) => {
+  return api.patch("/user/status", data);
+};
+
 export const deleteUser = (id) => {
   return api.delete(`/user/${id}`);
 };

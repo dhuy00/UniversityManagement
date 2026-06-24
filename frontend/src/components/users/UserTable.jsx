@@ -43,7 +43,6 @@ const getStatusMeta = (status) => {
     return {
       label: "OPEN",
       className: "border-emerald-200 bg-emerald-50 text-emerald-700",
-      dotClassName: "bg-emerald-500",
     };
   }
 
@@ -51,14 +50,12 @@ const getStatusMeta = (status) => {
     return {
       label: normalizedStatus,
       className: "border-rose-200 bg-rose-50 text-rose-700",
-      dotClassName: "bg-rose-500",
     };
   }
 
   return {
     label: status || "Unknown",
     className: "border-slate-200 bg-slate-50 text-slate-700",
-    dotClassName: "bg-slate-400",
   };
 };
 
@@ -200,9 +197,6 @@ export default function UserTable({ users = [], onEditUser }) {
                         variant="outline"
                         className={`h-5 rounded-full px-2 text-[11px] ${statusMeta.className}`}
                       >
-                        <span
-                          className={`size-1.5 rounded-full ${statusMeta.dotClassName}`}
-                        />
                         {statusMeta.label}
                       </Badge>
                     </TableCell>

@@ -72,6 +72,28 @@ public class RoleController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("revoke")]
+    public async Task<IActionResult> RevokeRoleFromUser([FromBody] RevokeRoleFromUserRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Rolename))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Username and Rolename are required",
+            });
+        }
+
+        var result = await _roleRepository.RevokeRoleFromUser(request.Username, request.Rolename);
+
+        if(!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
     [HttpDelete]
     public async Task<IActionResult> DeleteRole([FromBody] DeleteRoleRequest request)
     {

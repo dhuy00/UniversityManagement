@@ -1,9 +1,25 @@
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-const UserBasicForm = ({ formData, setFormData, mode = "create" }) => {
+const UserBasicForm = ({
+  formData,
+  setFormData,
+  mode = "create",
+  onManageRoles,
+}) => {
   const isEditMode = mode === "edit";
+  const selectedRoles = formData.roles ?? [];
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -52,17 +68,44 @@ const UserBasicForm = ({ formData, setFormData, mode = "create" }) => {
           </Field>
           <Field>
             <FieldLabel htmlFor="fieldgroup-role">Role</FieldLabel>
-            <Input
-              id="fieldgroup-role"
-              value={formData.role}
-              placeholder="ADMIN, MANAGER"
-              onChange={(e) => handleInputChange("role", e.target.value)}
-            />
+            <div className="space-y-2">
+              <div className="flex min-h-8 flex-wrap gap-1.5 rounded-lg border border-border bg-slate-50 p-2">
+                {selectedRoles.length > 0 ? (
+                  selectedRoles.map((role) => (
+                    <Badge
+                      key={role}
+                      variant="outline"
+                      className="h-6 border-blue-100 bg-blue-50 px-2 text-blue-700"
+                    >
+                      {role}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-sm text-slate-400">No role assigned</span>
+                )}
+              </div>
+              <Button type="button" variant="outline" onClick={onManageRoles}>
+                Manage roles
+              </Button>
+            </div>
           </Field>
           {isEditMode && (
             <Field>
               <FieldLabel htmlFor="fieldgroup-status">Status</FieldLabel>
-              <Input id="fieldgroup-status" value={formData.status} disabled />
+              <Select
+                value={formData.status}
+                onValueChange={(value) => handleInputChange("status", value)}
+              >
+                <SelectTrigger id="fieldgroup-status" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent alignItemWithTrigger={false}>
+                  <SelectGroup>
+                    <SelectItem value="OPEN">OPEN</SelectItem>
+                    <SelectItem value="LOCKED">LOCKED</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </Field>
           )}
         </FieldGroup>
