@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Text.RegularExpressions;
 using UniversityManagementAPI.DTOs.Requests;
 
 [ApiController]
 [Route("api/user")]
 public class UserController : ControllerBase
 {
+    private const string UsernameValidationMessage = "Username must start with a letter and contain only letters, numbers, _, $, #";
+
     private readonly IUserService _userService;
     private readonly IUserRepository _userRepository;
 
@@ -12,6 +15,11 @@ public class UserController : ControllerBase
     {
         _userService = userService;
         _userRepository = userRepository;
+    }
+
+    private static bool IsValidUsername(string username)
+    {
+        return Regex.IsMatch(username.Trim(), "^[A-Za-z][A-Za-z0-9_$#]{0,127}$");
     }
 
     [HttpGet]
@@ -43,8 +51,18 @@ public class UserController : ControllerBase
             });
         }
 
+        if (!IsValidUsername(request.Username))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = UsernameValidationMessage,
+                Data = null
+            });
+        }
+
         var result = await _userService.CreateUser(
-            request.Username,
+            request.Username.Trim().ToUpperInvariant(),
             request.Password);
 
         if (!result.Success)
@@ -56,7 +74,7 @@ public class UserController : ControllerBase
     }
 
     [HttpDelete]
-    public async Task<IActionResult> DeleteRole([FromBody] DeleteUserRequest request)
+    public async Task<IActionResult> DeleteUser([FromBody] DeleteUserRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Username))
         {
@@ -67,7 +85,47 @@ public class UserController : ControllerBase
             });
         }
 
-        var result = await _userRepository.DeleteUser(request.Username);
+        if (!IsValidUsername(request.Username))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = UsernameValidationMessage,
+            });
+        }
+
+        var result = await _userRepository.DeleteUser(request.Username.Trim().ToUpperInvariant());
+
+        if(!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    [HttpDelete("{username}")]
+    public async Task<IActionResult> DeleteUserByUsername([FromRoute] string username)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Username are required",
+            });
+        }
+
+        if (!IsValidUsername(username))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = UsernameValidationMessage,
+            });
+        }
+
+        var result = await _userRepository.DeleteUser(username.Trim().ToUpperInvariant());
 
         if(!result.Success)
         {
@@ -78,6 +136,8 @@ public class UserController : ControllerBase
     }
 
     [HttpPatch("status")]
+    [HttpPost("status")]
+    [HttpPut("status")]
     public async Task<IActionResult> UpdateUserStatus([FromBody] UpdateUserStatusRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Status))
@@ -86,6 +146,15 @@ public class UserController : ControllerBase
             {
                 Success = false,
                 Message = "Username and status are required",
+            });
+        }
+
+        if (!IsValidUsername(request.Username))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = UsernameValidationMessage,
             });
         }
 
@@ -99,7 +168,40 @@ public class UserController : ControllerBase
             });
         }
 
-        var result = await _userRepository.UpdateUserStatus(request.Username, status);
+        var result = await _userRepository.UpdateUserStatus(request.Username.Trim().ToUpperInvariant(), status);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPatch("password")]
+    [HttpPost("password")]
+    [HttpPut("password")]
+    public async Task<IActionResult> UpdateUserPassword([FromBody] UpdateUserPasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Username and password are required",
+            });
+        }
+
+        if (!IsValidUsername(request.Username))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = UsernameValidationMessage,
+            });
+        }
+
+        var result = await _userRepository.UpdateUserPassword(request.Username.Trim().ToUpperInvariant(), request.Password);
 
         if (!result.Success)
         {

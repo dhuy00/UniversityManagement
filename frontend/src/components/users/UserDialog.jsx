@@ -12,8 +12,9 @@ import UserBasicForm from "./UserBasicForm";
 import UserPrivileges from "./UserPrivileges";
 import { useEffect, useState } from "react";
 import { grantRoleToUser, getRoles, revokeRoleFromUser } from "@/api/roleApi";
-import { updateUserStatus } from "@/api/userApi";
+import { createUser, updateUserPassword, updateUserStatus } from "@/api/userApi";
 import UserRoleDialog from "./UserRoleDialog";
+import { toast } from "sonner";
 
 const initialPrivileges = [
   {
@@ -81,6 +82,11 @@ const getEditableStatus = (status) => {
   return normalizedStatus.includes("LOCKED") ? "LOCKED" : "OPEN";
 };
 
+const getErrorMessage = (error) =>
+  error?.response?.data?.message || error?.message || "Unexpected error";
+
+const USERNAME_PATTERN = /^[A-Za-z][A-Za-z0-9_$#]{0,127}$/;
+
 const createInitialFormData = (user = null) => ({
   name: user?.username ?? "",
   password: "",
@@ -88,7 +94,7 @@ const createInitialFormData = (user = null) => ({
   roles: splitRoles(user?.role),
   originalRoles: splitRoles(user?.role),
   selectedRole: "",
-  status: user ? getEditableStatus(user.status) : "OPEN",
+  status: user ? getEditableStatus(user.status) : "LOCKED",
 
   privileges: initialPrivileges,
 
@@ -122,6 +128,9 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
         setRoles(res.data ?? []);
       } catch (error) {
         console.error(error);
+        toast.error("Failed to load roles", {
+          description: getErrorMessage(error),
+        });
       }
     };
 
@@ -129,18 +138,27 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
   }, [open]);
 
   const handleSubmit = async () => {
-    if (!formData.name.trim()) {
-      alert("Name is required");
+    const username = formData.name.trim().toUpperCase();
+
+    if (!username) {
+      toast.error("Username is required");
+      return;
+    }
+
+    if (!USERNAME_PATTERN.test(formData.name.trim())) {
+      toast.error("Invalid username", {
+        description: "Start with a letter. Use letters, numbers, _, $, # only.",
+      });
       return;
     }
 
     if (!isEditMode && !formData.password) {
-      alert("Password is required");
+      toast.error("Password is required");
       return;
     }
 
     if (formData.password && formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -159,51 +177,60 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
       if (isEditMode) {
         await Promise.all([
           updateUserStatus({
-            username: formData.name,
+            username,
             status: formData.status,
           }),
+          ...(formData.password
+            ? [
+                updateUserPassword({
+                  username,
+                  password: formData.password,
+                }),
+              ]
+            : []),
           ...rolesToGrant.map((role) =>
             grantRoleToUser({
-              username: formData.name,
+              username,
               rolename: role,
             }),
           ),
           ...rolesToRevoke.map((role) =>
             revokeRoleFromUser({
-              username: formData.name,
+              username,
               rolename: role,
             }),
           ),
         ]);
       } else {
-        const payload = {
-          username: formData.name,
+        await createUser({
+          username,
           password: formData.password,
-          roles: formData.roles,
+        });
 
-          privileges: formData.privileges.map((table) => ({
-            tableName: table.tableName,
-
-            select: table.select,
-            selectColumns: table.selectColumns,
-
-            update: table.update,
-            updateColumns: table.updateColumns,
-
-            delete: table.delete,
-          })),
-
-          commonPrivileges: formData.commonPrivileges,
-        };
-
-        console.log(payload);
+        await Promise.all([
+          updateUserStatus({
+            username,
+            status: formData.status,
+          }),
+          ...formData.roles.map((role) =>
+            grantRoleToUser({
+              username,
+              rolename: role,
+            }),
+          ),
+        ]);
       }
 
       await onSaved?.();
+      toast.success(isEditMode ? "User updated" : "User created", {
+        description: username,
+      });
       setOpen(false);
     } catch (error) {
       console.error(error);
-      alert("Failed to save user changes");
+      toast.error("Failed to save user changes", {
+        description: getErrorMessage(error),
+      });
     } finally {
       setSaving(false);
     }

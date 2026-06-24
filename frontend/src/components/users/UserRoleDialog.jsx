@@ -54,14 +54,14 @@ const UserRoleDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="!max-w-none w-[620px] text-[13px]">
+      <DialogContent className="z-[70] !max-w-none w-[calc(100vw-2rem)] sm:w-[900px] text-[13px]">
         <DialogHeader>
           <DialogTitle className="text-sm leading-none">
             Manage user roles
           </DialogTitle>
         </DialogHeader>
 
-        <div className="max-h-[420px] overflow-auto rounded-lg border border-border">
+        <div className="max-h-[70vh] overflow-auto rounded-lg border border-border">
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50 hover:bg-slate-50">
@@ -87,15 +87,24 @@ const UserRoleDialog = ({
                   </TableCell>
                 </TableRow>
               ) : (
-                availableRoles.map((role) => (
-                  <TableRow key={role.role} className="hover:bg-slate-50/70">
+                availableRoles.map((role) => {
+                  const checked = hasRole(draftRoles, role.role);
+
+                  return (
+                  <TableRow
+                    key={role.role}
+                    className="cursor-pointer hover:bg-slate-50/70"
+                    onClick={() => handleToggleRole(role.role, !checked)}
+                  >
                     <TableCell className="text-center">
-                      <Checkbox
-                        checked={hasRole(draftRoles, role.role)}
-                        onCheckedChange={(checked) =>
-                          handleToggleRole(role.role, !!checked)
-                        }
-                      />
+                      <div onClick={(event) => event.stopPropagation()}>
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(checked) =>
+                            handleToggleRole(role.role, !!checked)
+                          }
+                        />
+                      </div>
                     </TableCell>
                     <TableCell className="font-medium text-slate-900">
                       {role.role}
@@ -105,7 +114,8 @@ const UserRoleDialog = ({
                     </TableCell>
                     <TableCell className="text-slate-600">{role.common}</TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               )}
             </TableBody>
           </Table>

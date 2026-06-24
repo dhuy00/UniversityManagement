@@ -33,13 +33,19 @@ const UserBasicForm = ({
       <TabsContent value="basic-info">
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="fieldgroup-name">Name</FieldLabel>
+            <FieldLabel htmlFor="fieldgroup-name">Username</FieldLabel>
             <Input
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
               id="fieldgroup-name"
+              placeholder="USER_NAME"
               disabled={isEditMode}
             />
+            {!isEditMode && (
+              <p className="text-xs text-slate-500">
+                Start with a letter. Use letters, numbers, _, $, # only.
+              </p>
+            )}
           </Field>
           <Field>
             <FieldLabel htmlFor="fieldgroup-password">
@@ -89,25 +95,23 @@ const UserBasicForm = ({
               </Button>
             </div>
           </Field>
-          {isEditMode && (
-            <Field>
-              <FieldLabel htmlFor="fieldgroup-status">Status</FieldLabel>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => handleInputChange("status", value)}
-              >
-                <SelectTrigger id="fieldgroup-status" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent alignItemWithTrigger={false}>
-                  <SelectGroup>
-                    <SelectItem value="OPEN">OPEN</SelectItem>
-                    <SelectItem value="LOCKED">LOCKED</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>
-          )}
+          <Field>
+            <FieldLabel htmlFor="fieldgroup-status">Status</FieldLabel>
+            <Select
+              value={formData.status}
+              onValueChange={(value) => handleInputChange("status", value)}
+            >
+              <SelectTrigger id="fieldgroup-status" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent alignItemWithTrigger={false}>
+                <SelectGroup>
+                  <SelectItem value="OPEN">OPEN</SelectItem>
+                  <SelectItem value="LOCKED">LOCKED</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Field>
         </FieldGroup>
       </TabsContent>
     </>

@@ -17,9 +17,13 @@ export const updateUser = (id, data) => {
 };
 
 export const updateUserStatus = (data) => {
-  return api.patch("/user/status", data);
+  return api.post("/user/status", data);
 };
 
-export const deleteUser = (id) => {
-  return api.delete(`/user/${id}`);
+export const updateUserPassword = (data) => {
+  return api.post("/user/password", data);
+};
+
+export const deleteUser = (username) => {
+  return api.delete(`/user/${encodeURIComponent(username)}`);
 };

@@ -3,7 +3,11 @@ import UserHeader from '../../components/users/UserHeader'
 import UserTable from '../../components/users/UserTable'
 import { Button } from "@/components/ui/button"
 import UserDialog from '@/components/users/UserDialog'
-import { getUsers } from '@/api/userApi'
+import { deleteUser, getUsers } from '@/api/userApi'
+import { toast } from 'sonner'
+
+const getErrorMessage = (error) =>
+  error?.response?.data?.message || error?.message || "Unexpected error";
 
 const Users = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -16,6 +20,9 @@ const Users = () => {
       setUsers(res.data)
     } catch (error) {
       console.error(error);
+      toast.error("Failed to load users", {
+        description: getErrorMessage(error),
+      });
     }
   };
 
@@ -33,6 +40,24 @@ const Users = () => {
     setOpenDialog(true);
   };
 
+  const handleDeleteUser = async (user) => {
+    const confirmed = window.confirm(`Delete user ${user.username}?`);
+    if (!confirmed) return;
+
+    try {
+      await deleteUser(user.username);
+      toast.success("User deleted", {
+        description: user.username,
+      });
+      await fetchUsers();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete user", {
+        description: getErrorMessage(error),
+      });
+    }
+  };
+
   return (
     <div className='bg-background-secondary flex-1 w-full min-h-screen'>
       <UserHeader/>
@@ -46,7 +71,11 @@ const Users = () => {
           </div>
           <Button className='py-2 text-[12px]' onClick={handleCreateUser}>Create user</Button>
         </div>
-        <UserTable users={users} onEditUser={handleEditUser}/>
+        <UserTable
+          users={users}
+          onEditUser={handleEditUser}
+          onDeleteUser={handleDeleteUser}
+        />
       </div>
       <UserDialog
         open={openDialog}

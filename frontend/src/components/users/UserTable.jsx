@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
   ChevronRight,
-  Clock3,
   Pencil,
   Trash2,
   UsersRound,
@@ -77,7 +76,7 @@ const getTimeAgo = (dateString) => {
   return `${days} day${days > 1 ? "s" : ""} ago`;
 };
 
-export default function UserTable({ users = [], onEditUser }) {
+export default function UserTable({ users = [], onEditUser, onDeleteUser }) {
   const [page, setPage] = useState(1);
 
   const totalPages = Math.max(1, Math.ceil(users.length / ITEMS_PER_PAGE));
@@ -92,7 +91,7 @@ export default function UserTable({ users = [], onEditUser }) {
   };
 
   const handleDelete = (user) => {
-    console.log("Delete:", user);
+    onDeleteUser?.(user);
   };
 
   return (
@@ -202,8 +201,7 @@ export default function UserTable({ users = [], onEditUser }) {
                     </TableCell>
 
                     <TableCell className="py-2">
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Clock3 className="size-3.5 text-slate-400" />
+                      <div className="text-sm text-slate-600">
                         {getTimeAgo(user.lastLogin)}
                       </div>
                     </TableCell>

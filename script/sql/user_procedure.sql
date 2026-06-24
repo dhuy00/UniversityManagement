@@ -31,7 +31,13 @@ AS
     v_status   VARCHAR2(20);
     v_count    NUMBER;
 BEGIN
-    v_username := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(TRIM(p_username)));
+    v_username := UPPER(TRIM(p_username));
+
+    IF v_username IS NULL OR NOT REGEXP_LIKE(v_username, '^[A-Z][A-Z0-9_$#]{0,127}$') THEN
+        RAISE_APPLICATION_ERROR(-20000, 'Invalid username. Use letters, numbers, _, $, # and start with a letter');
+    END IF;
+
+    v_username := DBMS_ASSERT.SIMPLE_SQL_NAME(v_username);
     v_status := UPPER(TRIM(p_status));
 
     SELECT COUNT(*)
@@ -54,6 +60,42 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         RAISE_APPLICATION_ERROR(-20003, 'Failed to update user status: ' || SQLERRM);
+END;
+/
+
+-- Update user's password
+CREATE OR REPLACE PROCEDURE USER_UPDATE_PASSWORD (
+    p_username IN VARCHAR2,
+    p_password IN VARCHAR2
+)
+AS
+    v_username VARCHAR2(128);
+    v_count    NUMBER;
+BEGIN
+    v_username := UPPER(TRIM(p_username));
+
+    IF v_username IS NULL OR NOT REGEXP_LIKE(v_username, '^[A-Z][A-Z0-9_$#]{0,127}$') THEN
+        RAISE_APPLICATION_ERROR(-20000, 'Invalid username. Use letters, numbers, _, $, # and start with a letter');
+    END IF;
+
+    v_username := DBMS_ASSERT.SIMPLE_SQL_NAME(v_username);
+
+    SELECT COUNT(*)
+    INTO v_count
+    FROM dba_users
+    WHERE username = v_username;
+
+    IF v_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'User does not exist');
+    END IF;
+
+    EXECUTE IMMEDIATE
+        'ALTER USER ' || v_username ||
+        ' IDENTIFIED BY "' || REPLACE(p_password, '"', '""') || '"';
+
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Failed to update user password: ' || SQLERRM);
 END;
 /
 
@@ -87,6 +129,10 @@ IS
 BEGIN
     -- Normalize username
     v_user := UPPER(TRIM(p_username));
+
+    IF v_user IS NULL OR NOT REGEXP_LIKE(v_user, '^[A-Z][A-Z0-9_$#]{0,127}$') THEN
+        RAISE_APPLICATION_ERROR(-20000, 'Invalid username. Use letters, numbers, _, $, # and start with a letter');
+    END IF;
 
     -- Check user existence (more reliable than COUNT)
     SELECT COUNT(*)
@@ -133,7 +179,13 @@ AS
     v_username VARCHAR2(128);
     v_count    NUMBER;
 BEGIN
-    v_username := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(TRIM(p_username)));
+    v_username := UPPER(TRIM(p_username));
+
+    IF v_username IS NULL OR NOT REGEXP_LIKE(v_username, '^[A-Z][A-Z0-9_$#]{0,127}$') THEN
+        RAISE_APPLICATION_ERROR(-20000, 'Invalid username. Use letters, numbers, _, $, # and start with a letter');
+    END IF;
+
+    v_username := DBMS_ASSERT.SIMPLE_SQL_NAME(v_username);
 
     SELECT COUNT(*)
     INTO v_count
