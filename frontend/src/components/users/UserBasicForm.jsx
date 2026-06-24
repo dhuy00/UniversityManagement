@@ -1,16 +1,10 @@
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
 
-const UserBasicForm = ({ formData, setFormData }) => {
+const UserBasicForm = ({ formData, setFormData, mode = "create" }) => {
+  const isEditMode = mode === "edit";
+
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -28,14 +22,18 @@ const UserBasicForm = ({ formData, setFormData }) => {
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
               id="fieldgroup-name"
+              disabled={isEditMode}
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="fieldgroup-password">Password</FieldLabel>
+            <FieldLabel htmlFor="fieldgroup-password">
+              {isEditMode ? "New Password" : "Password"}
+            </FieldLabel>
             <Input
               value={formData.password}
               id="fieldgroup-password"
               type="password"
+              placeholder={isEditMode ? "Leave blank to keep current password" : ""}
               onChange={(e) => handleInputChange("password", e.target.value)}
             />
           </Field>
@@ -53,27 +51,20 @@ const UserBasicForm = ({ formData, setFormData }) => {
             />
           </Field>
           <Field>
-            <FieldLabel>Role</FieldLabel>
-            <Select
-              defaultValue="- Select -"
+            <FieldLabel htmlFor="fieldgroup-role">Role</FieldLabel>
+            <Input
+              id="fieldgroup-role"
               value={formData.role}
-              onValueChange={(value) => handleInputChange("role", value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent alignItemWithTrigger={false}>
-                <SelectGroup>
-                  <SelectItem value="">- Select -</SelectItem>
-                  <SelectItem value="apple">Apple</SelectItem>
-                  <SelectItem value="banana">Banana</SelectItem>
-                  <SelectItem value="blueberry">Blueberry</SelectItem>
-                  <SelectItem value="grapes">Grapes</SelectItem>
-                  <SelectItem value="pineapple">Pineapple</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+              placeholder="ADMIN, MANAGER"
+              onChange={(e) => handleInputChange("role", e.target.value)}
+            />
           </Field>
+          {isEditMode && (
+            <Field>
+              <FieldLabel htmlFor="fieldgroup-status">Status</FieldLabel>
+              <Input id="fieldgroup-status" value={formData.status} disabled />
+            </Field>
+          )}
         </FieldGroup>
       </TabsContent>
     </>

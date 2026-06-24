@@ -1,8 +1,6 @@
 using Oracle.ManagedDataAccess.Client;
 using System.Data;
-using Oracle.ManagedDataAccess.Client;
 using BCrypt.Net;
-using System.Data;
 
 public class UserRepository : IUserRepository
 {
@@ -39,6 +37,7 @@ public class UserRepository : IUserRepository
       users.Add(new UserDto
       {
         Username = reader["USERNAME"].ToString()!,
+        Role = reader["ROLE"].ToString()!,
         Status = reader["ACCOUNT_STATUS"].ToString()!,
         UserId = reader["USER_ID"].ToString()!,
         LastLogin = reader["LAST_LOGIN"] == DBNull.Value

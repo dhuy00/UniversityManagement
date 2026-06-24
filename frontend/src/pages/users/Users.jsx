@@ -7,6 +7,7 @@ import { getUsers } from '@/api/userApi'
 
 const Users = () => {
   const [openDialog, setOpenDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [users, setUsers] = useState([]);
 
     useEffect(() => {
@@ -22,22 +23,37 @@ const Users = () => {
     fetchUsers();
   }, []);
 
+  const handleCreateUser = () => {
+    setSelectedUser(null);
+    setOpenDialog(true);
+  };
+
+  const handleEditUser = (user) => {
+    setSelectedUser(user);
+    setOpenDialog(true);
+  };
+
   return (
-    <div className='bg-background-secondary flex-1 w-full h-screen'>
+    <div className='bg-background-secondary flex-1 w-full min-h-screen'>
       <UserHeader/>
       {/* Content */}
       <div className='px-4 mt-4 drop-shadow-small'>
-        <div className='flex justify-between bg-background-table px-4 py-3 items-center rounded-t-xl
+        <div className='flex justify-between bg-background-table px-5 py-4 items-center rounded-t-xl
         border border-border-primary border-b-0'>
           <div className='flex flex-col'>
-            <span className='text-text-primary font-semibold text-[14px]'>All users</span>
-            <span className='text-small text-text-secondary'>8 members total</span>
+            <span className='text-text-primary font-semibold text-[15px]'>All users</span>
+            <span className='text-small text-text-secondary'>{users.length} accounts total</span>
           </div>
-          <Button className='py-2 text-[12px]'  onClick={() => setOpenDialog(true)}>Create user</Button>
+          <Button className='py-2 text-[12px]' onClick={handleCreateUser}>Create user</Button>
         </div>
-        <UserTable users={users}/>
+        <UserTable users={users} onEditUser={handleEditUser}/>
       </div>
-      <UserDialog open={openDialog} setOpen={setOpenDialog} />
+      <UserDialog
+        open={openDialog}
+        setOpen={setOpenDialog}
+        mode={selectedUser ? "edit" : "create"}
+        user={selectedUser}
+      />
     </div>
   )
 }

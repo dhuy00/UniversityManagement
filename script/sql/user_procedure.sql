@@ -4,8 +4,20 @@ CREATE OR REPLACE PROCEDURE USER_GET_ALL (
 ) AS
 BEGIN
     OPEN p_cursor FOR 
-        SELECT USERNAME, ACCOUNT_STATUS, USER_ID, LAST_LOGIN
-        FROM SYS.DBA_USERS;
+        SELECT
+            u.USERNAME,
+            u.ACCOUNT_STATUS,
+            u.USER_ID,
+            u.LAST_LOGIN,
+            NVL(r.ROLES, 'No Role') AS ROLE
+        FROM SYS.DBA_USERS u
+        LEFT JOIN (
+            SELECT
+                GRANTEE,
+                LISTAGG(GRANTED_ROLE, ', ') WITHIN GROUP (ORDER BY GRANTED_ROLE) AS ROLES
+            FROM SYS.DBA_ROLE_PRIVS
+            GROUP BY GRANTEE
+        ) r ON r.GRANTEE = u.USERNAME;
 END;
 /
 

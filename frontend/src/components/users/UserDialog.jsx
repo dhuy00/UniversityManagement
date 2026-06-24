@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "../ui/button";
 import UserBasicForm from "./UserBasicForm";
 import UserPrivileges from "./UserPrivileges";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const initialPrivileges = [
   {
@@ -60,22 +60,32 @@ const initialPrivileges = [
   },
 ];
 
-const UserDialog = ({ open, setOpen }) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    password: "",
-    confirmPassword: "",
-    role: "",
+const createInitialFormData = (user = null) => ({
+  name: user?.username ?? "",
+  password: "",
+  confirmPassword: "",
+  role: user?.role ?? "",
+  status: user?.status ?? "",
 
-    privileges: initialPrivileges,
+  privileges: initialPrivileges,
 
-    commonPrivileges: {
-      connect: false,
-      create: false,
-      temporary: false,
-      execute: false,
-    },
-  });
+  commonPrivileges: {
+    connect: false,
+    create: false,
+    temporary: false,
+    execute: false,
+  },
+});
+
+const UserDialog = ({ open, setOpen, mode = "create", user = null }) => {
+  const isEditMode = mode === "edit";
+  const [formData, setFormData] = useState(createInitialFormData(user));
+
+  useEffect(() => {
+    if (open) {
+      setFormData(createInitialFormData(user));
+    }
+  }, [open, user]);
 
   const handleSubmit = () => {
     if (!formData.name.trim()) {
@@ -83,12 +93,12 @@ const UserDialog = ({ open, setOpen }) => {
       return;
     }
 
-    if (!formData.password) {
+    if (!isEditMode && !formData.password) {
       alert("Password is required");
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (formData.password && formData.password !== formData.confirmPassword) {
       alert("Passwords do not match");
       return;
     }
@@ -185,7 +195,7 @@ const UserDialog = ({ open, setOpen }) => {
       <DialogContent className="!max-w-none w-[500px] text-[13px]">
         <DialogHeader>
           <DialogTitle className="text-sm leading-none">
-            Create User
+            {isEditMode ? "Edit User" : "Create User"}
           </DialogTitle>
         </DialogHeader>
 
@@ -194,7 +204,11 @@ const UserDialog = ({ open, setOpen }) => {
             <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
             <TabsTrigger value="privileges">Privileges</TabsTrigger>
           </TabsList>
-          <UserBasicForm formData={formData} setFormData={setFormData} />
+          <UserBasicForm
+            formData={formData}
+            setFormData={setFormData}
+            mode={mode}
+          />
           <UserPrivileges
             privileges={formData.privileges}
             setPrivileges={handleSetPrivileges}
@@ -205,7 +219,9 @@ const UserDialog = ({ open, setOpen }) => {
         </Tabs>
         <DialogFooter>
           <DialogClose render={<Button variant="outline">Cancel</Button>} />
-          <Button onClick={handleSubmit} type="submit">Save changes</Button>
+          <Button onClick={handleSubmit} type="submit">
+            {isEditMode ? "Update user" : "Save changes"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
