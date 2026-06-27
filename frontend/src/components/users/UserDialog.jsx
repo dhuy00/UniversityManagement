@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "../ui/button";
 import UserBasicForm from "./UserBasicForm";
 import UserPrivileges from "./UserPrivileges";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { grantRoleToUser, getRoles, revokeRoleFromUser } from "@/api/roleApi";
 import {
   createUser,
@@ -28,6 +28,22 @@ import UserRoleDialog from "./UserRoleDialog";
 import { toast } from "sonner";
 
 const initialPrivileges = [];
+let dialogMetadataPromise;
+
+const getDialogMetadata = () => {
+  if (!dialogMetadataPromise) {
+    dialogMetadataPromise = Promise.all([
+      getRoles(),
+      getTables(),
+      getSystemPrivileges(),
+    ]).catch((error) => {
+      dialogMetadataPromise = null;
+      throw error;
+    });
+  }
+
+  return dialogMetadataPromise;
+};
 
 const splitRoles = (role) => {
   if (!role || role === "No Role") return [];
@@ -107,33 +123,38 @@ const getPrivilegeField = (privilege, camelName, pascalName = camelName) =>
   privilege?.[camelName] ?? privilege?.[pascalName] ?? "";
 
 const buildPrivilegeState = (tables, userPrivileges = []) => {
-  const tablePrivileges = userPrivileges.filter(
-    (privilege) => privilege.privilegeType === "TABLE" || privilege.PrivilegeType === "TABLE",
-  );
-  const columnPrivileges = userPrivileges.filter(
-    (privilege) => privilege.privilegeType === "COLUMN" || privilege.PrivilegeType === "COLUMN",
-  );
+  const privilegesByTable = new Map();
+
+  userPrivileges.forEach((privilege) => {
+    const owner = getPrivilegeField(privilege, "owner", "Owner");
+    const tableName = getPrivilegeField(privilege, "tableName", "TableName");
+    const key = `${owner}.${tableName}`;
+    const current = privilegesByTable.get(key) ?? { table: [], column: [] };
+    const privilegeType = getPrivilegeField(
+      privilege,
+      "privilegeType",
+      "PrivilegeType",
+    ).toUpperCase();
+
+    if (privilegeType === "TABLE") current.table.push(privilege);
+    if (privilegeType === "COLUMN") current.column.push(privilege);
+    privilegesByTable.set(key, current);
+  });
 
   return (tables ?? []).map((table) => {
     const tableName = `${table.owner}.${table.tableName}`;
-    const matches = tablePrivileges.filter(
-      (privilege) =>
-        getPrivilegeField(privilege, "owner", "Owner") === table.owner &&
-        getPrivilegeField(privilege, "tableName", "TableName") === table.tableName,
-    );
-    const columnMatches = columnPrivileges.filter(
-      (privilege) =>
-        getPrivilegeField(privilege, "owner", "Owner") === table.owner &&
-        getPrivilegeField(privilege, "tableName", "TableName") === table.tableName,
-    );
+    const matches = privilegesByTable.get(tableName) ?? {
+      table: [],
+      column: [],
+    };
 
     const hasPrivilege = (privilegeName) =>
-      matches.some(
+      matches.table.some(
         (privilege) =>
           getPrivilegeField(privilege, "privilege", "Privilege").toUpperCase() === privilegeName,
       );
     const getPrivilegeColumns = (privilegeName) =>
-      columnMatches
+      matches.column
         .filter(
           (privilege) =>
             getPrivilegeField(privilege, "privilege", "Privilege").toUpperCase() === privilegeName,
@@ -200,26 +221,23 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
   const [systemPrivileges, setSystemPrivileges] = useState([]);
   const [openRoleDialog, setOpenRoleDialog] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setFormData(createInitialFormData(user));
-    }
-  }, [open, user]);
+  const [activeTab, setActiveTab] = useState("basic-info");
 
   useEffect(() => {
     if (!open) return;
 
+    let cancelled = false;
+
     const fetchDialogData = async () => {
       try {
-        const [rolesRes, tablesRes, systemPrivilegesRes, userPrivilegesRes] = await Promise.all([
-          getRoles(),
-          getTables(),
-          getSystemPrivileges(),
+        const [[rolesRes, tablesRes, systemPrivilegesRes], userPrivilegesRes] = await Promise.all([
+          getDialogMetadata(),
           isEditMode && user?.username
             ? getUserPrivileges(user.username)
             : Promise.resolve({ data: [] }),
         ]);
+
+        if (cancelled) return;
 
         setRoles(rolesRes.data ?? []);
         setSystemPrivileges(systemPrivilegesRes.data ?? []);
@@ -235,6 +253,7 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
           ),
         }));
       } catch (error) {
+        if (cancelled) return;
         console.error(error);
         toast.error("Failed to load user form data", {
           description: getErrorMessage(error),
@@ -243,7 +262,10 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
     };
 
     fetchDialogData();
-  }, [open]);
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditMode, open, user?.username]);
 
   const handleSubmit = async () => {
     const username = formData.name.trim().toUpperCase();
@@ -355,7 +377,7 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
       toast.success(isEditMode ? "User updated" : "User created", {
         description: username,
       });
-      setOpen(false);
+      handleDialogOpenChange(false);
     } catch (error) {
       console.error(error);
       toast.error("Failed to save user changes", {
@@ -366,7 +388,7 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
     }
   };
 
-  const handleSetPrivileges = (tableName, permission, checked) => {
+  const handleSetPrivileges = useCallback((tableName, permission, checked) => {
     setFormData((prev) => {
       const privileges = prev.privileges || [];
 
@@ -376,12 +398,12 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
               ...row,
               [permission]: checked,
 
-              ...(permission === "select" && !checked
-                ? { selectColumns: [] }
+              ...(permission === "select"
+                ? { selectColumns: checked ? row.columns : [] }
                 : {}),
 
-              ...(permission === "update" && !checked
-                ? { updateColumns: [] }
+              ...(permission === "update"
+                ? { updateColumns: checked ? row.columns : [] }
                 : {}),
             }
           : row,
@@ -392,9 +414,9 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
         privileges: next,
       };
     });
-  };
+  }, []);
 
-  const handleColumnChange = (tableName, permissionType, column, checked) => {
+  const handleColumnChange = useCallback((tableName, permissionType, column, checked) => {
     setFormData((prev) => {
       const privileges = prev.privileges || [];
 
@@ -419,9 +441,9 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
         privileges: next,
       };
     });
-  };
+  }, []);
 
-  const handleSetCommonPrivileges = (commonPrivileges) => {
+  const handleSetCommonPrivileges = useCallback((commonPrivileges) => {
     setFormData((prev) => ({
       ...prev,
       commonPrivileges:
@@ -429,10 +451,18 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
           ? commonPrivileges(prev.commonPrivileges)
           : commonPrivileges,
     }));
-  };
+  }, []);
+
+  const handleDialogOpenChange = useCallback((nextOpen) => {
+    if (!nextOpen) {
+      setActiveTab("basic-info");
+      setFormData(createInitialFormData(user));
+    }
+    setOpen(nextOpen);
+  }, [setOpen, user]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="!max-w-none w-[calc(100vw-2rem)] sm:w-[860px] max-h-[calc(100vh-2rem)] overflow-hidden text-[13px]">
         <DialogHeader>
           <DialogTitle className="text-sm leading-none">
@@ -440,7 +470,7 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="basic-info">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
             <TabsTrigger value="privileges">Privileges</TabsTrigger>
@@ -451,14 +481,16 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
             mode={mode}
             onManageRoles={() => setOpenRoleDialog(true)}
           />
-          <UserPrivileges
-            privileges={formData.privileges}
-            setPrivileges={handleSetPrivileges}
-            commonPrivileges={formData.commonPrivileges}
-            systemPrivileges={systemPrivileges}
-            setCommonPrivileges={handleSetCommonPrivileges}
-            onColumnChange={handleColumnChange}
-          />
+          {activeTab === "privileges" && (
+            <UserPrivileges
+              privileges={formData.privileges}
+              setPrivileges={handleSetPrivileges}
+              commonPrivileges={formData.commonPrivileges}
+              systemPrivileges={systemPrivileges}
+              setCommonPrivileges={handleSetCommonPrivileges}
+              onColumnChange={handleColumnChange}
+            />
+          )}
         </Tabs>
         <DialogFooter>
           <DialogClose render={<Button variant="outline">Cancel</Button>} />

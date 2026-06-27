@@ -90,6 +90,7 @@ const Users = () => {
         />
       </div>
       <UserDialog
+        key={selectedUser?.username ?? "create"}
         open={openDialog}
         setOpen={setOpenDialog}
         mode={selectedUser ? "edit" : "create"}

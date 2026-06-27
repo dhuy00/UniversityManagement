@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import {
   Table,
@@ -22,12 +22,12 @@ const UserPrivileges = ({
 }) => {
   const [expandedRows, setExpandedRows] = useState({});
 
-  const toggleExpanded = (tableName) => {
+  const toggleExpanded = useCallback((tableName) => {
     setExpandedRows((prev) => ({
       ...prev,
       [tableName]: !prev[tableName],
     }));
-  };
+  }, []);
 
 
   const handleCommonPrivilegeChange = (key) => (checked) => {
@@ -91,13 +91,13 @@ const UserPrivileges = ({
   );
 };
 
-const TableRowWrapper = ({
+const TableRowWrapper = memo(function TableRowWrapper({
   row,
   expanded,
   toggleExpanded,
   handleCheckboxChange,
   handleColumnChange,
-}) => {
+}) {
   return (
     <>
       <TableRow>
@@ -161,22 +161,9 @@ const TableRowWrapper = ({
         </TableCell>
       </TableRow>
 
-      <TableRow className="border-0">
-        <TableCell colSpan={5} className="p-0">
-          <div
-            className={`
-        overflow-hidden
-        transition-all
-        duration-300
-        ease-in-out
-        bg-muted/30
-        ${
-          expanded && (row.select || row.update)
-            ? "max-h-[1000px] opacity-100"
-            : "max-h-0 opacity-0"
-        }
-      `}
-          >
+      {expanded && (row.select || row.update) && (
+        <TableRow className="border-0">
+          <TableCell colSpan={5} className="bg-muted/30 p-0">
             <div className="p-4 space-y-4">
               {row.select && (
                 <div>
@@ -234,11 +221,11 @@ const TableRowWrapper = ({
                 </div>
               )}
             </div>
-          </div>
-        </TableCell>
-      </TableRow>
+          </TableCell>
+        </TableRow>
+      )}
     </>
   );
-};
+});
 
-export default UserPrivileges;
+export default memo(UserPrivileges);
