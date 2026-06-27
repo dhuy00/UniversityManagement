@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,9 +12,15 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import {
+  getAuthSession,
+  saveAuthSession,
+} from "@/lib/auth";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = location.state?.from?.pathname || "/users";
 
   const [formData, setFormData] = useState({
     username: "",
@@ -25,6 +31,7 @@ const Login = () => {
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
+    if (error) setError("");
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -32,12 +39,10 @@ const Login = () => {
   };
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
-
-    if (user) {
-      navigate("/users", { replace: true });
+    if (getAuthSession()) {
+      navigate(redirectTo, { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, redirectTo]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,15 +64,12 @@ const Login = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      if (formData.username === "admin" && formData.password === "123") {
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            username: formData.username,
-          }),
-        );
-
-        navigate("/users");
+      if (
+        formData.username.trim().toLowerCase() === "admin" &&
+        formData.password === "123"
+      ) {
+        saveAuthSession("admin");
+        navigate(redirectTo, { replace: true });
       } else {
         setError("Invalid username or password");
       }

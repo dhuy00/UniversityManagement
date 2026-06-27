@@ -20,6 +20,12 @@ export const updateRolePassword = (data) => {
   return api.patch("/role/password", data);
 };
 
+export const deleteRole = (roleName) => {
+  return api.delete("/role", {
+    data: { rolename: roleName },
+  });
+};
+
 export const grantRoleToUser = (data) => {
   return api.post("/role/grant", data);
 };

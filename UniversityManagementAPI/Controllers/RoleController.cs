@@ -17,8 +17,8 @@ public class RoleController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var users = await _roleService.GetAllRolesAsync();
-        return Ok(users);
+        var roles = await _roleService.GetAllRolesAsync();
+        return Ok(roles);
     }
 
     [HttpGet("privilege/{rolename}")]
@@ -76,7 +76,7 @@ public class RoleController : ControllerBase
     public async Task<IActionResult> UpdateRolePassword([FromBody] UpdateRolePasswordRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Rolename) ||
-            string.IsNullOrEmpty(request.Password))
+            string.IsNullOrWhiteSpace(request.Password))
         {
             return BadRequest(new ApiResponse<object>
             {
@@ -165,7 +165,7 @@ public class RoleController : ControllerBase
         ApiResponse<object> result;
         string transformPrivilege = _roleService.TransformPrivileges(request.Privilege);
 
-        if(request.TableName != null && request.TableName != "")
+        if (!string.IsNullOrWhiteSpace(request.TableName))
         {
             result = await _roleRepository.RevokeRolePrivilege(request.Rolename, transformPrivilege, request.TableName);
         }

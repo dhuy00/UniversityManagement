@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { getRoles } from "@/api/roleApi";
+import { deleteRole, getRoles } from "@/api/roleApi";
+import RoleDeleteDialog from "@/components/roles/RoleDeleteDialog";
 import RoleDialog from "@/components/roles/RoleDialog";
 import RoleEditDialog from "@/components/roles/RoleEditDialog";
 import RoleHeader from "@/components/roles/RoleHeader";
@@ -17,6 +18,8 @@ const Roles = () => {
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchRoles = async () => {
     try {
@@ -56,6 +59,26 @@ const Roles = () => {
     };
   }, []);
 
+  const handleDeleteRole = async () => {
+    if (!selectedRole) return;
+
+    try {
+      setDeleting(true);
+      await deleteRole(selectedRole.role);
+      toast.success("Role deleted", { description: selectedRole.role });
+      setOpenDeleteDialog(false);
+      await fetchRoles();
+      setSelectedRole(null);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete role", {
+        description: getErrorMessage(error),
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen w-full flex-1 bg-background-secondary">
       <RoleHeader />
@@ -83,6 +106,10 @@ const Roles = () => {
             setSelectedRole(role);
             setOpenEditDialog(true);
           }}
+          onDeleteRole={(role) => {
+            setSelectedRole(role);
+            setOpenDeleteDialog(true);
+          }}
         />
       </div>
       <RoleDialog
@@ -96,6 +123,13 @@ const Roles = () => {
         setOpen={setOpenEditDialog}
         role={selectedRole}
         onSaved={fetchRoles}
+      />
+      <RoleDeleteDialog
+        open={openDeleteDialog}
+        setOpen={setOpenDeleteDialog}
+        role={selectedRole}
+        deleting={deleting}
+        onConfirm={handleDeleteRole}
       />
     </div>
   );

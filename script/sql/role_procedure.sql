@@ -4,7 +4,7 @@ CREATE OR REPLACE PROCEDURE ROLE_GET_ALL(
 ) AS
 BEGIN
     OPEN p_cursor FOR 
-      SELECT ROLE, AUTHENTICATION_TYPE, COMMON
+      SELECT ROLE, AUTHENTICATION_TYPE, COMMON, ORACLE_MAINTAINED
       FROM DBA_ROLES;
 END;
 /
@@ -88,11 +88,8 @@ IS
     li_count NUMBER := 0;
     lv_stmt VARCHAR2(1000);
 BEGIN
-    lv_stmt := 'ALTER SESSION SET "_ORACLE_SCRIPT" = TRUE';
-    EXECUTE IMMEDIATE lv_stmt;
-    
     -- Validate role name
-    role_name := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(p_rolename));
+    role_name := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(TRIM(p_rolename)));
 
     -- Check existing role
     SELECT COUNT(1)
@@ -112,7 +109,8 @@ BEGIN
         lv_stmt := 'CREATE ROLE ' || role_name;
     ELSE
         lv_stmt := 'CREATE ROLE ' || role_name ||
-                   ' IDENTIFIED BY "' || p_password || '"';
+                   ' IDENTIFIED BY "' ||
+                   REPLACE(p_password, '"', '""') || '"';
     END IF;
 
     EXECUTE IMMEDIATE lv_stmt;

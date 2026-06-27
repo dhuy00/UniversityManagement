@@ -37,7 +37,8 @@ public class RoleRepository : IRoleRepository
       {
         Role = reader["ROLE"].ToString()!,
         AuthenticationType = reader["AUTHENTICATION_TYPE"].ToString()!,
-        Common = reader["COMMON"].ToString()!
+        Common = reader["COMMON"].ToString()!,
+        OracleMaintained = reader["ORACLE_MAINTAINED"].ToString()!
       });
     }
 
@@ -257,13 +258,12 @@ public class RoleRepository : IRoleRepository
 
       using var command = new OracleCommand("ROLE_REVOKE_PRIVILEGE", connection);
       command.CommandType = CommandType.StoredProcedure;
+      command.BindByName = true;
 
-      command.Parameters.Add("p_username", OracleDbType.Varchar2).Value = rolename;
+      command.Parameters.Add("p_rolename", OracleDbType.Varchar2).Value = rolename;
       command.Parameters.Add("p_privileges", OracleDbType.Varchar2).Value = privilege;
-      if(table_name != null)
-      {
-        command.Parameters.Add("p_table_name", OracleDbType.Varchar2).Value = table_name;
-      }
+      command.Parameters.Add("p_table_name", OracleDbType.Varchar2).Value =
+        string.IsNullOrWhiteSpace(table_name) ? DBNull.Value : table_name;
 
       await command.ExecuteNonQueryAsync();
 

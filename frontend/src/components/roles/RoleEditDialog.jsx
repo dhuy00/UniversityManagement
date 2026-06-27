@@ -203,6 +203,7 @@ const buildPermissionChanges = (initialState, nextState, roleName) => {
 const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
   const [activeTab, setActiveTab] = useState("basic-info");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [systemPrivileges, setSystemPrivileges] = useState([]);
   const [privilegeState, setPrivilegeState] = useState(emptyPrivilegeState);
@@ -223,6 +224,7 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
     ])
       .then(([tablesResponse, systemResponse, rolePrivilegesResponse]) => {
         if (cancelled) return;
+        setLoadError(false);
 
         const rolePrivileges = rolePrivilegesResponse.data ?? [];
         const nextState = {
@@ -242,6 +244,7 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
       })
       .catch((error) => {
         if (cancelled) return;
+        setLoadError(true);
         console.error(error);
         toast.error("Failed to load role privileges", {
           description: getErrorMessage(error),
@@ -262,6 +265,7 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
       if (!nextOpen) {
         setActiveTab("basic-info");
         setLoading(true);
+        setLoadError(false);
         setPrivilegeState(emptyPrivilegeState);
         setInitialState(emptyPrivilegeState);
         setPassword("");
@@ -325,7 +329,14 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
   }, []);
 
   const handleSubmit = async () => {
-    if (password && password !== confirmPassword) {
+    if (loadError) {
+      toast.error("Role data is not available", {
+        description: "Close and reopen the dialog to retry.",
+      });
+      return;
+    }
+
+    if ((password || confirmPassword) && password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
@@ -336,20 +347,27 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
       roleName,
     );
 
+    if (grants.length === 0 && revokes.length === 0 && !password) {
+      toast.info("No role changes to save");
+      return;
+    }
+
     try {
       setSaving(true);
 
-      await Promise.all(revokes.map(revokeRolePrivileges));
-      await Promise.all(
-        grants.map((request) =>
-          request.system
-            ? grantSystemPrivilege({
-                privilegeName: request.privilegeName,
-                target: request.target,
-              })
-            : grantPermission(request),
-        ),
-      );
+      for (const request of revokes) {
+        await revokeRolePrivileges(request);
+      }
+      for (const request of grants) {
+        if (request.system) {
+          await grantSystemPrivilege({
+            privilegeName: request.privilegeName,
+            target: request.target,
+          });
+        } else {
+          await grantPermission(request);
+        }
+      }
       if (password) {
         await updateRolePassword({
           rolename: roleName,
@@ -363,8 +381,9 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
     } catch (error) {
       console.error(error);
       toast.error("Failed to update role", {
-        description: getErrorMessage(error),
+        description: `${getErrorMessage(error)} Reopen the dialog before retrying.`,
       });
+      handleOpenChange(false);
     } finally {
       setSaving(false);
     }
@@ -382,6 +401,14 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
             <LoadingSpinner label="Loading role data..." />
           </div>
         )}
+        {loadError && (
+          <div
+            role="alert"
+            className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-700"
+          >
+            Role data could not be loaded. Close and reopen the dialog to retry.
+          </div>
+        )}
 
         <Tabs
           value={activeTab}
@@ -390,7 +417,7 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
         >
           <TabsList>
             <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
-            <TabsTrigger value="privileges" disabled={loading}>
+            <TabsTrigger value="privileges" disabled={loading || loadError}>
               Privileges
             </TabsTrigger>
           </TabsList>
@@ -467,7 +494,10 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
           <DialogClose
             render={<Button variant="outline" disabled={saving}>Cancel</Button>}
           />
-          <Button onClick={handleSubmit} disabled={loading || saving}>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading || loadError || saving}
+          >
             {saving ? <LoadingSpinner label="Updating..." /> : "Update role"}
           </Button>
         </DialogFooter>

@@ -16,10 +16,19 @@ import { IoIosSettings } from "react-icons/io";
 import { IoLogOutOutline } from "react-icons/io5";
 
 import { useLocation, useNavigate } from "react-router-dom";
+import { clearAuthSession, getAuthSession } from "@/lib/auth";
 
 export default function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const session = getAuthSession();
+  const username = session?.username || "Administrator";
+  const initials = username.slice(0, 2).toUpperCase();
+
+  const handleLogout = () => {
+    clearAuthSession();
+    navigate("/login", { replace: true });
+  };
 
   const items = [
     {
@@ -44,11 +53,11 @@ export default function AppSidebar() {
       <SidebarHeader>
         <div className="flex gap-3 items-center px-2 py-2 border-b">
           <div className="size-10 rounded-full bg-slate-300 flex items-center justify-center font-semibold">
-            EC
+            {initials}
           </div>
 
           <div className="flex flex-col">
-            <span className="font-semibold">Emily Chen</span>
+            <span className="font-semibold">{username}</span>
             <span className="text-xs text-muted-foreground">
               Administrator
             </span>
@@ -86,7 +95,7 @@ export default function AppSidebar() {
             <SidebarMenuButton
             className={`border border-red-600 bg-background text-red-600 h-10 hover:bg-red-100
               hover:text-red-600`}
-              onClick={() => navigate("/logout")}
+              onClick={handleLogout}
             >
               <IoLogOutOutline />
               <span>Sign out</span>

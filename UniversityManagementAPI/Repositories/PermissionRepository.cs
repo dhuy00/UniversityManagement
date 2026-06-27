@@ -72,7 +72,7 @@ public class PermissionRepository : IPermissionRepository
     return privileges;
   }
 
-  public async Task<ApiResponse<object>> grantPermissionTable(string permission_type, string table_name, string target, int is_grant_option, string listColumnString)
+  public async Task<ApiResponse<object>> grantPermissionTable(string permission_type, string table_name, string target, int is_grant_option, string? listColumnString)
   {
     try
     {
@@ -87,7 +87,8 @@ public class PermissionRepository : IPermissionRepository
       command.Parameters.Add("p_tablename", OracleDbType.Varchar2).Value = table_name;
       command.Parameters.Add("p_target_name", OracleDbType.Varchar2).Value = target;
       command.Parameters.Add("p_is_grant_option", OracleDbType.Int32).Value = is_grant_option;
-      command.Parameters.Add("p_column_name", OracleDbType.Varchar2).Value = listColumnString;
+      command.Parameters.Add("p_column_name", OracleDbType.Varchar2).Value =
+        string.IsNullOrWhiteSpace(listColumnString) ? DBNull.Value : listColumnString;
 
       await command.ExecuteNonQueryAsync();
 

@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Pencil, ShieldCheck } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +32,12 @@ const getCommonRoleMeta = (common) => {
   };
 };
 
-const RoleTable = ({ roles = [], loading = false, onEditRole }) => {
+const RoleTable = ({
+  roles = [],
+  loading = false,
+  onEditRole,
+  onDeleteRole,
+}) => {
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(roles.length / ITEMS_PER_PAGE));
   const currentPage = Math.min(page, totalPages);
@@ -51,7 +62,7 @@ const RoleTable = ({ roles = [], loading = false, onEditRole }) => {
               <TableHead className="min-w-[160px] py-2 pr-4 text-[11px] font-semibold uppercase text-slate-500">
                 Scope
               </TableHead>
-              <TableHead className="w-[72px] py-2 pr-4 text-right text-[11px] font-semibold uppercase text-slate-500">
+              <TableHead className="w-[96px] py-2 pr-4 text-right text-[11px] font-semibold uppercase text-slate-500">
                 Actions
               </TableHead>
             </TableRow>
@@ -106,15 +117,25 @@ const RoleTable = ({ roles = [], loading = false, onEditRole }) => {
                       </Badge>
                     </TableCell>
                     <TableCell className="py-2 pr-4 text-right">
-                      <Button
-                        className="border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
-                        variant="outline"
-                        size="icon-sm"
-                        aria-label={`Edit ${role.role}`}
-                        onClick={() => onEditRole?.(role)}
-                      >
-                        <Pencil className="size-3.5" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          className="border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                          variant="outline"
+                          size="icon-sm"
+                          aria-label={`Edit ${role.role}`}
+                          onClick={() => onEditRole?.(role)}
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="icon-sm"
+                          aria-label={`Delete ${role.role}`}
+                          onClick={() => onDeleteRole?.(role)}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
