@@ -27,6 +27,7 @@ import {
 import UserRoleDialog from "./UserRoleDialog";
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { UserRoundCog, UserRoundPlus } from "lucide-react";
 
 const initialPrivileges = [];
 let dialogMetadataPromise;
@@ -470,15 +471,26 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
 
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
-      <DialogContent className="!max-w-none w-[calc(100vw-2rem)] sm:w-[860px] max-h-[calc(100vh-2rem)] overflow-hidden text-[13px]">
+      <DialogContent className="max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] !max-w-none overflow-hidden text-[13px] sm:w-[920px]">
         <DialogHeader>
-          <DialogTitle className="text-sm leading-none">
-            {isEditMode ? "Edit User" : "Create User"}
-          </DialogTitle>
+          <div className="flex items-start gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-[#fcd535] text-[#181a20]">
+              {isEditMode ? (
+                <UserRoundCog className="size-5" />
+              ) : (
+                <UserRoundPlus className="size-5" />
+              )}
+            </div>
+            <div>
+              <DialogTitle className="text-lg leading-tight text-white">
+                {isEditMode ? "Edit user" : "Create user"}
+              </DialogTitle>
+            </div>
+          </div>
         </DialogHeader>
 
         {loadingData && (
-          <div className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-blue-700">
+          <div className="rounded-md border border-[#f0b90b]/30 bg-[#fcd535]/15 px-3 py-2 text-[#181a20]">
             <LoadingSpinner label="Loading user data..." />
           </div>
         )}
@@ -488,9 +500,15 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
           onValueChange={setActiveTab}
           className={saving ? "pointer-events-none opacity-70" : undefined}
         >
-          <TabsList>
-            <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
-            <TabsTrigger value="privileges" disabled={loadingData}>
+          <TabsList className="h-11 w-full justify-start rounded-md bg-[#0b0e11] p-1">
+            <TabsTrigger className="flex-none px-4" value="basic-info">
+              Basic information
+            </TabsTrigger>
+            <TabsTrigger
+              className="flex-none px-4"
+              value="privileges"
+              disabled={loadingData}
+            >
               Privileges
             </TabsTrigger>
           </TabsList>
@@ -531,18 +549,20 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
           </Button>
         </DialogFooter>
       </DialogContent>
-      <UserRoleDialog
-        open={openRoleDialog}
-        setOpen={setOpenRoleDialog}
-        availableRoles={roles}
-        selectedRoles={formData.roles}
-        onApply={(nextRoles) =>
-          setFormData((prev) => ({
-            ...prev,
-            roles: nextRoles,
-          }))
-        }
-      />
+      {openRoleDialog && (
+        <UserRoleDialog
+          open={openRoleDialog}
+          setOpen={setOpenRoleDialog}
+          availableRoles={roles}
+          selectedRoles={formData.roles}
+          onApply={(nextRoles) =>
+            setFormData((prev) => ({
+              ...prev,
+              roles: nextRoles,
+            }))
+          }
+        />
+      )}
     </Dialog>
   );
 };

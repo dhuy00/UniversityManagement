@@ -80,20 +80,19 @@ const Roles = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex-1 bg-background-secondary">
+    <div className="dashboard-page">
       <RoleHeader />
-      <div className="mt-4 px-4 drop-shadow-small">
-        <div className="flex items-center justify-between rounded-t-xl border border-b-0 border-border-primary bg-background-table px-5 py-4">
-          <div className="flex flex-col">
-            <span className="text-[15px] font-semibold text-text-primary">
-              All roles
-            </span>
-            <span className="text-small text-text-secondary">
+      <div className="dashboard-content">
+        <div className="flex items-center justify-between rounded-t-xl border border-b-0 border-[#2b3139] bg-[#1e2329] px-5 py-5 sm:px-6">
+          <div>
+            <h2 className="text-base font-semibold text-white">All roles</h2>
+            <p className="mt-1 text-xs text-[#707a8a]">
               {loading ? "Loading roles..." : `${roles.length} roles total`}
-            </span>
+            </p>
           </div>
           <Button
-            className="py-2 text-[12px]"
+            size="sm"
+            className="px-4"
             onClick={() => setOpenCreateDialog(true)}
           >
             Create role

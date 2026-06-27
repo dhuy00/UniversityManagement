@@ -1,18 +1,17 @@
 import { Outlet } from "react-router-dom";
 import AppSidebar from "../components/layout/AppSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function MainLayout() {
   return (
-    <>
-      <div className="flex font-inter h-screen box-border text-normal">
-        <SidebarProvider>
-          <AppSidebar />
-          <main className="flex-1">
-            <Outlet />
-          </main>
-        </SidebarProvider>
-      </div>
-    </>
+    <div className="flex h-screen box-border overflow-hidden bg-[#0b0e11] font-inter text-normal text-[#eaecef]">
+      <SidebarProvider>
+        <AppSidebar />
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <SidebarTrigger className="fixed left-3 top-6 z-40 border border-[#2b3139] bg-[#1e2329] text-[#eaecef] hover:bg-[#2b3139] md:hidden" />
+          <Outlet />
+        </main>
+      </SidebarProvider>
+    </div>
   );
 }

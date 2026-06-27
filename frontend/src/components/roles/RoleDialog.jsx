@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { ShieldPlus } from "lucide-react";
 
 const ROLE_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_$#]{0,127}$/;
 
@@ -92,14 +93,27 @@ const RoleDialog = ({ open, setOpen, onSaved }) => {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] text-[13px] sm:w-[520px]">
+      <DialogContent className="w-[calc(100vw-2rem)] text-[13px] sm:w-[640px]">
         <DialogHeader>
-          <DialogTitle className="text-sm leading-none">Create Role</DialogTitle>
+          <div className="flex items-start gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-[#fcd535] text-[#181a20]">
+              <ShieldPlus className="size-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg leading-tight text-white">
+                Create role
+              </DialogTitle>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form id="create-role-form" onSubmit={handleSubmit}>
-          <FieldGroup>
-            <Field>
+        <form
+          id="create-role-form"
+          className="rounded-lg border border-[#2b3139] bg-[#0b0e11] p-5"
+          onSubmit={handleSubmit}
+        >
+          <FieldGroup className="grid gap-5 md:grid-cols-2">
+            <Field className="md:col-span-2">
               <FieldLabel htmlFor="role-name">Role name</FieldLabel>
               <Input
                 id="role-name"
@@ -110,12 +124,12 @@ const RoleDialog = ({ open, setOpen, onSaved }) => {
                 disabled={saving}
                 autoFocus
               />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs leading-5 text-[#929aa5]">
                 Start with a letter. Use letters, numbers, _, $, # only.
               </p>
             </Field>
 
-            <Field>
+            <Field className="md:col-span-2">
               <FieldLabel htmlFor="role-password">Password</FieldLabel>
               <Input
                 id="role-password"
@@ -127,7 +141,7 @@ const RoleDialog = ({ open, setOpen, onSaved }) => {
               />
             </Field>
 
-            <Field>
+            <Field className="md:col-span-2">
               <FieldLabel htmlFor="role-confirm-password">
                 Confirm password
               </FieldLabel>

@@ -27,12 +27,12 @@ const RoleDeleteDialog = ({
         <DialogTitle className="text-sm leading-none">Delete role</DialogTitle>
       </DialogHeader>
 
-      <div className="space-y-2 text-slate-600">
+      <div className="space-y-2 text-[#929aa5]">
         <p>
           Are you sure you want to delete{" "}
-          <span className="font-semibold text-slate-900">{role?.role}</span>?
+          <span className="font-semibold text-white">{role?.role}</span>?
         </p>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[#707a8a]">
           This action drops the database role and revokes it from assigned
           users. It cannot be undone.
         </p>

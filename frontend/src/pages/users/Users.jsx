@@ -94,19 +94,19 @@ const Users = () => {
   };
 
   return (
-    <div className='bg-background-secondary flex-1 w-full min-h-screen'>
+    <div className="dashboard-page">
       <UserHeader/>
-      {/* Content */}
-      <div className='px-4 mt-4 drop-shadow-small'>
-        <div className='flex justify-between bg-background-table px-5 py-4 items-center rounded-t-xl
-        border border-border-primary border-b-0'>
-          <div className='flex flex-col'>
-            <span className='text-text-primary font-semibold text-[15px]'>All users</span>
-            <span className='text-small text-text-secondary'>
+      <div className="dashboard-content">
+        <div className="flex items-center justify-between rounded-t-xl border border-b-0 border-[#2b3139] bg-[#1e2329] px-5 py-5 sm:px-6">
+          <div>
+            <h2 className="text-base font-semibold text-white">All users</h2>
+            <p className="mt-1 text-xs text-[#707a8a]">
               {loadingUsers ? "Loading accounts..." : `${users.length} accounts total`}
-            </span>
+            </p>
           </div>
-          <Button className='py-2 text-[12px]' onClick={handleCreateUser}>Create user</Button>
+          <Button size="sm" className="px-4" onClick={handleCreateUser}>
+            Create user
+          </Button>
         </div>
         <UserTable
           users={users}
@@ -131,7 +131,7 @@ const Users = () => {
         onConfirm={handleConfirmDelete}
       />
     </div>
-  )
+  );
 }
 
 export default Users

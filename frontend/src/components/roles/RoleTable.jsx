@@ -27,8 +27,8 @@ const getCommonRoleMeta = (common) => {
   return {
     label: isCommon ? "COMMON" : "LOCAL",
     className: isCommon
-      ? "border-violet-200 bg-violet-50 text-violet-700"
-      : "border-slate-200 bg-slate-50 text-slate-700",
+      ? "border-[#fcd535]/30 bg-[#fcd535]/10 text-[#fcd535]"
+      : "border-[#3b82f6]/30 bg-[#3b82f6]/10 text-[#60a5fa]",
   };
 };
 
@@ -48,21 +48,21 @@ const RoleTable = ({
   }, [currentPage, roles]);
 
   return (
-    <div className="overflow-hidden rounded-b-xl border border-border-primary bg-background-table shadow-small">
+    <div className="overflow-hidden rounded-b-xl border border-[#2b3139] bg-[#1e2329]">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead className="min-w-[260px] px-4 py-2 text-[11px] font-semibold uppercase text-slate-500">
+            <TableRow className="border-[#2b3139] bg-[#181a20] hover:bg-[#181a20]">
+              <TableHead className="min-w-[260px] px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#707a8a]">
                 Role
               </TableHead>
-              <TableHead className="min-w-[220px] py-2 text-[11px] font-semibold uppercase text-slate-500">
+              <TableHead className="min-w-[220px] py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#707a8a]">
                 Authentication
               </TableHead>
-              <TableHead className="min-w-[160px] py-2 pr-4 text-[11px] font-semibold uppercase text-slate-500">
+              <TableHead className="min-w-[160px] py-3 pr-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#707a8a]">
                 Scope
               </TableHead>
-              <TableHead className="w-[96px] py-2 pr-4 text-right text-[11px] font-semibold uppercase text-slate-500">
+              <TableHead className="w-[96px] py-3 pr-5 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-[#707a8a]">
                 Actions
               </TableHead>
             </TableRow>
@@ -71,19 +71,19 @@ const RoleTable = ({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-48 text-center text-slate-500">
+                <TableCell colSpan={4} className="h-48 text-center text-[#929aa5]">
                   <LoadingSpinner label="Loading roles..." />
                 </TableCell>
               </TableRow>
             ) : currentRoles.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="h-48 text-center">
-                  <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-slate-500">
-                    <div className="flex size-12 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+                  <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-[#707a8a]">
+                    <div className="flex size-12 items-center justify-center rounded-lg bg-[#2b3139] text-[#929aa5]">
                       <ShieldCheck className="size-6" />
                     </div>
                     <div>
-                      <p className="font-medium text-slate-700">No roles found</p>
+                      <p className="font-medium text-[#eaecef]">No roles found</p>
                       <p className="mt-1 text-sm">
                         No database roles are available.
                       </p>
@@ -98,17 +98,17 @@ const RoleTable = ({
                 return (
                   <TableRow
                     key={role.role}
-                    className="border-slate-100 hover:bg-slate-50/70"
+                    className="border-[#2b3139] hover:bg-[#252a31]"
                   >
-                    <TableCell className="px-4 py-2">
-                      <span className="font-medium text-slate-900">
+                    <TableCell className="px-5 py-3">
+                      <span className="font-medium text-white">
                         {role.role}
                       </span>
                     </TableCell>
-                    <TableCell className="py-2 text-sm text-slate-600">
+                    <TableCell className="py-3 text-sm text-[#929aa5]">
                       {role.authenticationType || "NONE"}
                     </TableCell>
-                    <TableCell className="py-2 pr-4">
+                    <TableCell className="py-3 pr-4">
                       <Badge
                         variant="outline"
                         className={`h-5 rounded-full px-2 text-[11px] ${commonMeta.className}`}
@@ -116,10 +116,10 @@ const RoleTable = ({
                         {commonMeta.label}
                       </Badge>
                     </TableCell>
-                    <TableCell className="py-2 pr-4 text-right">
+                    <TableCell className="py-3 pr-5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
-                          className="border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                          className="border-[#3f4650] bg-transparent text-[#929aa5] hover:bg-[#2b3139] hover:text-white"
                           variant="outline"
                           size="icon-sm"
                           aria-label={`Edit ${role.role}`}
@@ -145,24 +145,24 @@ const RoleTable = ({
         </Table>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-slate-100 bg-white px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-500">
+      <div className="flex flex-col gap-3 border-t border-[#2b3139] bg-[#1e2329] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-[#707a8a]">
           {loading ? (
             "Loading role count..."
           ) : (
             <>
               Showing{" "}
-              <span className="font-medium text-slate-700">
+              <span className="number-font font-medium text-[#eaecef]">
                 {currentRoles.length}
               </span>{" "}
-              of <span className="font-medium text-slate-700">{roles.length}</span>{" "}
+              of <span className="number-font font-medium text-[#eaecef]">{roles.length}</span>{" "}
               roles
             </>
           )}
         </p>
 
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-500">
+          <span className="number-font text-sm text-[#707a8a]">
             Page {currentPage} of {totalPages}
           </span>
           <div className="flex gap-1.5">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   Dialog,
@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { UsersRound } from "lucide-react";
 
 const hasRole = (roles, role) =>
   roles.some((item) => item.toUpperCase() === role.toUpperCase());
@@ -30,12 +31,6 @@ const UserRoleDialog = ({
   onApply,
 }) => {
   const [draftRoles, setDraftRoles] = useState(selectedRoles);
-
-  useEffect(() => {
-    if (open) {
-      setDraftRoles(selectedRoles);
-    }
-  }, [open, selectedRoles]);
 
   const handleToggleRole = (role, checked) => {
     setDraftRoles((prev) => {
@@ -54,27 +49,34 @@ const UserRoleDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="z-[70] !max-w-none w-[calc(100vw-2rem)] sm:w-[900px] text-[13px]">
+      <DialogContent className="z-[70] w-[calc(100vw-2rem)] !max-w-none text-[13px] sm:w-[920px]">
         <DialogHeader>
-          <DialogTitle className="text-sm leading-none">
-            Manage user roles
-          </DialogTitle>
+          <div className="flex items-start gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-[#fcd535] text-[#181a20]">
+              <UsersRound className="size-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg leading-tight text-white">
+                Manage assigned roles
+              </DialogTitle>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="max-h-[70vh] overflow-auto rounded-lg border border-border">
+        <div className="max-h-[65vh] overflow-auto rounded-lg border border-[#2b3139]">
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50 hover:bg-slate-50">
-                <TableHead className="w-[64px] text-center text-[11px] font-semibold uppercase text-slate-500">
+              <TableRow className="bg-[#181a20] hover:bg-[#181a20]">
+                <TableHead className="w-[64px] text-center text-[11px] font-semibold uppercase text-[#929aa5]">
                   Use
                 </TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase text-slate-500">
+                <TableHead className="text-[11px] font-semibold uppercase text-[#929aa5]">
                   Role
                 </TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase text-slate-500">
+                <TableHead className="text-[11px] font-semibold uppercase text-[#929aa5]">
                   Authentication
                 </TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase text-slate-500">
+                <TableHead className="text-[11px] font-semibold uppercase text-[#929aa5]">
                   Common
                 </TableHead>
               </TableRow>
@@ -82,7 +84,7 @@ const UserRoleDialog = ({
             <TableBody>
               {availableRoles.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center text-slate-500">
+                  <TableCell colSpan={4} className="h-24 text-center text-[#929aa5]">
                     No roles available
                   </TableCell>
                 </TableRow>
@@ -93,7 +95,7 @@ const UserRoleDialog = ({
                   return (
                   <TableRow
                     key={role.role}
-                    className="cursor-pointer hover:bg-slate-50/70"
+                    className="cursor-pointer hover:bg-[#252a31]"
                     onClick={() => handleToggleRole(role.role, !checked)}
                   >
                     <TableCell className="text-center">
@@ -106,13 +108,13 @@ const UserRoleDialog = ({
                         />
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium text-slate-900">
+                    <TableCell className="font-medium text-white">
                       {role.role}
                     </TableCell>
-                    <TableCell className="text-slate-600">
+                    <TableCell className="text-[#929aa5]">
                       {role.authenticationType}
                     </TableCell>
-                    <TableCell className="text-slate-600">{role.common}</TableCell>
+                    <TableCell className="text-[#929aa5]">{role.common}</TableCell>
                   </TableRow>
                   );
                 })

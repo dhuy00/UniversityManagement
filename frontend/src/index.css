@@ -7,28 +7,29 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-background-primary: #E8E5D8;
-  --color-background-secondary: #F5F5EB;
-  --color-background-tertiary: #28536B;
-  --color-bakcground-tertiary-hover: #23485D;
-  --color-background-input: #ECEEF8;
-  --color-background-table: #FFFFFF;
+  --color-background-primary: #0b0e11;
+  --color-background-secondary: #0b0e11;
+  --color-background-tertiary: #fcd535;
+  --color-bakcground-tertiary-hover: #f0b90b;
+  --color-background-input: #2b3139;
+  --color-background-table: #1e2329;
 
-  --color-text-primary: #1A2332;
-  --color-text-secondary: #4A5568;
-  --color-text-tertiary: #ffffff;
-  --color-text-subtitle: #6B7280;
+  --color-text-primary: #eaecef;
+  --color-text-secondary: #929aa5;
+  --color-text-tertiary: #181a20;
+  --color-text-subtitle: #707a8a;
 
-  --color-border-primary: #8E9DCC4D;
-  --color-border-primary-focus: #8E9DCC80;
+  --color-border-primary: #2b3139;
+  --color-border-primary-focus: #3b82f6;
 
-  --text-normal: 13px;
-  --text-small: 11px;
+  --text-normal: 14px;
+  --text-small: 12px;
 
-  --font-inter: "Inter", sans-serif;
+  --font-inter: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-number: "IBM Plex Sans", "Inter", sans-serif;
 
-  --shadow-small: 0 1px 3px 0 rgba(0, 0, 0, 0.10), 0 1px 2px -1px rgba(0, 0, 0, 0.10);
-  --drop-shadow-small: 0 1px 3px 0 rgba(0, 0, 0, 0.10), 0 1px 2px -1px rgba(0, 0, 0, 0.10);
+  --shadow-small: none;
+  --drop-shadow-small: none;
 }
 
 @layer components {
@@ -93,38 +94,38 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: #0b0e11;
+  --foreground: #eaecef;
+  --card: #1e2329;
+  --card-foreground: #eaecef;
+  --popover: #1e2329;
+  --popover-foreground: #eaecef;
+  --primary: #fcd535;
+  --primary-foreground: #181a20;
+  --secondary: #2b3139;
+  --secondary-foreground: #eaecef;
+  --muted: #2b3139;
+  --muted-foreground: #929aa5;
+  --accent: #2b3139;
+  --accent-foreground: #ffffff;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #2b3139;
+  --input: #cdd1d6;
+  --ring: #3b82f6;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: #E8E5D8;
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 0.5rem;
+  --sidebar: #0b0e11;
+  --sidebar-foreground: #eaecef;
+  --sidebar-primary: #fcd535;
+  --sidebar-primary-foreground: #181a20;
+  --sidebar-accent: #1e2329;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2b3139;
+  --sidebar-ring: #3b82f6;
 }
 
 .dark {
@@ -164,11 +165,148 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    scrollbar-width: thin;
+    scrollbar-color: #3f4650 #0b0e11;
   }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: #0b0e11;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    min-height: 32px;
+    border: 2px solid #0b0e11;
+    border-radius: 6px;
+    background: #3f4650;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: #707a8a;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: #0b0e11;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
   html {
-    @apply font-sans;
+    @apply font-sans bg-background;
+  }
+}
+
+@layer components {
+  .number-font {
+    font-family: var(--font-number);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dashboard-page {
+    @apply min-h-full w-full bg-[#0b0e11] text-[#eaecef];
+  }
+
+  .dashboard-content {
+    @apply mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8;
+  }
+
+  .dashboard-card {
+    @apply overflow-hidden rounded-xl border border-[#2b3139] bg-[#1e2329];
+  }
+
+  [data-slot="dialog-content"] {
+    --background: #1e2329;
+    --foreground: #eaecef;
+    --muted: #2b3139;
+    --muted-foreground: #929aa5;
+    --border: #2b3139;
+    --input: #3f4650;
+    background: #1e2329 !important;
+    color: #eaecef !important;
+    box-shadow: 0 24px 64px rgb(0 0 0 / 40%);
+    scrollbar-color: #3f4650 #1e2329;
+  }
+
+  [data-slot="dialog-content"] *::-webkit-scrollbar-track {
+    background: #1e2329;
+  }
+
+  [data-slot="dialog-content"] *::-webkit-scrollbar-thumb {
+    border-color: #1e2329;
+  }
+
+  [data-slot="dialog-content"] *::-webkit-scrollbar-corner {
+    background: #1e2329;
+  }
+
+  [data-slot="dialog-footer"] {
+    background: #181a20 !important;
+    border-color: #2b3139 !important;
+  }
+
+  [data-slot="dialog-content"] [data-slot="input"],
+  [data-slot="dialog-content"] [data-slot="select-trigger"] {
+    background: #0b0e11;
+    color: #eaecef;
+    border-color: #3f4650;
+  }
+
+  [data-slot="dialog-content"] [data-slot="input"]:disabled {
+    background: #2b3139;
+    color: #929aa5;
+  }
+
+  [data-slot="dialog-content"] [data-slot="field-label"] {
+    color: #eaecef;
+  }
+
+  [data-slot="dialog-content"] [data-slot="tabs-list"] {
+    background: #0b0e11 !important;
+  }
+
+  [data-slot="dialog-content"] [data-slot="tabs-trigger"] {
+    color: #929aa5;
+  }
+
+  [data-slot="dialog-content"] [data-slot="tabs-trigger"][data-active] {
+    background: #2b3139 !important;
+    color: #ffffff !important;
+  }
+
+  [data-slot="dialog-content"] [data-slot="button"][data-variant="outline"] {
+    background: transparent;
+    border-color: #3f4650;
+    color: #eaecef;
+  }
+
+  [data-slot="dialog-content"] [data-slot="button"][data-variant="outline"]:hover {
+    background: #2b3139;
+  }
+
+  [data-slot="dialog-content"] [data-slot="button"][data-variant="destructive"] {
+    background: rgb(246 70 93 / 10%);
+    border-color: rgb(246 70 93 / 30%);
+    color: #f6465d;
+  }
+
+  [data-slot="dialog-content"] [data-slot="table-row"] {
+    border-color: #2b3139;
+  }
+
+  [data-slot="dialog-content"] [data-slot="table-row"]:hover {
+    background: #252a31;
+  }
+
+  [data-slot="dialog-content"] [data-slot="table-head"] {
+    color: #929aa5;
+  }
+
+  [data-slot="dialog-content"] [data-slot="dialog-title"] {
+    color: #ffffff !important;
   }
 }

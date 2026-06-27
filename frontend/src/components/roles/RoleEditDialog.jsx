@@ -26,6 +26,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserPrivileges from "@/components/users/UserPrivileges";
+import { ShieldCheck } from "lucide-react";
 
 const emptyPrivilegeState = {
   privileges: [],
@@ -391,20 +392,29 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] !max-w-none overflow-hidden text-[13px] sm:w-[860px]">
+      <DialogContent className="max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] !max-w-none overflow-hidden text-[13px] sm:w-[920px]">
         <DialogHeader>
-          <DialogTitle className="text-sm leading-none">Edit Role</DialogTitle>
+          <div className="flex items-start gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-[#fcd535] text-[#181a20]">
+              <ShieldCheck className="size-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg leading-tight text-white">
+                Edit role
+              </DialogTitle>
+            </div>
+          </div>
         </DialogHeader>
 
         {loading && (
-          <div className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-blue-700">
+          <div className="rounded-md border border-[#f0b90b]/30 bg-[#fcd535]/15 px-3 py-2 text-[#181a20]">
             <LoadingSpinner label="Loading role data..." />
           </div>
         )}
         {loadError && (
           <div
             role="alert"
-            className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-700"
+            className="rounded-md border border-[#3f4650] bg-[#2b3139] px-3 py-2 text-[#eaecef]"
           >
             Role data could not be loaded. Close and reopen the dialog to retry.
           </div>
@@ -415,17 +425,23 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
           onValueChange={setActiveTab}
           className={saving ? "pointer-events-none opacity-70" : undefined}
         >
-          <TabsList>
-            <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
-            <TabsTrigger value="privileges" disabled={loading || loadError}>
+          <TabsList className="h-11 w-full justify-start rounded-md bg-[#0b0e11] p-1">
+            <TabsTrigger className="flex-none px-4" value="basic-info">
+              Basic information
+            </TabsTrigger>
+            <TabsTrigger
+              className="flex-none px-4"
+              value="privileges"
+              disabled={loading || loadError}
+            >
               Privileges
             </TabsTrigger>
           </TabsList>
 
           {activeTab === "basic-info" && (
-            <div className="mt-2 max-h-[calc(100vh-260px)] overflow-y-auto pr-1">
-              <FieldGroup>
-                <Field>
+            <div className="mt-3 max-h-[calc(100vh-300px)] overflow-y-auto rounded-lg border border-[#2b3139] bg-[#0b0e11] p-5">
+              <FieldGroup className="grid gap-5 md:grid-cols-2">
+                <Field className="md:col-span-2">
                   <FieldLabel htmlFor="edit-role-name">Role name</FieldLabel>
                   <Input id="edit-role-name" value={roleName} disabled />
                 </Field>

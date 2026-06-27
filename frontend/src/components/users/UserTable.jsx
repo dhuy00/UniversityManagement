@@ -42,20 +42,20 @@ const getStatusMeta = (status) => {
   if (normalizedStatus === "OPEN") {
     return {
       label: "OPEN",
-      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      className: "border-[#0ecb81]/30 bg-[#0ecb81]/10 text-[#0ecb81]",
     };
   }
 
   if (normalizedStatus.includes("LOCKED")) {
     return {
       label: normalizedStatus,
-      className: "border-rose-200 bg-rose-50 text-rose-700",
+      className: "border-[#f6465d]/30 bg-[#f6465d]/10 text-[#f6465d]",
     };
   }
 
   return {
     label: status || "Unknown",
-    className: "border-slate-200 bg-slate-50 text-slate-700",
+    className: "border-[#fcd535]/30 bg-[#fcd535]/10 text-[#fcd535]",
   };
 };
 
@@ -101,27 +101,27 @@ export default function UserTable({
   };
 
   return (
-    <div className="overflow-hidden rounded-b-xl border border-border-primary bg-background-table shadow-small">
+    <div className="overflow-hidden rounded-b-xl border border-[#2b3139] bg-[#1e2329]">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead className="w-[110px] px-4 py-2 text-[11px] font-semibold uppercase text-slate-500">
+            <TableRow className="border-[#2b3139] bg-[#181a20] hover:bg-[#181a20]">
+              <TableHead className="w-[110px] px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#707a8a]">
                 User ID
               </TableHead>
-              <TableHead className="min-w-[200px] py-2 text-[11px] font-semibold uppercase text-slate-500">
+              <TableHead className="min-w-[200px] py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#707a8a]">
                 Username
               </TableHead>
-              <TableHead className="min-w-[260px] py-2 text-[11px] font-semibold uppercase text-slate-500">
+              <TableHead className="min-w-[260px] py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#707a8a]">
                 Roles
               </TableHead>
-              <TableHead className="min-w-[170px] py-2 text-[11px] font-semibold uppercase text-slate-500">
+              <TableHead className="min-w-[170px] py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#707a8a]">
                 Status
               </TableHead>
-              <TableHead className="min-w-[140px] py-2 text-[11px] font-semibold uppercase text-slate-500">
+              <TableHead className="min-w-[140px] py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#707a8a]">
                 Last login
               </TableHead>
-              <TableHead className="w-[96px] py-2 pr-4 text-right text-[11px] font-semibold uppercase text-slate-500">
+              <TableHead className="w-[96px] py-3 pr-5 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-[#707a8a]">
                 Actions
               </TableHead>
             </TableRow>
@@ -130,19 +130,19 @@ export default function UserTable({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-48 text-center text-slate-500">
+                <TableCell colSpan={6} className="h-48 text-center text-[#929aa5]">
                   <LoadingSpinner label="Loading users..." />
                 </TableCell>
               </TableRow>
             ) : currentUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-48 text-center">
-                  <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-slate-500">
-                    <div className="flex size-12 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+                  <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-[#707a8a]">
+                    <div className="flex size-12 items-center justify-center rounded-lg bg-[#2b3139] text-[#929aa5]">
                       <UsersRound className="size-6" />
                     </div>
                     <div>
-                      <p className="font-medium text-slate-700">No users found</p>
+                      <p className="font-medium text-[#eaecef]">No users found</p>
                       <p className="mt-1 text-sm">
                         Create a user or refresh the data source.
                       </p>
@@ -160,31 +160,31 @@ export default function UserTable({
                 return (
                   <TableRow
                     key={user.userId || user.username}
-                    className="border-slate-100 hover:bg-slate-50/70"
+                    className="border-[#2b3139] hover:bg-[#252a31]"
                   >
-                    <TableCell className="px-4 py-2">
-                      <span className="font-mono text-sm font-medium text-slate-700">
+                    <TableCell className="number-font px-5 py-3">
+                      <span className="text-sm font-medium text-[#929aa5]">
                         {user.userId}
                       </span>
                     </TableCell>
 
-                    <TableCell className="py-2">
+                    <TableCell className="py-3">
                       <div className="min-w-0">
-                        <p className="truncate font-medium text-slate-900">
+                        <p className="truncate font-medium text-white">
                           {user.username}
                         </p>
-                        <p className="text-xs text-slate-500">Database account</p>
+                        <p className="text-xs text-[#707a8a]">Database account</p>
                       </div>
                     </TableCell>
 
-                    <TableCell className="py-2">
+                    <TableCell className="py-3">
                       {roles.length > 0 ? (
                         <div className="flex max-w-[360px] flex-wrap gap-1">
                           {visibleRoles.map((role) => (
                             <Badge
                               key={role}
                               variant="outline"
-                              className="h-5 border-blue-100 bg-blue-50 px-2 text-[11px] text-blue-700"
+                              className="h-5 border-[#3f4650] bg-[#2b3139] px-2 text-[11px] text-[#eaecef]"
                             >
                               {role}
                             </Badge>
@@ -192,18 +192,18 @@ export default function UserTable({
                           {hiddenRoleCount > 0 && (
                             <Badge
                               variant="outline"
-                              className="h-5 border-slate-200 bg-slate-50 px-2 text-[11px] text-slate-600"
+                              className="h-5 border-[#3f4650] bg-[#181a20] px-2 text-[11px] text-[#929aa5]"
                             >
                               +{hiddenRoleCount} more
                             </Badge>
                           )}
                         </div>
                       ) : (
-                        <span className="text-sm text-slate-400">No role assigned</span>
+                        <span className="text-sm text-[#707a8a]">No role assigned</span>
                       )}
                     </TableCell>
 
-                    <TableCell className="py-2">
+                    <TableCell className="py-3">
                       <Badge
                         variant="outline"
                         className={`h-5 rounded-full px-2 text-[11px] ${statusMeta.className}`}
@@ -212,16 +212,16 @@ export default function UserTable({
                       </Badge>
                     </TableCell>
 
-                    <TableCell className="py-2">
-                      <div className="text-sm text-slate-600">
+                    <TableCell className="number-font py-3">
+                      <div className="text-sm text-[#929aa5]">
                         {getTimeAgo(user.lastLogin)}
                       </div>
                     </TableCell>
 
-                    <TableCell className="py-2 pr-4 text-right">
+                    <TableCell className="py-3 pr-5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
-                          className="border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                          className="border-[#3f4650] bg-transparent text-[#929aa5] hover:bg-[#2b3139] hover:text-white"
                           variant="outline"
                           size="icon-sm"
                           aria-label={`Edit ${user.username}`}
@@ -248,22 +248,22 @@ export default function UserTable({
         </Table>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-slate-100 bg-white px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-500">
+      <div className="flex flex-col gap-3 border-t border-[#2b3139] bg-[#1e2329] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-[#707a8a]">
           {loading ? (
             "Loading user count..."
           ) : (
             <>
               Showing{" "}
-              <span className="font-medium text-slate-700">{currentUsers.length}</span>{" "}
-              of <span className="font-medium text-slate-700">{users.length}</span>{" "}
+              <span className="number-font font-medium text-[#eaecef]">{currentUsers.length}</span>{" "}
+              of <span className="number-font font-medium text-[#eaecef]">{users.length}</span>{" "}
               users
             </>
           )}
         </p>
 
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-500">
+          <span className="number-font text-sm text-[#707a8a]">
             Page {page} of {totalPages}
           </span>
           <div className="flex gap-1.5">

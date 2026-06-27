@@ -38,13 +38,21 @@ const UserPrivileges = ({
   };
 
   return (
-    <TabsContent value="privileges" className="mt-4 max-h-[calc(100vh-220px)] overflow-y-auto pr-1">
-      <span>Table Privileges</span>
+    <TabsContent value="privileges" className="mt-4 max-h-[calc(100vh-290px)] overflow-y-auto pr-1">
+      <div>
+        <h3 className="text-sm font-semibold text-white">
+          Table privileges
+        </h3>
+        <p className="mt-1 text-xs leading-5 text-[#929aa5]">
+          Grant object-level access. Expand a table to configure SELECT and
+          UPDATE columns.
+        </p>
+      </div>
 
-      <div className="rounded-lg border bg-background my-2 w-full max-w-full max-h-[260px] overflow-auto">
+      <div className="mb-6 mt-3 max-h-[280px] w-full max-w-full overflow-auto rounded-lg border border-[#2b3139] bg-[#0b0e11]">
         <Table className="min-w-[680px]">
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-[#181a20] hover:bg-[#181a20]">
               <TableHead className="text-muted-foreground">
                 TABLE NAME
               </TableHead>
@@ -70,13 +78,20 @@ const UserPrivileges = ({
         </Table>
       </div>
 
-      <span>Common Privileges</span>
+      <div>
+        <h3 className="text-sm font-semibold text-white">
+          System privileges
+        </h3>
+        <p className="mt-1 text-xs leading-5 text-[#929aa5]">
+          Apply database-wide capabilities directly to this principal.
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 text-normal mt-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
+      <div className="mt-3 grid max-h-[220px] grid-cols-1 gap-2 overflow-y-auto pr-1 text-normal sm:grid-cols-2">
         {systemPrivileges.map((privilege) => (
           <label
             key={privilege}
-            className="flex cursor-pointer justify-between border-gray-300 border px-2 py-2 rounded-md"
+            className="flex cursor-pointer justify-between rounded-md border border-[#2b3139] bg-[#0b0e11] px-3 py-2.5 text-[#eaecef]"
           >
             <span>{privilege}</span>
             <Checkbox
@@ -163,7 +178,7 @@ const TableRowWrapper = memo(function TableRowWrapper({
 
       {expanded && (row.select || row.update) && (
         <TableRow className="border-0">
-          <TableCell colSpan={5} className="bg-muted/30 p-0">
+          <TableCell colSpan={5} className="bg-[#181a20] p-0">
             <div className="p-4 space-y-4">
               {row.select && (
                 <div>

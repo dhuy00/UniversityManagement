@@ -5,7 +5,17 @@ function App() {
     return (
         <>
             <AppRoutes />
-            <Toaster richColors position="top-right" />
+            <Toaster
+              theme="dark"
+              position="top-right"
+              toastOptions={{
+                style: {
+                  background: "#1e2329",
+                  border: "1px solid #2b3139",
+                  color: "#eaecef",
+                },
+              }}
+            />
         </>
     );
 }
