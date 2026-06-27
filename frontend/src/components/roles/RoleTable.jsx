@@ -87,14 +87,9 @@ const RoleTable = ({ roles = [], loading = false }) => {
                     className="border-slate-100 hover:bg-slate-50/70"
                   >
                     <TableCell className="px-4 py-2">
-                      <div className="flex items-center gap-3">
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-50 text-blue-600">
-                          <ShieldCheck className="size-4" />
-                        </div>
-                        <span className="font-medium text-slate-900">
-                          {role.role}
-                        </span>
-                      </div>
+                      <span className="font-medium text-slate-900">
+                        {role.role}
+                      </span>
                     </TableCell>
                     <TableCell className="py-2 text-sm text-slate-600">
                       {role.authenticationType || "NONE"}
