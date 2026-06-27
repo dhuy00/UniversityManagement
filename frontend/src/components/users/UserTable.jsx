@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 import {
   ChevronLeft,
@@ -76,7 +77,12 @@ const getTimeAgo = (dateString) => {
   return `${days} day${days > 1 ? "s" : ""} ago`;
 };
 
-export default function UserTable({ users = [], onEditUser, onDeleteUser }) {
+export default function UserTable({
+  users = [],
+  loading = false,
+  onEditUser,
+  onDeleteUser,
+}) {
   const [page, setPage] = useState(1);
 
   const totalPages = Math.max(1, Math.ceil(users.length / ITEMS_PER_PAGE));
@@ -122,7 +128,13 @@ export default function UserTable({ users = [], onEditUser, onDeleteUser }) {
           </TableHeader>
 
           <TableBody>
-            {currentUsers.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-48 text-center text-slate-500">
+                  <LoadingSpinner label="Loading users..." />
+                </TableCell>
+              </TableRow>
+            ) : currentUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-48 text-center">
                   <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-slate-500">
@@ -238,10 +250,16 @@ export default function UserTable({ users = [], onEditUser, onDeleteUser }) {
 
       <div className="flex flex-col gap-3 border-t border-slate-100 bg-white px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-500">
-          Showing{" "}
-          <span className="font-medium text-slate-700">{currentUsers.length}</span>{" "}
-          of <span className="font-medium text-slate-700">{users.length}</span>{" "}
-          users
+          {loading ? (
+            "Loading user count..."
+          ) : (
+            <>
+              Showing{" "}
+              <span className="font-medium text-slate-700">{currentUsers.length}</span>{" "}
+              of <span className="font-medium text-slate-700">{users.length}</span>{" "}
+              users
+            </>
+          )}
         </p>
 
         <div className="flex items-center gap-3">
@@ -252,7 +270,7 @@ export default function UserTable({ users = [], onEditUser, onDeleteUser }) {
             <Button
               variant="outline"
               size="icon-sm"
-              disabled={page === 1}
+              disabled={loading || page === 1}
               aria-label="Previous page"
               onClick={() => setPage((prev) => Math.max(1, prev - 1))}
             >
@@ -262,7 +280,7 @@ export default function UserTable({ users = [], onEditUser, onDeleteUser }) {
             <Button
               variant="outline"
               size="icon-sm"
-              disabled={page === totalPages}
+              disabled={loading || page === totalPages}
               aria-label="Next page"
               onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
             >

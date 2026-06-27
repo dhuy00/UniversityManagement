@@ -7,10 +7,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 const UserDeleteDialog = ({ open, setOpen, user, deleting, onConfirm }) => {
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!deleting) setOpen(nextOpen);
+      }}
+    >
       <DialogContent className="w-[420px] text-[13px]">
         <DialogHeader>
           <DialogTitle className="text-sm leading-none">Delete user</DialogTitle>
@@ -30,13 +36,15 @@ const UserDeleteDialog = ({ open, setOpen, user, deleting, onConfirm }) => {
         </div>
 
         <DialogFooter>
-          <DialogClose render={<Button variant="outline">Cancel</Button>} />
+          <DialogClose
+            render={<Button variant="outline" disabled={deleting}>Cancel</Button>}
+          />
           <Button
             variant="destructive"
             disabled={deleting}
             onClick={onConfirm}
           >
-            Delete user
+            {deleting ? <LoadingSpinner label="Deleting..." /> : "Delete user"}
           </Button>
         </DialogFooter>
       </DialogContent>

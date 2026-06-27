@@ -26,6 +26,7 @@ import {
 } from "@/api/permissionApi";
 import UserRoleDialog from "./UserRoleDialog";
 import { toast } from "sonner";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 const initialPrivileges = [];
 let dialogMetadataPromise;
@@ -221,6 +222,7 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
   const [systemPrivileges, setSystemPrivileges] = useState([]);
   const [openRoleDialog, setOpenRoleDialog] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [activeTab, setActiveTab] = useState("basic-info");
 
   useEffect(() => {
@@ -258,6 +260,8 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
         toast.error("Failed to load user form data", {
           description: getErrorMessage(error),
         });
+      } finally {
+        if (!cancelled) setLoadingData(false);
       }
     };
 
@@ -454,12 +458,15 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
   }, []);
 
   const handleDialogOpenChange = useCallback((nextOpen) => {
+    if (!nextOpen && saving) return;
+
     if (!nextOpen) {
       setActiveTab("basic-info");
       setFormData(createInitialFormData(user));
+      setLoadingData(true);
     }
     setOpen(nextOpen);
-  }, [setOpen, user]);
+  }, [saving, setOpen, user]);
 
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
@@ -470,15 +477,28 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        {loadingData && (
+          <div className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-blue-700">
+            <LoadingSpinner label="Loading user data..." />
+          </div>
+        )}
+
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className={saving ? "pointer-events-none opacity-70" : undefined}
+        >
           <TabsList>
             <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
-            <TabsTrigger value="privileges">Privileges</TabsTrigger>
+            <TabsTrigger value="privileges" disabled={loadingData}>
+              Privileges
+            </TabsTrigger>
           </TabsList>
           <UserBasicForm
             formData={formData}
             setFormData={setFormData}
             mode={mode}
+            disabled={loadingData || saving}
             onManageRoles={() => setOpenRoleDialog(true)}
           />
           {activeTab === "privileges" && (
@@ -493,9 +513,21 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
           )}
         </Tabs>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline">Cancel</Button>} />
-          <Button onClick={handleSubmit} type="submit" disabled={saving}>
-            {isEditMode ? "Update user" : "Save changes"}
+          <DialogClose
+            render={<Button variant="outline" disabled={saving}>Cancel</Button>}
+          />
+          <Button
+            onClick={handleSubmit}
+            type="submit"
+            disabled={loadingData || saving}
+          >
+            {saving ? (
+              <LoadingSpinner label={isEditMode ? "Updating..." : "Saving..."} />
+            ) : isEditMode ? (
+              "Update user"
+            ) : (
+              "Save changes"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

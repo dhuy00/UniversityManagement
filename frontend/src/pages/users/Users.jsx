@@ -16,9 +16,11 @@ const Users = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
 
   const fetchUsers = async () => {
     try {
+      setLoadingUsers(true);
       const res = await getUsers();
       setUsers(res.data)
     } catch (error) {
@@ -26,11 +28,32 @@ const Users = () => {
       toast.error("Failed to load users", {
         description: getErrorMessage(error),
       });
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    let cancelled = false;
+
+    getUsers()
+      .then((res) => {
+        if (!cancelled) setUsers(res.data);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error(error);
+        toast.error("Failed to load users", {
+          description: getErrorMessage(error),
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingUsers(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleCreateUser = () => {
@@ -79,12 +102,15 @@ const Users = () => {
         border border-border-primary border-b-0'>
           <div className='flex flex-col'>
             <span className='text-text-primary font-semibold text-[15px]'>All users</span>
-            <span className='text-small text-text-secondary'>{users.length} accounts total</span>
+            <span className='text-small text-text-secondary'>
+              {loadingUsers ? "Loading accounts..." : `${users.length} accounts total`}
+            </span>
           </div>
           <Button className='py-2 text-[12px]' onClick={handleCreateUser}>Create user</Button>
         </div>
         <UserTable
           users={users}
+          loading={loadingUsers}
           onEditUser={handleEditUser}
           onDeleteUser={handleDeleteUser}
         />

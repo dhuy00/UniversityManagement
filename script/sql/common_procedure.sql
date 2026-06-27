@@ -1,3 +1,73 @@
+-- Get application table and column metadata
+CREATE OR REPLACE PROCEDURE PERMISSION_GET_TABLES (
+    p_cursor OUT SYS_REFCURSOR
+)
+AS
+    v_table_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_table_count
+    FROM (
+        SELECT 1
+        FROM SYS.DBA_TABLES t
+        JOIN SYS.DBA_USERS u
+          ON u.USERNAME = t.OWNER
+        WHERE u.ORACLE_MAINTAINED = 'N'
+          AND EXISTS (
+              SELECT 1
+              FROM SYS.DBA_TAB_COLUMNS c
+              WHERE c.OWNER = t.OWNER
+                AND c.TABLE_NAME = t.TABLE_NAME
+          )
+          AND ROWNUM = 1
+    );
+
+    IF v_table_count > 0 THEN
+        OPEN p_cursor FOR
+            SELECT
+                t.OWNER,
+                t.TABLE_NAME,
+                c.COLUMN_NAME,
+                c.COLUMN_ID
+            FROM SYS.DBA_TABLES t
+            JOIN SYS.DBA_USERS u
+              ON u.USERNAME = t.OWNER
+            JOIN SYS.DBA_TAB_COLUMNS c
+              ON c.OWNER = t.OWNER
+             AND c.TABLE_NAME = t.TABLE_NAME
+            WHERE u.ORACLE_MAINTAINED = 'N'
+            ORDER BY t.OWNER, t.TABLE_NAME, c.COLUMN_ID;
+    ELSE
+        OPEN p_cursor FOR
+            SELECT
+                t.OWNER,
+                t.TABLE_NAME,
+                c.COLUMN_NAME,
+                c.COLUMN_ID
+            FROM SYS.DBA_TABLES t
+            JOIN SYS.DBA_TAB_COLUMNS c
+              ON c.OWNER = t.OWNER
+             AND c.TABLE_NAME = t.TABLE_NAME
+            WHERE t.OWNER NOT IN (
+                'SYS',
+                'SYSTEM',
+                'XDB',
+                'CTXSYS',
+                'MDSYS',
+                'ORDSYS',
+                'OUTLN',
+                'WMSYS',
+                'DBSNMP',
+                'APPQOSSYS',
+                'GSMADMIN_INTERNAL'
+            )
+              AND t.TABLE_NAME NOT LIKE 'BIN$%'
+              AND t.NESTED = 'NO'
+            ORDER BY t.OWNER, t.TABLE_NAME, c.COLUMN_ID;
+    END IF;
+END;
+/
+
 CREATE OR REPLACE PROCEDURE PERMISSION_GRANT (
     p_permission_type     IN VARCHAR2,
     p_tablename           IN VARCHAR2,

@@ -15,59 +15,15 @@ public class PermissionRepository : IPermissionRepository
     using var connection = _connectionFactory.CreateConnection();
     await connection.OpenAsync();
 
-    var tables = await ReadTableMetadataAsync(connection, @"
-      SELECT
-        t.OWNER,
-        t.TABLE_NAME,
-        c.COLUMN_NAME,
-        c.COLUMN_ID
-      FROM SYS.DBA_TABLES t
-      JOIN SYS.DBA_USERS u
-        ON u.USERNAME = t.OWNER
-      JOIN SYS.DBA_TAB_COLUMNS c
-        ON c.OWNER = t.OWNER
-       AND c.TABLE_NAME = t.TABLE_NAME
-      WHERE u.ORACLE_MAINTAINED = 'N'
-      ORDER BY t.OWNER, t.TABLE_NAME, c.COLUMN_ID");
-
-    if (tables.Count > 0)
-    {
-      return tables;
-    }
-
-    return await ReadTableMetadataAsync(connection, @"
-      SELECT
-        t.OWNER,
-        t.TABLE_NAME,
-        c.COLUMN_NAME,
-        c.COLUMN_ID
-      FROM SYS.DBA_TABLES t
-      JOIN SYS.DBA_TAB_COLUMNS c
-        ON c.OWNER = t.OWNER
-       AND c.TABLE_NAME = t.TABLE_NAME
-      WHERE t.OWNER NOT IN (
-        'SYS',
-        'SYSTEM',
-        'XDB',
-        'CTXSYS',
-        'MDSYS',
-        'ORDSYS',
-        'OUTLN',
-        'WMSYS',
-        'DBSNMP',
-        'APPQOSSYS',
-        'GSMADMIN_INTERNAL'
-      )
-        AND t.TABLE_NAME NOT LIKE 'BIN$%'
-        AND t.NESTED = 'NO'
-      ORDER BY t.OWNER, t.TABLE_NAME, c.COLUMN_ID");
-  }
-
-  private static async Task<List<TableMetadataDto>> ReadTableMetadataAsync(IDbConnection connection, string sql)
-  {
     var tables = new Dictionary<string, TableMetadataDto>();
 
-    using var command = new OracleCommand(sql, (OracleConnection)connection);
+    using var command = new OracleCommand("PERMISSION_GET_TABLES", connection);
+    command.CommandType = CommandType.StoredProcedure;
+
+    command.Parameters.Add(
+      "p_cursor",
+      OracleDbType.RefCursor,
+      ParameterDirection.Output);
 
     using var reader = await command.ExecuteReaderAsync();
 

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -100,6 +101,7 @@ const Login = () => {
                   type="text"
                   value={formData.username}
                   onChange={handleChange}
+                  disabled={loading}
                 />
               </Field>
 
@@ -112,6 +114,7 @@ const Login = () => {
                   type="password"
                   value={formData.password}
                   onChange={handleChange}
+                  disabled={loading}
                 />
               </Field>
 
@@ -123,7 +126,7 @@ const Login = () => {
                   type="submit"
                   disabled={loading}
                 >
-                  {loading ? "Logging in..." : "Login"}
+                  {loading ? <LoadingSpinner label="Logging in..." /> : "Login"}
                 </Button>
               </Field>
             </FieldGroup>

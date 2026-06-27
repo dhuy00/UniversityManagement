@@ -16,6 +16,7 @@ const UserBasicForm = ({
   formData,
   setFormData,
   mode = "create",
+  disabled = false,
   onManageRoles,
 }) => {
   const isEditMode = mode === "edit";
@@ -39,7 +40,7 @@ const UserBasicForm = ({
               onChange={(e) => handleInputChange("name", e.target.value)}
               id="fieldgroup-name"
               placeholder="USER_NAME"
-              disabled={isEditMode}
+              disabled={isEditMode || disabled}
             />
             {!isEditMode && (
               <p className="text-xs text-slate-500">
@@ -57,6 +58,7 @@ const UserBasicForm = ({
               type="password"
               placeholder={isEditMode ? "Leave blank to keep current password" : ""}
               onChange={(e) => handleInputChange("password", e.target.value)}
+              disabled={disabled}
             />
           </Field>
           <Field>
@@ -70,6 +72,7 @@ const UserBasicForm = ({
               onChange={(e) =>
                 handleInputChange("confirmPassword", e.target.value)
               }
+              disabled={disabled}
             />
           </Field>
           <Field>
@@ -90,7 +93,12 @@ const UserBasicForm = ({
                   <span className="text-sm text-slate-400">No role assigned</span>
                 )}
               </div>
-              <Button type="button" variant="outline" onClick={onManageRoles}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onManageRoles}
+                disabled={disabled}
+              >
                 Manage roles
               </Button>
             </div>
@@ -100,6 +108,7 @@ const UserBasicForm = ({
             <Select
               value={formData.status}
               onValueChange={(value) => handleInputChange("status", value)}
+              disabled={disabled}
             >
               <SelectTrigger id="fieldgroup-status" className="w-full">
                 <SelectValue />
