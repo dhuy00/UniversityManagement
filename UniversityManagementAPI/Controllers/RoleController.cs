@@ -72,6 +72,31 @@ public class RoleController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPatch("password")]
+    public async Task<IActionResult> UpdateRolePassword([FromBody] UpdateRolePasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Rolename) ||
+            string.IsNullOrEmpty(request.Password))
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Rolename and password are required",
+            });
+        }
+
+        var result = await _roleRepository.UpdateRolePassword(
+            request.Rolename,
+            request.Password);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
     [HttpPost("revoke")]
     public async Task<IActionResult> RevokeRoleFromUser([FromBody] RevokeRoleFromUserRequest request)
     {
@@ -128,7 +153,7 @@ public class RoleController : ControllerBase
             });
         }
 
-        if (request.Privilege.Length == 0 || request.Privilege == null)
+        if (request.Privilege == null || request.Privilege.Length == 0)
         {
             return BadRequest(new ApiResponse<object>
             {

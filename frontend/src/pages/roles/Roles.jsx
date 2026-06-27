@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { getRoles } from "@/api/roleApi";
 import RoleDialog from "@/components/roles/RoleDialog";
+import RoleEditDialog from "@/components/roles/RoleEditDialog";
 import RoleHeader from "@/components/roles/RoleHeader";
 import RoleTable from "@/components/roles/RoleTable";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ const Roles = () => {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
 
   const fetchRoles = async () => {
     try {
@@ -73,11 +76,25 @@ const Roles = () => {
             Create role
           </Button>
         </div>
-        <RoleTable roles={roles} loading={loading} />
+        <RoleTable
+          roles={roles}
+          loading={loading}
+          onEditRole={(role) => {
+            setSelectedRole(role);
+            setOpenEditDialog(true);
+          }}
+        />
       </div>
       <RoleDialog
         open={openCreateDialog}
         setOpen={setOpenCreateDialog}
+        onSaved={fetchRoles}
+      />
+      <RoleEditDialog
+        key={selectedRole?.role ?? "edit-role"}
+        open={openEditDialog}
+        setOpen={setOpenEditDialog}
+        role={selectedRole}
         onSaved={fetchRoles}
       />
     </div>

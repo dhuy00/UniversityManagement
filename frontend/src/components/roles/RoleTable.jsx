@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, ShieldCheck } from "lucide-react";
 
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +26,7 @@ const getCommonRoleMeta = (common) => {
   };
 };
 
-const RoleTable = ({ roles = [], loading = false }) => {
+const RoleTable = ({ roles = [], loading = false, onEditRole }) => {
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(roles.length / ITEMS_PER_PAGE));
   const currentPage = Math.min(page, totalPages);
@@ -51,19 +51,22 @@ const RoleTable = ({ roles = [], loading = false }) => {
               <TableHead className="min-w-[160px] py-2 pr-4 text-[11px] font-semibold uppercase text-slate-500">
                 Scope
               </TableHead>
+              <TableHead className="w-[72px] py-2 pr-4 text-right text-[11px] font-semibold uppercase text-slate-500">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={3} className="h-48 text-center text-slate-500">
+                <TableCell colSpan={4} className="h-48 text-center text-slate-500">
                   <LoadingSpinner label="Loading roles..." />
                 </TableCell>
               </TableRow>
             ) : currentRoles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="h-48 text-center">
+                <TableCell colSpan={4} className="h-48 text-center">
                   <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-slate-500">
                     <div className="flex size-12 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
                       <ShieldCheck className="size-6" />
@@ -101,6 +104,17 @@ const RoleTable = ({ roles = [], loading = false }) => {
                       >
                         {commonMeta.label}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="py-2 pr-4 text-right">
+                      <Button
+                        className="border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label={`Edit ${role.role}`}
+                        onClick={() => onEditRole?.(role)}
+                      >
+                        <Pencil className="size-3.5" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );

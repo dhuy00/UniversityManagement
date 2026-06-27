@@ -71,9 +71,11 @@ public class RoleRepository : IRoleRepository
     {
       rolePrivilege.Add(new RolePrivilegeDto
       {
+        PrivilegeType = reader["PRIVILEGE_TYPE"].ToString()!,
         Role = reader["ROLE"].ToString()!,
-        Owner = reader["OWNER"].ToString()!,
-        TableName = reader["TABLE_NAME"].ToString()!,
+        Owner = reader["OWNER"] == DBNull.Value ? string.Empty : reader["OWNER"].ToString()!,
+        TableName = reader["TABLE_NAME"] == DBNull.Value ? string.Empty : reader["TABLE_NAME"].ToString()!,
+        ColumnName = reader["COLUMN_NAME"] == DBNull.Value ? string.Empty : reader["COLUMN_NAME"].ToString()!,
         Privilege = reader["PRIVILEGE"].ToString()!,
         Grantable = reader["GRANTABLE"].ToString()!,
       });
@@ -134,6 +136,39 @@ public class RoleRepository : IRoleRepository
       {
         Success = true,
         Message = "Role granted successfully",
+        Data = null
+      };
+    }
+    catch (Exception ex)
+    {
+      return new ApiResponse<object>
+      {
+        Success = false,
+        Message = ex.Message,
+        Data = null
+      };
+    }
+  }
+
+  public async Task<ApiResponse<object>> UpdateRolePassword(string rolename, string password)
+  {
+    try
+    {
+      using var connection = _connectionFactory.CreateConnection();
+      await connection.OpenAsync();
+
+      using var command = new OracleCommand("ROLE_UPDATE_PASSWORD", connection);
+      command.CommandType = CommandType.StoredProcedure;
+
+      command.Parameters.Add("p_rolename", OracleDbType.Varchar2).Value = rolename;
+      command.Parameters.Add("p_password", OracleDbType.Varchar2).Value = password;
+
+      await command.ExecuteNonQueryAsync();
+
+      return new ApiResponse<object>
+      {
+        Success = true,
+        Message = "Role password updated successfully",
         Data = null
       };
     }

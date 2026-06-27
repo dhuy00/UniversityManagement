@@ -16,14 +16,65 @@ CREATE OR REPLACE PROCEDURE ROLE_GET_PRIVILEGE (
 ) AS
 BEGIN
     OPEN p_cursor FOR
-        SELECT 
-            ROLE,
-            OWNER,
-            TABLE_NAME,
-            PRIVILEGE,
-            GRANTABLE
-        FROM ROLE_TAB_PRIVS
-        WHERE ROLE = UPPER(p_rolename);
+        SELECT
+            'TABLE' AS PRIVILEGE_TYPE,
+            p.GRANTEE AS ROLE,
+            p.OWNER,
+            p.TABLE_NAME,
+            NULL AS COLUMN_NAME,
+            p.PRIVILEGE,
+            p.GRANTABLE
+        FROM SYS.DBA_TAB_PRIVS p
+        WHERE p.GRANTEE = UPPER(p_rolename)
+          AND NOT (
+              p.PRIVILEGE = 'SELECT'
+              AND EXISTS (
+                  SELECT 1
+                  FROM SYS.DBA_TABLES t
+                  WHERE p.TABLE_NAME =
+                      'VW_SEL_' || t.OWNER || '_' || t.TABLE_NAME || '_' || p.GRANTEE
+              )
+          )
+        UNION ALL
+        SELECT
+            'COLUMN' AS PRIVILEGE_TYPE,
+            p.GRANTEE AS ROLE,
+            p.OWNER,
+            p.TABLE_NAME,
+            p.COLUMN_NAME,
+            p.PRIVILEGE,
+            p.GRANTABLE
+        FROM SYS.DBA_COL_PRIVS p
+        WHERE p.GRANTEE = UPPER(p_rolename)
+        UNION ALL
+        SELECT
+            'COLUMN' AS PRIVILEGE_TYPE,
+            p.GRANTEE AS ROLE,
+            t.OWNER,
+            t.TABLE_NAME,
+            c.COLUMN_NAME,
+            'SELECT' AS PRIVILEGE,
+            p.GRANTABLE
+        FROM SYS.DBA_TAB_PRIVS p
+        JOIN SYS.DBA_TABLES t
+          ON p.TABLE_NAME =
+             'VW_SEL_' || t.OWNER || '_' || t.TABLE_NAME || '_' || p.GRANTEE
+        JOIN SYS.DBA_TAB_COLUMNS c
+          ON c.OWNER = p.OWNER
+         AND c.TABLE_NAME = p.TABLE_NAME
+        WHERE p.GRANTEE = UPPER(p_rolename)
+          AND p.PRIVILEGE = 'SELECT'
+        UNION ALL
+        SELECT
+            'SYSTEM' AS PRIVILEGE_TYPE,
+            p.GRANTEE AS ROLE,
+            NULL AS OWNER,
+            NULL AS TABLE_NAME,
+            NULL AS COLUMN_NAME,
+            p.PRIVILEGE,
+            p.ADMIN_OPTION AS GRANTABLE
+        FROM SYS.DBA_SYS_PRIVS p
+        WHERE p.GRANTEE = UPPER(p_rolename);
 END;
 /
 
@@ -71,6 +122,36 @@ BEGIN
     EXECUTE IMMEDIATE lv_stmt;
 
     DBMS_OUTPUT.PUT_LINE('Role created successfully');
+END;
+/
+
+-- Update role password
+CREATE OR REPLACE PROCEDURE ROLE_UPDATE_PASSWORD (
+    p_rolename IN VARCHAR2,
+    p_password IN VARCHAR2
+)
+AS
+    v_rolename VARCHAR2(128);
+    v_count    NUMBER;
+BEGIN
+    v_rolename := DBMS_ASSERT.SIMPLE_SQL_NAME(UPPER(TRIM(p_rolename)));
+
+    IF p_password IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Password is required');
+    END IF;
+
+    SELECT COUNT(*)
+    INTO v_count
+    FROM SYS.DBA_ROLES
+    WHERE ROLE = v_rolename;
+
+    IF v_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Role does not exist');
+    END IF;
+
+    EXECUTE IMMEDIATE
+        'ALTER ROLE ' || v_rolename ||
+        ' IDENTIFIED BY "' || REPLACE(p_password, '"', '""') || '"';
 END;
 /
 
@@ -178,13 +259,15 @@ AS
     v_privilege       VARCHAR2(50);
     v_privilege_list  VARCHAR2(4000);
     v_sql             VARCHAR2(4000);
+    v_view_name       VARCHAR2(128);
+    v_count           NUMBER;
 BEGIN
     v_rolename := DBMS_ASSERT.SIMPLE_SQL_NAME(
         UPPER(TRIM(p_rolename))
     );
 
     IF p_table_name IS NOT NULL THEN
-        v_table_name := DBMS_ASSERT.SIMPLE_SQL_NAME(
+        v_table_name := DBMS_ASSERT.SQL_OBJECT_NAME(
             UPPER(TRIM(p_table_name))
         );
     END IF;
@@ -210,24 +293,34 @@ BEGIN
     LOOP
         v_privilege := rec.privilege;
 
-        IF v_privilege NOT IN (
-            'SELECT',
-            'INSERT',
-            'UPDATE',
-            'DELETE',
-            'EXECUTE',
-            'REFERENCES',
-            'ALTER',
-            'INDEX',
-            'CREATE SESSION',
-            'CREATE TABLE',
-            'CREATE VIEW',
-            'CREATE PROCEDURE'
-        ) THEN
-            RAISE_APPLICATION_ERROR(
-                -20001,
-                'Invalid privilege: ' || v_privilege
-            );
+        IF p_table_name IS NOT NULL THEN
+            IF v_privilege NOT IN (
+                'SELECT',
+                'INSERT',
+                'UPDATE',
+                'DELETE',
+                'EXECUTE',
+                'REFERENCES',
+                'ALTER',
+                'INDEX'
+            ) THEN
+                RAISE_APPLICATION_ERROR(
+                    -20001,
+                    'Invalid object privilege: ' || v_privilege
+                );
+            END IF;
+        ELSE
+            SELECT COUNT(*)
+            INTO v_count
+            FROM SYS.SYSTEM_PRIVILEGE_MAP
+            WHERE NAME = v_privilege;
+
+            IF v_count = 0 THEN
+                RAISE_APPLICATION_ERROR(
+                    -20001,
+                    'Invalid system privilege: ' || v_privilege
+                );
+            END IF;
         END IF;
 
         IF v_privilege_list IS NULL THEN
@@ -242,6 +335,30 @@ BEGIN
             -20003,
             'No privileges specified'
         );
+    END IF;
+
+    IF v_table_name IS NOT NULL AND v_privilege_list = 'SELECT' THEN
+        v_view_name := DBMS_ASSERT.SIMPLE_SQL_NAME(
+            'VW_SEL_' ||
+            REPLACE(v_table_name, '.', '_') ||
+            '_' ||
+            v_rolename
+        );
+
+        SELECT COUNT(*)
+        INTO v_count
+        FROM SYS.DBA_TAB_PRIVS
+        WHERE GRANTEE = v_rolename
+          AND TABLE_NAME = v_view_name
+          AND PRIVILEGE = 'SELECT';
+
+        IF v_count > 0 THEN
+            EXECUTE IMMEDIATE
+                'REVOKE SELECT ON ' || v_view_name ||
+                ' FROM ' || v_rolename;
+            EXECUTE IMMEDIATE 'DROP VIEW ' || v_view_name;
+            RETURN;
+        END IF;
     END IF;
 
     IF v_table_name IS NOT NULL THEN
