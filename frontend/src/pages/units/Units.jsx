@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2 } from "lucide-react";
+import { Building2, Pencil } from "lucide-react";
 
 import { getUnits } from "@/api/unitApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import UnitFormDialog from "@/components/units/UnitFormDialog";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,11 +14,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getAuthSession, hasAnyRole } from "@/lib/auth";
+import { UNIT_WRITE_ROLES } from "@/lib/roles";
 
 export default function Units() {
+  const session = getAuthSession();
   const [units, setUnits] = useState(null);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [editingUnit, setEditingUnit] = useState(null);
+  const canManageUnits = hasAnyRole(session, UNIT_WRITE_ROLES);
 
   useEffect(() => {
     let active = true;
@@ -33,6 +40,11 @@ export default function Units() {
       active = false;
     };
   }, []);
+
+  const refreshUnits = async () => {
+    const data = await getUnits();
+    setUnits(data);
+  };
 
   const visibleUnits = useMemo(() => {
     if (!units) return [];
@@ -88,6 +100,11 @@ export default function Units() {
                   <TableHead className="px-4 text-[#929aa5]">
                     Head staff name
                   </TableHead>
+                  {canManageUnits && (
+                    <TableHead className="px-4 text-right text-[#929aa5]">
+                      Action
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -108,6 +125,21 @@ export default function Units() {
                     <TableCell className="px-4 text-[#eaecef]">
                       {unit.headStaffName || "—"}
                     </TableCell>
+                    {canManageUnits && (
+                      <TableCell className="px-4 text-right">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          aria-label={`Edit ${unit.unitId}`}
+                          title="Edit unit"
+                          onClick={() => setEditingUnit(unit)}
+                        >
+                          <Pencil />
+                          Edit
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -121,6 +153,13 @@ export default function Units() {
           </div>
         )}
       </div>
+      {editingUnit && (
+        <UnitFormDialog
+          unit={editingUnit}
+          onClose={() => setEditingUnit(null)}
+          onSaved={refreshUnits}
+        />
+      )}
     </div>
   );
 }

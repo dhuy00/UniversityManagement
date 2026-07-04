@@ -12,4 +12,15 @@ public sealed class UnitService : IUnitService
     {
         return _unitRepository.GetAllAsync(cancellationToken);
     }
+
+    public Task<bool> UpdateAsync(
+        string unitId,
+        UpdateUnitRequest request,
+        CancellationToken cancellationToken)
+    {
+        return _unitRepository.UpdateAsync(
+            unitId,
+            request,
+            cancellationToken);
+    }
 }

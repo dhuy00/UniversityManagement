@@ -24,6 +24,8 @@ export const COURSE_WRITE_ROLES = ["ACADEMIC_AFFAIRS"];
 
 export const STUDENT_WRITE_ROLES = ["ACADEMIC_AFFAIRS"];
 
+export const UNIT_WRITE_ROLES = ["ACADEMIC_AFFAIRS"];
+
 export const STAFF_ROLES = [
   "BASIC_STAFF",
   "LECTURER",

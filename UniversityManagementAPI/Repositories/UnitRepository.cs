@@ -1,4 +1,5 @@
 using System.Data;
+using Oracle.ManagedDataAccess.Client;
 
 public sealed class UnitRepository : IUnitRepository
 {
@@ -48,5 +49,41 @@ public sealed class UnitRepository : IUnitRepository
         }
 
         return units;
+    }
+
+    public async Task<bool> UpdateAsync(
+        string unitId,
+        UpdateUnitRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = connection.BeginTransaction();
+
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.BindByName = true;
+        command.CommandType = CommandType.Text;
+        command.CommandText = """
+            UPDATE UNIVERSITY_APP.UNITS
+            SET UNIT_NAME = :unit_name
+            WHERE UNIT_ID = :unit_id
+            """;
+        command.Parameters.Add("unit_name", OracleDbType.Varchar2).Value =
+            request.UnitName.Trim();
+        command.Parameters.Add("unit_id", OracleDbType.Varchar2).Value =
+            unitId.Trim().ToUpperInvariant();
+
+        var updated = await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+        if (updated)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
+        else
+        {
+            await transaction.RollbackAsync(cancellationToken);
+        }
+
+        return updated;
     }
 }

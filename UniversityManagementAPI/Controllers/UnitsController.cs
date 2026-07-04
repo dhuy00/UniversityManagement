@@ -20,4 +20,19 @@ public sealed class UnitsController : ControllerBase
         var units = await _unitService.GetAllAsync(cancellationToken);
         return Ok(units);
     }
+
+    [Authorize(Roles = "ACADEMIC_AFFAIRS")]
+    [HttpPut("{unitId}")]
+    public async Task<IActionResult> Update(
+        [FromRoute] string unitId,
+        [FromBody] UpdateUnitRequest request,
+        CancellationToken cancellationToken)
+    {
+        var updated = await _unitService.UpdateAsync(
+            unitId,
+            request,
+            cancellationToken);
+
+        return updated ? NoContent() : NotFound();
+    }
 }
