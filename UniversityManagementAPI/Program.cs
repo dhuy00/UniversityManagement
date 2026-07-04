@@ -31,6 +31,18 @@ builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 
+// Course plans
+builder.Services.AddScoped<ICoursePlanService, CoursePlanService>();
+builder.Services.AddScoped<ICoursePlanRepository, CoursePlanRepository>();
+
+// Teaching assignments
+builder.Services.AddScoped<ITeachingAssignmentService, TeachingAssignmentService>();
+builder.Services.AddScoped<ITeachingAssignmentRepository, TeachingAssignmentRepository>();
+
+// Enrollments
+builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendDomain", policy =>

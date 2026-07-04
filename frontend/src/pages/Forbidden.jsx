@@ -18,11 +18,11 @@ export default function Forbidden() {
           Access denied
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-          System administration only
+          You do not have access
         </h1>
         <p className="mt-4 text-sm leading-6 text-[#929aa5]">
-          User and role management belongs to the isolated database
-          administration surface. Your university identity cannot access it.
+          Your authenticated role does not have permission to open this area.
+          Data access is enforced again by the API and Oracle database.
         </p>
         {attemptedPath && (
           <p className="mt-3 text-xs text-[#707a8a]">

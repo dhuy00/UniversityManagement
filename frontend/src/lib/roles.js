@@ -1,0 +1,13 @@
+export const TEACHING_ASSIGNMENT_ROLES = [
+  "LECTURER",
+  "ACADEMIC_AFFAIRS",
+  "UNIT_HEAD",
+  "DEAN",
+];
+
+export const ENROLLMENT_ROLES = [
+  "STUDENT",
+  "LECTURER",
+  "UNIT_HEAD",
+  "DEAN",
+];

@@ -13,9 +13,12 @@ import {
 
 import {
   BookOpen,
+  CalendarRange,
   Database,
+  GraduationCap,
   LayoutDashboard,
   LogOut,
+  Presentation,
   ShieldCheck,
   UserRound,
   Users,
@@ -26,8 +29,13 @@ import {
   clearAuthSession,
   getAuthSession,
   isSystemAdministrator,
+  hasAnyRole,
 } from "@/lib/auth";
 import { logout } from "@/api/authApi";
+import {
+  ENROLLMENT_ROLES,
+  TEACHING_ASSIGNMENT_ROLES,
+} from "@/lib/roles";
 
 export default function AppSidebar() {
   const navigate = useNavigate();
@@ -62,6 +70,31 @@ export default function AppSidebar() {
       url: "/courses",
       icon: BookOpen,
     },
+    {
+      title: "Course Plans",
+      url: "/course-plans",
+      icon: CalendarRange,
+    },
+    ...(hasAnyRole(session, TEACHING_ASSIGNMENT_ROLES)
+      ? [
+          {
+            title: "Assignments",
+            url: "/teaching-assignments",
+            icon: Presentation,
+          },
+        ]
+      : []),
+    ...(hasAnyRole(session, ENROLLMENT_ROLES)
+      ? [
+          {
+            title: session?.roleCode === "STUDENT"
+              ? "My Enrollments"
+              : "Enrollments",
+            url: "/enrollments",
+            icon: GraduationCap,
+          },
+        ]
+      : []),
     ...(isSystemAdministrator(session)
       ? [
           {

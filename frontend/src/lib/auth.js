@@ -46,3 +46,6 @@ export const isAuthenticated = () => getAuthSession() !== null;
 
 export const isSystemAdministrator = (session = getAuthSession()) =>
   session?.username?.toUpperCase() === "SYS";
+
+export const hasAnyRole = (session, allowedRoles) =>
+  Boolean(session?.roleCode && allowedRoles.includes(session.roleCode));
