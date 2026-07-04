@@ -20,7 +20,11 @@ import {
 } from "lucide-react";
 
 import { useLocation, useNavigate } from "react-router-dom";
-import { clearAuthSession, getAuthSession } from "@/lib/auth";
+import {
+  clearAuthSession,
+  getAuthSession,
+  isSystemAdministrator,
+} from "@/lib/auth";
 import { logout } from "@/api/authApi";
 
 export default function AppSidebar() {
@@ -46,16 +50,20 @@ export default function AppSidebar() {
       url: "/",
       icon: LayoutDashboard,
     },
-    {
-      title: "Users",
-      url: "/users",
-      icon: Users,
-    },
-    {
-      title: "Roles",
-      url: "/roles",
-      icon: ShieldCheck,
-    },
+    ...(isSystemAdministrator(session)
+      ? [
+          {
+            title: "Users",
+            url: "/users",
+            icon: Users,
+          },
+          {
+            title: "Roles",
+            url: "/roles",
+            icon: ShieldCheck,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -70,7 +78,7 @@ export default function AppSidebar() {
               DB Control
             </span>
             <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#707a8a]">
-              Oracle Admin
+              University Portal
             </span>
           </div>
         </div>
@@ -79,7 +87,7 @@ export default function AppSidebar() {
       <SidebarContent>
         <SidebarGroup className="px-3 py-5">
           <SidebarGroupLabel className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#707a8a]">
-            Management
+            Workspace
           </SidebarGroupLabel>
 
           <SidebarGroupContent>

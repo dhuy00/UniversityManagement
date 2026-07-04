@@ -43,3 +43,6 @@ export const clearAuthSession = () => {
 };
 
 export const isAuthenticated = () => getAuthSession() !== null;
+
+export const isSystemAdministrator = (session = getAuthSession()) =>
+  session?.username?.toUpperCase() === "SYS";

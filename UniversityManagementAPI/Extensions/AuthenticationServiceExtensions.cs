@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 
 public static class AuthenticationServiceExtensions
@@ -85,7 +86,14 @@ public static class AuthenticationServiceExtensions
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(
+                AuthorizationPolicies.SystemAdministrator,
+                policy => policy
+                    .RequireAuthenticatedUser()
+                    .RequireClaim(ClaimTypes.Name, "SYS"));
+        });
         return services;
     }
 }

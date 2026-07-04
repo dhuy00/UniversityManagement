@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using UniversityManagementAPI.DTOs.Requests;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = AuthorizationPolicies.SystemAdministrator)]
 [Route("api/role")]
 public class RoleController : ControllerBase
 {

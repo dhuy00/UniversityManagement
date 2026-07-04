@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using UniversityManagementAPI.DTOs.Requests;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = AuthorizationPolicies.SystemAdministrator)]
 [Route("api/user")]
 public class UserController : ControllerBase
 {
