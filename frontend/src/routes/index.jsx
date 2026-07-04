@@ -6,6 +6,8 @@ import AuthLayout from "../layout/AuthLayout"
 import ProtectedRoute from "./ProtectedRoute";
 import SystemAdminRoute from "./SystemAdminRoute";
 import Home from "../pages/Home";
+import Profile from "../pages/Profile";
+import Courses from "../pages/courses/Courses";
 import Forbidden from "../pages/Forbidden";
 import Login from "../pages/auth/Login";
 import Users from "../pages/users/Users";
@@ -24,6 +26,8 @@ export default function AppRoutes() {
             <Route element={<ProtectedRoute />}>
                 <Route element={<MainLayout />}>
                     <Route path="/" element={<Home />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/courses" element={<Courses />} />
                     <Route path="/forbidden" element={<Forbidden />} />
                     <Route element={<SystemAdminRoute />}>
                         <Route path="/users" element={<Users />} />

@@ -12,10 +12,12 @@ import {
 } from "@/components/ui/sidebar";
 
 import {
+  BookOpen,
   Database,
   LayoutDashboard,
   LogOut,
   ShieldCheck,
+  UserRound,
   Users,
 } from "lucide-react";
 
@@ -49,6 +51,16 @@ export default function AppSidebar() {
       title: "Overview",
       url: "/",
       icon: LayoutDashboard,
+    },
+    {
+      title: "My Profile",
+      url: "/profile",
+      icon: UserRound,
+    },
+    {
+      title: "Courses",
+      url: "/courses",
+      icon: BookOpen,
     },
     ...(isSystemAdministrator(session)
       ? [
