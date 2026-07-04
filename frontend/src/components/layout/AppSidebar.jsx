@@ -21,6 +21,7 @@ import {
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { clearAuthSession, getAuthSession } from "@/lib/auth";
+import { logout } from "@/api/authApi";
 
 export default function AppSidebar() {
   const navigate = useNavigate();
@@ -29,7 +30,12 @@ export default function AppSidebar() {
   const username = session?.username || "Administrator";
   const initials = username.slice(0, 2).toUpperCase();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // Local sign-out must still complete if the session already expired.
+    }
     clearAuthSession();
     navigate("/login", { replace: true });
   };
@@ -103,7 +109,9 @@ export default function AppSidebar() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-white">{username}</p>
-            <p className="text-xs text-[#707a8a]">Administrator</p>
+            <p className="text-xs text-[#707a8a]">
+              {session?.roleCode || session?.identityType}
+            </p>
           </div>
         </div>
         <SidebarMenu>

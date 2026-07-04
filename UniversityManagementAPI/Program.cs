@@ -1,6 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using UniversityManagementAPI.Data;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services
@@ -9,12 +6,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<ApplicationDbContext>(options => 
-    options.UseOracle(
-        builder.Configuration.GetConnectionString("OracleDb")
-    )
-);
-
+builder.Services.AddUniversityAuthentication(
+    builder.Configuration,
+    builder.Environment);
 builder.Services.AddScoped<IDbConnectionFactory, OracleConnectionFactory>();
 
 // User
@@ -51,6 +45,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("FrontendDomain");
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

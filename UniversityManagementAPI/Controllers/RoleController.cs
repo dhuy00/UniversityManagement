@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UniversityManagementAPI.DTOs.Requests;
 
 [ApiController]
+[Authorize]
 [Route("api/role")]
 public class RoleController : ControllerBase
 {

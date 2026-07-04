@@ -1,17 +1,29 @@
 using Oracle.ManagedDataAccess.Client;
+using System.Security.Authentication;
 
 public class OracleConnectionFactory : IDbConnectionFactory
 {
-    private readonly IConfiguration _configuration;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOracleSessionStore _sessionStore;
 
-    public OracleConnectionFactory(IConfiguration configuration)
+    public OracleConnectionFactory(
+        IHttpContextAccessor httpContextAccessor,
+        IOracleSessionStore sessionStore)
     {
-        _configuration = configuration;
+        _httpContextAccessor = httpContextAccessor;
+        _sessionStore = sessionStore;
     }
 
     public OracleConnection CreateConnection()
     {
-        return new OracleConnection(
-            _configuration.GetConnectionString("OracleDb"));
+        var sessionId = _httpContextAccessor.HttpContext?.User.FindFirst("sid")?.Value;
+
+        if (string.IsNullOrWhiteSpace(sessionId) ||
+            !_sessionStore.TryGetConnectionString(sessionId, out var connectionString))
+        {
+            throw new AuthenticationException("The authenticated Oracle session is unavailable or expired.");
+        }
+
+        return new OracleConnection(connectionString);
     }
 }

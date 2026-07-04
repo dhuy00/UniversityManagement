@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
 using UniversityManagementAPI.DTOs.Requests;
 
 [ApiController]
+[Authorize]
 [Route("api/user")]
 public class UserController : ControllerBase
 {

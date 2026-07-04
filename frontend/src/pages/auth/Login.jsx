@@ -13,6 +13,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Database, LockKeyhole, ShieldCheck } from "lucide-react";
+import { login } from "@/api/authApi";
 import {
   getAuthSession,
   saveAuthSession,
@@ -21,7 +22,7 @@ import {
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = location.state?.from?.pathname || "/users";
+  const redirectTo = location.state?.from?.pathname || "/";
 
   const [formData, setFormData] = useState({
     username: "",
@@ -63,19 +64,17 @@ const Login = () => {
     try {
       setLoading(true);
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      if (
-        formData.username.trim().toLowerCase() === "admin" &&
-        formData.password === "123"
-      ) {
-        saveAuthSession("admin");
-        navigate(redirectTo, { replace: true });
-      } else {
-        setError("Invalid username or password");
-      }
+      const result = await login({
+        username: formData.username.trim(),
+        password: formData.password,
+      });
+      saveAuthSession(result);
+      navigate(redirectTo, { replace: true });
     } catch (err) {
-      setError("Something went wrong");
+      setError(
+        err.response?.data?.message ||
+          "Unable to sign in. Check the API and Oracle database.",
+      );
       console.error(err);
     } finally {
       setLoading(false);

@@ -1,5 +1,4 @@
 const AUTH_SESSION_KEY = "auth_session";
-const SESSION_DURATION_MS = 8 * 60 * 60 * 1000;
 
 export const getAuthSession = () => {
   try {
@@ -9,6 +8,7 @@ export const getAuthSession = () => {
     const session = JSON.parse(value);
     if (
       !session?.username ||
+      !session?.accessToken ||
       !session?.expiresAt ||
       Date.parse(session.expiresAt) <= Date.now()
     ) {
@@ -23,24 +23,23 @@ export const getAuthSession = () => {
   }
 };
 
-export const saveAuthSession = (username) => {
-  const now = Date.now();
+export const saveAuthSession = ({ accessToken, expiresAt, user }) => {
   const session = {
-    username,
-    signedInAt: new Date(now).toISOString(),
-    expiresAt: new Date(now + SESSION_DURATION_MS).toISOString(),
+    accessToken,
+    expiresAt,
+    username: user.username,
+    identityType: user.identityType,
+    roleCode: user.roleCode,
+    staffId: user.staffId,
+    studentId: user.studentId,
   };
 
   localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
   return session;
 };
 
 export const clearAuthSession = () => {
   localStorage.removeItem(AUTH_SESSION_KEY);
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
 };
 
 export const isAuthenticated = () => getAuthSession() !== null;
