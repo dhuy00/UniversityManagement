@@ -13,6 +13,7 @@ export default function DataPageHeader({
   onSearchSubmit,
   searchPlaceholder = "Search",
   searchDisabled = false,
+  actions,
 }) {
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -39,19 +40,22 @@ export default function DataPageHeader({
           </div>
         </div>
 
-        <form className="flex w-full max-w-md gap-2" onSubmit={handleSubmit}>
-          <Input
-            value={searchValue}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder={searchPlaceholder}
-            disabled={searchDisabled}
-            className="border-[#3f4650] bg-[#0b0e11] text-[#eaecef]"
-          />
-          <Button type="submit" variant="outline" disabled={searchDisabled}>
-            <Search />
-            Search
-          </Button>
-        </form>
+        <div className="flex w-full flex-col gap-2 sm:flex-row lg:max-w-2xl lg:justify-end">
+          {actions}
+          <form className="flex w-full max-w-md gap-2" onSubmit={handleSubmit}>
+            <Input
+              value={searchValue}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder={searchPlaceholder}
+              disabled={searchDisabled}
+              className="border-[#3f4650] bg-[#0b0e11] text-[#eaecef]"
+            />
+            <Button type="submit" variant="outline" disabled={searchDisabled}>
+              <Search />
+              Search
+            </Button>
+          </form>
+        </div>
       </div>
     </header>
   );

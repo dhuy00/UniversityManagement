@@ -7,4 +7,10 @@ public interface IProfileRepository
     Task<ProfileDto?> GetStudentProfileAsync(
         string studentId,
         CancellationToken cancellationToken);
+
+    Task<bool> UpdateContactAsync(
+        string identityType,
+        string identityId,
+        UpdateContactRequest request,
+        CancellationToken cancellationToken);
 }

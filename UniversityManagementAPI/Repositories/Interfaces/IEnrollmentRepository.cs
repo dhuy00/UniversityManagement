@@ -9,4 +9,8 @@ public interface IEnrollmentRepository
         int academicYear,
         string programId,
         CancellationToken cancellationToken);
+
+    Task<bool> UpdateScoresAsync(
+        UpdateEnrollmentScoresRequest request,
+        CancellationToken cancellationToken);
 }

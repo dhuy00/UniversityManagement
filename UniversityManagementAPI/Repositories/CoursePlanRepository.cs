@@ -1,3 +1,4 @@
+using Oracle.ManagedDataAccess.Client;
 using System.Data;
 
 public sealed class CoursePlanRepository : ICoursePlanRepository
@@ -54,8 +55,125 @@ public sealed class CoursePlanRepository : ICoursePlanRepository
         return plans;
     }
 
+    public async Task CreateAsync(
+        SaveCoursePlanRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = connection.BeginTransaction();
+
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.BindByName = true;
+        command.CommandType = CommandType.Text;
+        command.CommandText = """
+            INSERT INTO UNIVERSITY_APP.COURSE_PLANS (
+                COURSE_ID,
+                SEMESTER,
+                ACADEMIC_YEAR,
+                PROGRAM_ID,
+                START_DATE
+            ) VALUES (
+                :course_id,
+                :semester,
+                :academic_year,
+                :program_id,
+                :start_date
+            )
+            """;
+        AddPlanParameters(command, request);
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<bool> UpdateAsync(
+        string originalCourseId,
+        int originalSemester,
+        int originalAcademicYear,
+        string originalProgramId,
+        SaveCoursePlanRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = connection.BeginTransaction();
+
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.BindByName = true;
+        command.CommandType = CommandType.Text;
+        command.CommandText = """
+            UPDATE UNIVERSITY_APP.COURSE_PLANS
+            SET
+                COURSE_ID = :course_id,
+                SEMESTER = :semester,
+                ACADEMIC_YEAR = :academic_year,
+                PROGRAM_ID = :program_id,
+                START_DATE = :start_date
+            WHERE COURSE_ID = :original_course_id
+              AND SEMESTER = :original_semester
+              AND ACADEMIC_YEAR = :original_academic_year
+              AND PROGRAM_ID = :original_program_id
+            """;
+        AddPlanParameters(command, request);
+        command.Parameters.Add(
+            "original_course_id",
+            OracleDbType.Varchar2).Value = originalCourseId.ToUpperInvariant();
+        command.Parameters.Add(
+            "original_semester",
+            OracleDbType.Int32).Value = originalSemester;
+        command.Parameters.Add(
+            "original_academic_year",
+            OracleDbType.Int32).Value = originalAcademicYear;
+        command.Parameters.Add(
+            "original_program_id",
+            OracleDbType.Varchar2).Value = originalProgramId.ToUpperInvariant();
+
+        var updated = await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+        if (updated)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
+        else
+        {
+            await transaction.RollbackAsync(cancellationToken);
+        }
+
+        return updated;
+    }
+
     private static int ReadInt32(IDataRecord reader, string name)
     {
         return Convert.ToInt32(reader.GetDecimal(reader.GetOrdinal(name)));
+    }
+
+    private static void AddPlanParameters(
+        OracleCommand command,
+        SaveCoursePlanRequest request)
+    {
+        command.Parameters.Add("course_id", OracleDbType.Varchar2).Value =
+            request.CourseId.Trim().ToUpperInvariant();
+        command.Parameters.Add("semester", OracleDbType.Int32).Value =
+            request.Semester;
+        command.Parameters.Add("academic_year", OracleDbType.Int32).Value =
+            request.AcademicYear;
+        command.Parameters.Add("program_id", OracleDbType.Varchar2).Value =
+            request.ProgramId.Trim().ToUpperInvariant();
+        command.Parameters.Add("start_date", OracleDbType.Date).Value =
+            GetStartDate(request.AcademicYear, request.Semester);
+    }
+
+    private static DateTime GetStartDate(int academicYear, int semester)
+    {
+        var month = semester switch
+        {
+            1 => 1,
+            2 => 5,
+            3 => 9,
+            _ => throw new ArgumentOutOfRangeException(nameof(semester))
+        };
+        return new DateTime(academicYear, month, 1);
     }
 }

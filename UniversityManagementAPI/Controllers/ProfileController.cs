@@ -37,4 +37,31 @@ public sealed class ProfileController : ControllerBase
 
         return profile is null ? NotFound() : Ok(profile);
     }
+
+    [HttpPut("contact")]
+    public async Task<IActionResult> UpdateContact(
+        [FromBody] UpdateContactRequest request,
+        CancellationToken cancellationToken)
+    {
+        var identityType = User.FindFirst("identity_type")?.Value;
+        var identityId = identityType switch
+        {
+            "STAFF" => User.FindFirst("staff_id")?.Value,
+            "STUDENT" => User.FindFirst("student_id")?.Value,
+            _ => null
+        };
+
+        if (identityType is null || identityId is null)
+        {
+            return Forbid();
+        }
+
+        var updated = await _profileService.UpdateContactAsync(
+            identityType,
+            identityId,
+            request,
+            cancellationToken);
+
+        return updated ? NoContent() : NotFound();
+    }
 }

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { FileText, GraduationCap } from "lucide-react";
+import { FileText, GraduationCap, Pencil } from "lucide-react";
 
 import { getEnrollments } from "@/api/enrollmentApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import EnrollmentDetailDialog from "@/components/enrollments/EnrollmentDetailDialog";
+import EnrollmentScoreDialog from "@/components/enrollments/EnrollmentScoreDialog";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -14,13 +15,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getAuthSession } from "@/lib/auth";
+import { getAuthSession, hasAnyRole } from "@/lib/auth";
+import { SCORE_EDIT_ROLES } from "@/lib/roles";
 
 export default function Enrollments() {
   const session = getAuthSession();
   const [enrollments, setEnrollments] = useState(null);
   const [error, setError] = useState("");
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [scoreEnrollment, setScoreEnrollment] = useState(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -45,6 +48,7 @@ export default function Enrollments() {
   }, []);
 
   const isStudent = session?.roleCode === "STUDENT";
+  const canEditScores = hasAnyRole(session, SCORE_EDIT_ROLES);
   const visibleEnrollments = useMemo(() => {
     if (!enrollments) return [];
     const term = search.trim().toLowerCase();
@@ -127,17 +131,33 @@ export default function Enrollments() {
                       {enrollment.programId}
                     </TableCell>
                     <TableCell className="px-4 text-right">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        aria-label="View enrollment details"
-                        title="View enrollment details"
-                        onClick={() => setSelectedEnrollment(enrollment)}
-                      >
-                        <FileText />
-                        Detail
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          aria-label="View enrollment details"
+                          title="View enrollment details"
+                          onClick={() => setSelectedEnrollment(enrollment)}
+                        >
+                          <FileText />
+                          Detail
+                        </Button>
+                        {canEditScores &&
+                          session?.staffId === enrollment.lecturerId && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              aria-label="Edit enrollment scores"
+                              title="Edit enrollment scores"
+                              onClick={() => setScoreEnrollment(enrollment)}
+                            >
+                              <Pencil />
+                              Edit
+                            </Button>
+                          )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -156,6 +176,24 @@ export default function Enrollments() {
         <EnrollmentDetailDialog
           enrollment={selectedEnrollment}
           onClose={() => setSelectedEnrollment(null)}
+        />
+      )}
+      {scoreEnrollment && (
+        <EnrollmentScoreDialog
+          enrollment={scoreEnrollment}
+          onClose={() => setScoreEnrollment(null)}
+          onSaved={(updatedEnrollment) => {
+            setEnrollments((current) =>
+              current.map((item) =>
+                item.studentId === updatedEnrollment.studentId &&
+                item.lecturerId === updatedEnrollment.lecturerId &&
+                item.courseId === updatedEnrollment.courseId &&
+                item.semester === updatedEnrollment.semester &&
+                item.academicYear === updatedEnrollment.academicYear &&
+                item.programId === updatedEnrollment.programId
+                  ? updatedEnrollment
+                  : item));
+          }}
         />
       )}
     </div>

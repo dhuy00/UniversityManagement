@@ -11,3 +11,11 @@ export const ENROLLMENT_ROLES = [
   "UNIT_HEAD",
   "DEAN",
 ];
+
+export const SCORE_EDIT_ROLES = [
+  "LECTURER",
+  "UNIT_HEAD",
+  "DEAN",
+];
+
+export const COURSE_PLAN_WRITE_ROLES = ["ACADEMIC_AFFAIRS"];

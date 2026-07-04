@@ -32,6 +32,20 @@
   --drop-shadow-small: none;
 }
 
+[data-sonner-toast][data-styled="true"] [data-close-button] {
+  left: auto !important;
+  right: 0 !important;
+  top: 0 !important;
+  width: 28px !important;
+  height: 28px !important;
+  transform: translate(35%, -35%) !important;
+}
+
+[data-sonner-toast][data-styled="true"] [data-close-button] svg {
+  width: 16px;
+  height: 16px;
+}
+
 @layer components {
   .btn-action {
     @apply px-1 py-1.5 transition-colors rounded-sm cursor-pointer;

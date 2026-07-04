@@ -23,4 +23,17 @@ public sealed class ProfileService : IProfileService
             _ => Task.FromResult<ProfileDto?>(null)
         };
     }
+
+    public Task<bool> UpdateContactAsync(
+        string identityType,
+        string identityId,
+        UpdateContactRequest request,
+        CancellationToken cancellationToken)
+    {
+        return _profileRepository.UpdateContactAsync(
+            identityType,
+            identityId,
+            request,
+            cancellationToken);
+    }
 }

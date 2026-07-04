@@ -8,7 +8,11 @@ function App() {
             <Toaster
               theme="dark"
               position="top-right"
+              closeButton
               toastOptions={{
+                classNames: {
+                  toast: "!pr-12",
+                },
                 style: {
                   background: "#1e2329",
                   border: "1px solid #2b3139",

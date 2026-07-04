@@ -48,4 +48,17 @@ public sealed class EnrollmentsController : ControllerBase
             cancellationToken);
         return Ok(enrollments);
     }
+
+    [Authorize(Roles = "LECTURER,UNIT_HEAD,DEAN")]
+    [HttpPut("scores")]
+    public async Task<IActionResult> UpdateScores(
+        [FromBody] UpdateEnrollmentScoresRequest request,
+        CancellationToken cancellationToken)
+    {
+        var updated = await _enrollmentService.UpdateScoresAsync(
+            request,
+            cancellationToken);
+
+        return updated ? NoContent() : NotFound();
+    }
 }

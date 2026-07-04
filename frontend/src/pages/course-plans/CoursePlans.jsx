@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarRange, FileText } from "lucide-react";
+import { CalendarRange, FileText, Pencil, Plus } from "lucide-react";
 
 import { getCoursePlans } from "@/api/coursePlanApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import CoursePlanFormDialog from "@/components/course-plans/CoursePlanFormDialog";
 import CoursePlanEnrollmentsDialog from "@/components/enrollments/CoursePlanEnrollmentsDialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +16,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getAuthSession, hasAnyRole } from "@/lib/auth";
-import { ENROLLMENT_ROLES } from "@/lib/roles";
+import {
+  COURSE_PLAN_WRITE_ROLES,
+  ENROLLMENT_ROLES,
+} from "@/lib/roles";
 
 const formatDate = (value) =>
   new Intl.DateTimeFormat("en-GB", {
@@ -29,8 +33,11 @@ export default function CoursePlans() {
   const [plans, setPlans] = useState(null);
   const [error, setError] = useState("");
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [formMode, setFormMode] = useState(null);
+  const [editingPlan, setEditingPlan] = useState(null);
   const [search, setSearch] = useState("");
   const canViewEnrollments = hasAnyRole(session, ENROLLMENT_ROLES);
+  const canManagePlans = hasAnyRole(session, COURSE_PLAN_WRITE_ROLES);
 
   useEffect(() => {
     let active = true;
@@ -47,6 +54,11 @@ export default function CoursePlans() {
       active = false;
     };
   }, []);
+
+  const refreshPlans = async () => {
+    const data = await getCoursePlans();
+    setPlans(data);
+  };
 
   const visiblePlans = useMemo(() => {
     if (!plans) return [];
@@ -73,6 +85,18 @@ export default function CoursePlans() {
         onSearchChange={setSearch}
         searchPlaceholder="Search course, program, semester, or year"
         searchDisabled={plans === null}
+        actions={canManagePlans && (
+          <Button
+            type="button"
+            onClick={() => {
+              setEditingPlan(null);
+              setFormMode("create");
+            }}
+          >
+            <Plus />
+            Create plan
+          </Button>
+        )}
       />
 
       <div className="dashboard-content">
@@ -99,7 +123,7 @@ export default function CoursePlans() {
                   <TableHead className="px-4 text-right text-[#929aa5]">Year</TableHead>
                   <TableHead className="px-4 text-[#929aa5]">Program</TableHead>
                   <TableHead className="px-4 text-[#929aa5]">Start date</TableHead>
-                  {canViewEnrollments && (
+                  {(canViewEnrollments || canManagePlans) && (
                     <TableHead className="px-4 text-right text-[#929aa5]">
                       Action
                     </TableHead>
@@ -130,19 +154,39 @@ export default function CoursePlans() {
                     <TableCell className="px-4 text-[#eaecef]">
                       {formatDate(plan.startDate)}
                     </TableCell>
-                    {canViewEnrollments && (
+                    {(canViewEnrollments || canManagePlans) && (
                       <TableCell className="px-4 text-right">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          aria-label="View registered students"
-                          title="View registered students"
-                          onClick={() => setSelectedPlan(plan)}
-                        >
-                          <FileText />
-                          Detail
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          {canViewEnrollments && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              aria-label="View registered students"
+                              title="View registered students"
+                              onClick={() => setSelectedPlan(plan)}
+                            >
+                              <FileText />
+                              Detail
+                            </Button>
+                          )}
+                          {canManagePlans && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              aria-label="Edit course plan"
+                              title="Edit course plan"
+                              onClick={() => {
+                                setEditingPlan(plan);
+                                setFormMode("edit");
+                              }}
+                            >
+                              <Pencil />
+                              Edit
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     )}
                   </TableRow>
@@ -162,6 +206,17 @@ export default function CoursePlans() {
         <CoursePlanEnrollmentsDialog
           plan={selectedPlan}
           onClose={() => setSelectedPlan(null)}
+        />
+      )}
+      {formMode && (
+        <CoursePlanFormDialog
+          mode={formMode}
+          plan={editingPlan}
+          onClose={() => {
+            setFormMode(null);
+            setEditingPlan(null);
+          }}
+          onSaved={refreshPlans}
         />
       )}
     </div>

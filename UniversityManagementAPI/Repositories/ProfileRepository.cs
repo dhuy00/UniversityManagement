@@ -113,9 +113,74 @@ public sealed class ProfileRepository : IProfileRepository
         };
     }
 
+    public async Task<bool> UpdateContactAsync(
+        string identityType,
+        string identityId,
+        UpdateContactRequest request,
+        CancellationToken cancellationToken)
+    {
+        var isStaff = identityType == "STAFF";
+        var isStudent = identityType == "STUDENT";
+        if (!isStaff && !isStudent)
+        {
+            return false;
+        }
+
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = connection.BeginTransaction();
+
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.BindByName = true;
+        command.CommandType = CommandType.Text;
+        command.CommandText = isStaff
+            ? """
+              UPDATE UNIVERSITY_APP.STAFF
+              SET PHONE = :phone
+              WHERE STAFF_ID = :identity_id
+              """
+            : """
+              UPDATE UNIVERSITY_APP.STUDENTS
+              SET
+                  PHONE = :phone,
+                  ADDRESS = :address
+              WHERE STUDENT_ID = :identity_id
+              """;
+
+        AddNullableVarchar(command, "phone", request.Phone);
+        if (isStudent)
+        {
+            AddNullableVarchar(command, "address", request.Address);
+        }
+        command.Parameters.Add("identity_id", OracleDbType.Varchar2).Value =
+            identityId;
+
+        var updated = await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+        if (updated)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
+        else
+        {
+            await transaction.RollbackAsync(cancellationToken);
+        }
+
+        return updated;
+    }
+
     private static string? ReadNullableString(IDataRecord reader, string name)
     {
         var ordinal = reader.GetOrdinal(name);
         return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+    }
+
+    private static void AddNullableVarchar(
+        OracleCommand command,
+        string name,
+        string? value)
+    {
+        command.Parameters.Add(name, OracleDbType.Varchar2).Value =
+            string.IsNullOrWhiteSpace(value) ? DBNull.Value : value.Trim();
     }
 }

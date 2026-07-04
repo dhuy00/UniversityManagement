@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, IdCard, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, IdCard, Pencil, ShieldCheck } from "lucide-react";
 
 import { getCurrentProfile } from "@/api/profileApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import ProfileContactDialog from "@/components/profile/ProfileContactDialog";
 import { Button } from "@/components/ui/button";
 
 const formatDate = (value) =>
@@ -34,6 +35,7 @@ export default function Profile() {
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState("");
   const [showAllowance, setShowAllowance] = useState(false);
+  const [editingContact, setEditingContact] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -90,19 +92,29 @@ export default function Profile() {
       </header>
 
       <div className="dashboard-content">
-        <section className="flex flex-col gap-5 border-b border-[#2b3139] pb-8 sm:flex-row sm:items-center">
-          <div className="flex size-14 items-center justify-center rounded-lg bg-[#fcd535] text-[#181a20]">
-            <IdCard className="size-7" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-semibold text-white">
-              {profile.fullName}
-            </h2>
-            <div className="mt-2 flex items-center gap-2 text-sm text-[#929aa5]">
-              <ShieldCheck className="size-4 text-[#fcd535]" />
-              {profile.identityType} · {profile.roleCode ?? profile.programId}
+        <section className="flex flex-col gap-5 border-b border-[#2b3139] pb-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-5">
+            <div className="flex size-14 items-center justify-center rounded-lg bg-[#fcd535] text-[#181a20]">
+              <IdCard className="size-7" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-white">
+                {profile.fullName}
+              </h2>
+              <div className="mt-2 flex items-center gap-2 text-sm text-[#929aa5]">
+                <ShieldCheck className="size-4 text-[#fcd535]" />
+                {profile.identityType} · {profile.roleCode ?? profile.programId}
+              </div>
             </div>
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setEditingContact(true)}
+          >
+            <Pencil />
+            Edit contact
+          </Button>
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -168,6 +180,18 @@ export default function Profile() {
           </dl>
         </section>
       </div>
+      {editingContact && (
+        <ProfileContactDialog
+          profile={profile}
+          onClose={() => setEditingContact(false)}
+          onSaved={(contact) =>
+            setProfile((current) => ({
+              ...current,
+              phone: contact.phone,
+              ...(isStudent ? { address: contact.address } : {}),
+            }))}
+        />
+      )}
     </div>
   );
 }

@@ -31,6 +31,63 @@ public sealed class EnrollmentRepository : IEnrollmentRepository
         return await QueryAsync(filter, cancellationToken);
     }
 
+    public async Task<bool> UpdateScoresAsync(
+        UpdateEnrollmentScoresRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = connection.BeginTransaction();
+
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.BindByName = true;
+        command.CommandType = CommandType.Text;
+        command.CommandText = """
+            UPDATE UNIVERSITY_APP.ENROLLMENTS
+            SET
+                PRACTICE_SCORE = :practice_score,
+                PROCESS_SCORE = :process_score,
+                FINAL_EXAM_SCORE = :final_exam_score,
+                FINAL_SCORE = :final_score
+            WHERE STUDENT_ID = :student_id
+              AND LECTURER_ID = :lecturer_id
+              AND COURSE_ID = :course_id
+              AND SEMESTER = :semester
+              AND ACADEMIC_YEAR = :academic_year
+              AND PROGRAM_ID = :program_id
+            """;
+
+        AddNullableDecimal(command, "practice_score", request.PracticeScore);
+        AddNullableDecimal(command, "process_score", request.ProcessScore);
+        AddNullableDecimal(command, "final_exam_score", request.FinalExamScore);
+        AddNullableDecimal(command, "final_score", request.FinalScore);
+        command.Parameters.Add("student_id", OracleDbType.Varchar2).Value =
+            request.StudentId;
+        command.Parameters.Add("lecturer_id", OracleDbType.Varchar2).Value =
+            request.LecturerId;
+        command.Parameters.Add("course_id", OracleDbType.Varchar2).Value =
+            request.CourseId;
+        command.Parameters.Add("semester", OracleDbType.Int32).Value =
+            request.Semester;
+        command.Parameters.Add("academic_year", OracleDbType.Int32).Value =
+            request.AcademicYear;
+        command.Parameters.Add("program_id", OracleDbType.Varchar2).Value =
+            request.ProgramId;
+
+        var updated = await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+        if (updated)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
+        else
+        {
+            await transaction.RollbackAsync(cancellationToken);
+        }
+
+        return updated;
+    }
+
     private async Task<IReadOnlyList<EnrollmentDto>> QueryAsync(
         CoursePlanFilter? filter,
         CancellationToken cancellationToken)
@@ -128,5 +185,14 @@ public sealed class EnrollmentRepository : IEnrollmentRepository
     {
         var ordinal = reader.GetOrdinal(name);
         return reader.IsDBNull(ordinal) ? null : reader.GetDecimal(ordinal);
+    }
+
+    private static void AddNullableDecimal(
+        OracleCommand command,
+        string name,
+        decimal? value)
+    {
+        command.Parameters.Add(name, OracleDbType.Decimal).Value =
+            value.HasValue ? value.Value : DBNull.Value;
     }
 }

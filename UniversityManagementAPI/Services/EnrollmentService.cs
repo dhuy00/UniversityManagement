@@ -27,4 +27,13 @@ public sealed class EnrollmentService : IEnrollmentService
             programId,
             cancellationToken);
     }
+
+    public Task<bool> UpdateScoresAsync(
+        UpdateEnrollmentScoresRequest request,
+        CancellationToken cancellationToken)
+    {
+        return _enrollmentRepository.UpdateScoresAsync(
+            request,
+            cancellationToken);
+    }
 }

@@ -16,3 +16,7 @@ export const getCoursePlanEnrollments = async (plan) => {
   });
   return response.data;
 };
+
+export const updateEnrollmentScores = async (request) => {
+  await api.put("/enrollments/scores", request);
+};
