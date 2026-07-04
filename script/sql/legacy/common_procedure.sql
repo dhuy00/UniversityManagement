@@ -1,4 +1,4 @@
--- Get application table and column metadata
+-- Legacy admin-console procedure: get application table and column metadata.
 CREATE OR REPLACE PROCEDURE PERMISSION_GET_TABLES (
     p_cursor OUT SYS_REFCURSOR
 )

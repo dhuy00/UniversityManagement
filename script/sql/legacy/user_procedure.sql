@@ -1,4 +1,4 @@
--- Get all users
+-- Legacy admin-console user procedures.
 CREATE OR REPLACE PROCEDURE USER_GET_ALL (
     p_cursor OUT SYS_REFCURSOR
 ) AS

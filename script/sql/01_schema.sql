@@ -28,7 +28,11 @@ END;
 -- ignores initialization errors until Phase 2 recreates the trusted package.
 BEGIN
     FOR target IN (
-        SELECT 'BUSINESS_RULE_PKG' AS PACKAGE_NAME FROM DUAL
+        SELECT 'ENROLLMENT_POLICY_PKG' AS PACKAGE_NAME FROM DUAL
+        UNION ALL
+        SELECT 'STUDENT_POLICY_PKG' FROM DUAL
+        UNION ALL
+        SELECT 'BUSINESS_RULE_PKG' FROM DUAL
         UNION ALL
         SELECT 'ACCESS_POLICY_PKG' FROM DUAL
         UNION ALL

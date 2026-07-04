@@ -1,4 +1,4 @@
---Select All Role--
+-- Legacy admin-console role procedures.
 CREATE OR REPLACE PROCEDURE ROLE_GET_ALL(
     p_cursor OUT SYS_REFCURSOR
 ) AS

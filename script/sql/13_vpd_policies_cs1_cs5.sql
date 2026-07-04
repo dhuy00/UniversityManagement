@@ -288,8 +288,9 @@ AS
         p_object_name   IN VARCHAR2
     ) RETURN VARCHAR2
     IS
-        v_role_code VARCHAR2(30);
-        v_staff_id  VARCHAR2(20);
+        v_role_code  VARCHAR2(30);
+        v_staff_id   VARCHAR2(20);
+        v_student_id VARCHAR2(20);
     BEGIN
         IF OWNER_BYPASS THEN
             RETURN '1=1';
@@ -297,12 +298,16 @@ AS
 
         v_role_code := CONTEXT_VALUE('ROLE_CODE');
         v_staff_id := CONTEXT_VALUE('STAFF_ID');
+        v_student_id := CONTEXT_VALUE('STUDENT_ID');
 
         IF v_role_code = 'DEAN' THEN
             RETURN '1=1';
         ELSIF v_role_code IN ('LECTURER', 'UNIT_HEAD')
               AND v_staff_id IS NOT NULL THEN
             RETURN 'LECTURER_ID = ' || QUOTED_VALUE(v_staff_id);
+        ELSIF v_role_code = 'STUDENT'
+              AND v_student_id IS NOT NULL THEN
+            RETURN 'STUDENT_ID = ' || QUOTED_VALUE(v_student_id);
         END IF;
 
         RETURN '1=0';

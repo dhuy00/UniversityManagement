@@ -1,3 +1,4 @@
+-- Legacy scratch tests for the original admin-console procedures.
 VAR rc REFCURSOR;
 
 EXEC USER_GET_ALL(:rc);
@@ -36,3 +37,9 @@ END;
 
 select *
 from DBA_USERS;
+
+
+SELECT COUNT(*) FROM UNIVERSITY_APP.STUDENTS;      -- 1
+SELECT COUNT(*) FROM UNIVERSITY_APP.COURSE_PLANS; -- 9 với STUDENT01
+
+SELECT COUNT(*) FROM UNIVERSITY_APP.ENROLLMENTS;
