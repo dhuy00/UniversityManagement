@@ -30,4 +30,29 @@ public sealed class StudentsController : ControllerBase
             cancellationToken);
         return Ok(result);
     }
+
+    [Authorize(Roles = "ACADEMIC_AFFAIRS")]
+    [HttpPost]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateStudentRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _studentService.CreateAsync(request, cancellationToken);
+        return NoContent();
+    }
+
+    [Authorize(Roles = "ACADEMIC_AFFAIRS")]
+    [HttpPut("{studentId}")]
+    public async Task<IActionResult> Update(
+        [FromRoute] string studentId,
+        [FromBody] UpdateStudentRequest request,
+        CancellationToken cancellationToken)
+    {
+        var updated = await _studentService.UpdateAsync(
+            studentId,
+            request,
+            cancellationToken);
+
+        return updated ? NoContent() : NotFound();
+    }
 }

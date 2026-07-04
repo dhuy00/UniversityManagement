@@ -19,4 +19,22 @@ public sealed class StudentService : IStudentService
             search,
             cancellationToken);
     }
+
+    public Task CreateAsync(
+        CreateStudentRequest request,
+        CancellationToken cancellationToken)
+    {
+        return _studentRepository.CreateAsync(request, cancellationToken);
+    }
+
+    public Task<bool> UpdateAsync(
+        string studentId,
+        UpdateStudentRequest request,
+        CancellationToken cancellationToken)
+    {
+        return _studentRepository.UpdateAsync(
+            studentId,
+            request,
+            cancellationToken);
+    }
 }

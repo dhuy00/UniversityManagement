@@ -5,4 +5,13 @@ public interface IStudentRepository
         int pageSize,
         string? search,
         CancellationToken cancellationToken);
+
+    Task CreateAsync(
+        CreateStudentRequest request,
+        CancellationToken cancellationToken);
+
+    Task<bool> UpdateAsync(
+        string studentId,
+        UpdateStudentRequest request,
+        CancellationToken cancellationToken);
 }

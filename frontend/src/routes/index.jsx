@@ -9,6 +9,7 @@ import SystemAdminRoute from "./SystemAdminRoute";
 import Home from "../pages/Home";
 import Profile from "../pages/Profile";
 import Courses from "../pages/courses/Courses";
+import Units from "../pages/units/Units";
 import CoursePlans from "../pages/course-plans/CoursePlans";
 import TeachingAssignments from "../pages/teaching-assignments/TeachingAssignments";
 import Enrollments from "../pages/enrollments/Enrollments";
@@ -19,6 +20,7 @@ import Users from "../pages/users/Users";
 import Roles from "../pages/roles/Roles";
 import {
     ENROLLMENT_ROLES,
+    STAFF_ROLES,
     TEACHING_ASSIGNMENT_ROLES,
 } from "@/lib/roles";
 
@@ -40,6 +42,9 @@ export default function AppRoutes() {
                     <Route path="/course-plans" element={<CoursePlans />} />
                     <Route path="/students" element={<Students />} />
                     <Route path="/forbidden" element={<Forbidden />} />
+                    <Route element={<RoleRoute allowedRoles={STAFF_ROLES} />}>
+                        <Route path="/units" element={<Units />} />
+                    </Route>
                     <Route element={<RoleRoute allowedRoles={TEACHING_ASSIGNMENT_ROLES} />}>
                         <Route
                             path="/teaching-assignments"

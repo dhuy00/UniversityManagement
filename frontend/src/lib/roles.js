@@ -19,3 +19,15 @@ export const SCORE_EDIT_ROLES = [
 ];
 
 export const COURSE_PLAN_WRITE_ROLES = ["ACADEMIC_AFFAIRS"];
+
+export const COURSE_WRITE_ROLES = ["ACADEMIC_AFFAIRS"];
+
+export const STUDENT_WRITE_ROLES = ["ACADEMIC_AFFAIRS"];
+
+export const STAFF_ROLES = [
+  "BASIC_STAFF",
+  "LECTURER",
+  "ACADEMIC_AFFAIRS",
+  "UNIT_HEAD",
+  "DEAN",
+];

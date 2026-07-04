@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Pencil, Plus } from "lucide-react";
 
 import { getCourses } from "@/api/courseApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import CourseFormDialog from "@/components/courses/CourseFormDialog";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,11 +14,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getAuthSession, hasAnyRole } from "@/lib/auth";
+import { COURSE_WRITE_ROLES } from "@/lib/roles";
 
 export default function Courses() {
+  const session = getAuthSession();
   const [courses, setCourses] = useState(null);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [formMode, setFormMode] = useState(null);
+  const [editingCourse, setEditingCourse] = useState(null);
+  const canManageCourses = hasAnyRole(session, COURSE_WRITE_ROLES);
 
   useEffect(() => {
     let active = true;
@@ -33,6 +41,11 @@ export default function Courses() {
       active = false;
     };
   }, []);
+
+  const refreshCourses = async () => {
+    const data = await getCourses();
+    setCourses(data);
+  };
 
   const visibleCourses = useMemo(() => {
     if (!courses) return [];
@@ -54,6 +67,18 @@ export default function Courses() {
         onSearchChange={setSearch}
         searchPlaceholder="Search by code, name, or unit"
         searchDisabled={courses === null}
+        actions={canManageCourses && (
+          <Button
+            type="button"
+            onClick={() => {
+              setEditingCourse(null);
+              setFormMode("create");
+            }}
+          >
+            <Plus />
+            Create course
+          </Button>
+        )}
       />
 
       <div className="dashboard-content">
@@ -81,6 +106,11 @@ export default function Courses() {
                   <TableHead className="px-4 text-right text-[#929aa5]">Practice</TableHead>
                   <TableHead className="px-4 text-right text-[#929aa5]">Capacity</TableHead>
                   <TableHead className="px-4 text-[#929aa5]">Unit</TableHead>
+                  {canManageCourses && (
+                    <TableHead className="px-4 text-right text-[#929aa5]">
+                      Action
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -110,6 +140,24 @@ export default function Courses() {
                     <TableCell className="px-4 text-[#eaecef]">
                       {course.unitId}
                     </TableCell>
+                    {canManageCourses && (
+                      <TableCell className="px-4 text-right">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          aria-label={`Edit ${course.courseId}`}
+                          title="Edit course"
+                          onClick={() => {
+                            setEditingCourse(course);
+                            setFormMode("edit");
+                          }}
+                        >
+                          <Pencil />
+                          Edit
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -123,6 +171,17 @@ export default function Courses() {
           </div>
         )}
       </div>
+      {formMode && (
+        <CourseFormDialog
+          mode={formMode}
+          course={editingCourse}
+          onClose={() => {
+            setFormMode(null);
+            setEditingCourse(null);
+          }}
+          onSaved={refreshCourses}
+        />
+      )}
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
 
 import {
   BookOpen,
+  Building2,
   CalendarRange,
   Database,
   GraduationCap,
@@ -35,6 +36,7 @@ import {
 import { logout } from "@/api/authApi";
 import {
   ENROLLMENT_ROLES,
+  STAFF_ROLES,
   TEACHING_ASSIGNMENT_ROLES,
 } from "@/lib/roles";
 
@@ -76,6 +78,15 @@ export default function AppSidebar() {
       url: "/course-plans",
       icon: CalendarRange,
     },
+    ...(hasAnyRole(session, STAFF_ROLES)
+      ? [
+          {
+            title: "Units",
+            url: "/units",
+            icon: Building2,
+          },
+        ]
+      : []),
     {
       title: session?.roleCode === "STUDENT"
         ? "My Student Record"

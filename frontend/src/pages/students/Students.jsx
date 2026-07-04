@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, UsersRound } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Plus,
+  UsersRound,
+} from "lucide-react";
 
 import { getStudents } from "@/api/studentApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import StudentFormDialog from "@/components/students/StudentFormDialog";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -13,7 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getAuthSession } from "@/lib/auth";
+import { getAuthSession, hasAnyRole } from "@/lib/auth";
+import { STUDENT_WRITE_ROLES } from "@/lib/roles";
 
 const PAGE_SIZE = 20;
 
@@ -32,7 +40,10 @@ export default function Students() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [formMode, setFormMode] = useState(null);
+  const [editingStudent, setEditingStudent] = useState(null);
   const isStudent = session?.roleCode === "STUDENT";
+  const canManageStudents = hasAnyRole(session, STUDENT_WRITE_ROLES);
 
   useEffect(() => {
     let active = true;
@@ -69,6 +80,11 @@ export default function Students() {
     setPage(nextPage);
   };
 
+  const refreshStudents = async () => {
+    const data = await getStudents({ page, pageSize: PAGE_SIZE, search });
+    setResult(data);
+  };
+
   const students = result?.items ?? [];
   const totalPages = result?.totalPages ?? 0;
 
@@ -84,6 +100,18 @@ export default function Students() {
         onSearchSubmit={handleSearch}
         searchPlaceholder="Search by student ID or name"
         searchDisabled={loading}
+        actions={canManageStudents && (
+          <Button
+            type="button"
+            onClick={() => {
+              setEditingStudent(null);
+              setFormMode("create");
+            }}
+          >
+            <Plus />
+            Create student
+          </Button>
+        )}
       />
 
       <div className="dashboard-content">
@@ -114,6 +142,11 @@ export default function Students() {
                   <TableHead className="px-4 text-right text-[#929aa5]">Credits</TableHead>
                   <TableHead className="px-4 text-right text-[#929aa5]">GPA</TableHead>
                   <TableHead className="px-4 text-[#929aa5]">Campus</TableHead>
+                  {canManageStudents && (
+                    <TableHead className="px-4 text-right text-[#929aa5]">
+                      Action
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -152,6 +185,24 @@ export default function Students() {
                     <TableCell className="px-4 text-[#eaecef]">
                       {student.campusId}
                     </TableCell>
+                    {canManageStudents && (
+                      <TableCell className="px-4 text-right">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          aria-label={`Edit ${student.studentId}`}
+                          title="Edit student"
+                          onClick={() => {
+                            setEditingStudent(student);
+                            setFormMode("edit");
+                          }}
+                        >
+                          <Pencil />
+                          Edit
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -198,6 +249,17 @@ export default function Students() {
           </div>
         )}
       </div>
+      {formMode && (
+        <StudentFormDialog
+          mode={formMode}
+          student={editingStudent}
+          onClose={() => {
+            setFormMode(null);
+            setEditingStudent(null);
+          }}
+          onSaved={refreshStudents}
+        />
+      )}
     </div>
   );
 }

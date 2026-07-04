@@ -10,3 +10,11 @@ export const getStudents = async ({ page, pageSize, search }) => {
   });
   return response.data;
 };
+
+export const createStudent = async (request) => {
+  await api.post("/students", request);
+};
+
+export const updateStudent = async (studentId, request) => {
+  await api.put(`/students/${encodeURIComponent(studentId)}`, request);
+};

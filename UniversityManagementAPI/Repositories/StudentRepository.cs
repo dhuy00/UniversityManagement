@@ -96,6 +96,124 @@ public sealed class StudentRepository : IStudentRepository
             totalItems);
     }
 
+    public async Task CreateAsync(
+        CreateStudentRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = connection.BeginTransaction();
+
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.BindByName = true;
+        command.CommandType = CommandType.Text;
+        command.CommandText = """
+            INSERT INTO UNIVERSITY_APP.STUDENTS (
+                STUDENT_ID,
+                FULL_NAME,
+                GENDER,
+                DATE_OF_BIRTH,
+                ADDRESS,
+                PHONE,
+                PROGRAM_ID,
+                MAJOR_ID,
+                ACCUMULATED_CREDITS,
+                CUMULATIVE_GPA,
+                ORACLE_USERNAME,
+                CAMPUS_ID
+            ) VALUES (
+                :student_id,
+                :full_name,
+                :gender,
+                :date_of_birth,
+                :address,
+                :phone,
+                :program_id,
+                :major_id,
+                :accumulated_credits,
+                :cumulative_gpa,
+                :oracle_username,
+                :campus_id
+            )
+            """;
+        AddCommonParameters(
+            command,
+            request.FullName,
+            request.Gender,
+            request.DateOfBirth,
+            request.Address,
+            request.Phone,
+            request.ProgramId,
+            request.MajorId,
+            request.AccumulatedCredits,
+            request.CumulativeGpa,
+            request.CampusId);
+        command.Parameters.Add("student_id", OracleDbType.Varchar2).Value =
+            request.StudentId.Trim().ToUpperInvariant();
+        command.Parameters.Add("oracle_username", OracleDbType.Varchar2).Value =
+            request.OracleUsername.Trim().ToUpperInvariant();
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<bool> UpdateAsync(
+        string studentId,
+        UpdateStudentRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = connection.BeginTransaction();
+
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.BindByName = true;
+        command.CommandType = CommandType.Text;
+        command.CommandText = """
+            UPDATE UNIVERSITY_APP.STUDENTS
+            SET
+                FULL_NAME = :full_name,
+                GENDER = :gender,
+                DATE_OF_BIRTH = :date_of_birth,
+                ADDRESS = :address,
+                PHONE = :phone,
+                PROGRAM_ID = :program_id,
+                MAJOR_ID = :major_id,
+                ACCUMULATED_CREDITS = :accumulated_credits,
+                CUMULATIVE_GPA = :cumulative_gpa,
+                CAMPUS_ID = :campus_id
+            WHERE STUDENT_ID = :student_id
+            """;
+        AddCommonParameters(
+            command,
+            request.FullName,
+            request.Gender,
+            request.DateOfBirth,
+            request.Address,
+            request.Phone,
+            request.ProgramId,
+            request.MajorId,
+            request.AccumulatedCredits,
+            request.CumulativeGpa,
+            request.CampusId);
+        command.Parameters.Add("student_id", OracleDbType.Varchar2).Value =
+            studentId.Trim().ToUpperInvariant();
+
+        var updated = await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+        if (updated)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
+        else
+        {
+            await transaction.RollbackAsync(cancellationToken);
+        }
+
+        return updated;
+    }
+
     private static void AddSearchParameter(
         OracleCommand command,
         string? search)
@@ -115,5 +233,47 @@ public sealed class StudentRepository : IStudentRepository
     {
         var ordinal = reader.GetOrdinal(name);
         return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+    }
+
+    private static void AddCommonParameters(
+        OracleCommand command,
+        string fullName,
+        string gender,
+        DateTime dateOfBirth,
+        string? address,
+        string? phone,
+        string programId,
+        string majorId,
+        int accumulatedCredits,
+        decimal cumulativeGpa,
+        string campusId)
+    {
+        command.Parameters.Add("full_name", OracleDbType.Varchar2).Value =
+            fullName.Trim();
+        command.Parameters.Add("gender", OracleDbType.Varchar2).Value =
+            gender.Trim().ToUpperInvariant();
+        command.Parameters.Add("date_of_birth", OracleDbType.Date).Value =
+            dateOfBirth;
+        command.Parameters.Add("address", OracleDbType.Varchar2).Value =
+            DbValue(address);
+        command.Parameters.Add("phone", OracleDbType.Varchar2).Value =
+            DbValue(phone);
+        command.Parameters.Add("program_id", OracleDbType.Varchar2).Value =
+            programId.Trim().ToUpperInvariant();
+        command.Parameters.Add("major_id", OracleDbType.Varchar2).Value =
+            majorId.Trim().ToUpperInvariant();
+        command.Parameters.Add("accumulated_credits", OracleDbType.Int32).Value =
+            accumulatedCredits;
+        command.Parameters.Add("cumulative_gpa", OracleDbType.Decimal).Value =
+            cumulativeGpa;
+        command.Parameters.Add("campus_id", OracleDbType.Varchar2).Value =
+            campusId.Trim().ToUpperInvariant();
+    }
+
+    private static object DbValue(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? DBNull.Value
+            : value.Trim();
     }
 }

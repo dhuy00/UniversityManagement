@@ -31,6 +31,10 @@ builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 
+// Units
+builder.Services.AddScoped<IUnitService, UnitService>();
+builder.Services.AddScoped<IUnitRepository, UnitRepository>();
+
 // Course plans
 builder.Services.AddScoped<ICoursePlanService, CoursePlanService>();
 builder.Services.AddScoped<ICoursePlanRepository, CoursePlanRepository>();
