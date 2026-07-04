@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileText, GraduationCap } from "lucide-react";
 
 import { getEnrollments } from "@/api/enrollmentApi";
+import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import EnrollmentDetailDialog from "@/components/enrollments/EnrollmentDetailDialog";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ export default function Enrollments() {
   const [enrollments, setEnrollments] = useState(null);
   const [error, setError] = useState("");
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -43,35 +45,37 @@ export default function Enrollments() {
   }, []);
 
   const isStudent = session?.roleCode === "STUDENT";
+  const visibleEnrollments = useMemo(() => {
+    if (!enrollments) return [];
+    const term = search.trim().toLowerCase();
+    if (!term) return enrollments;
+
+    return enrollments.filter((enrollment) =>
+      [
+        enrollment.studentId,
+        enrollment.studentName,
+        enrollment.lecturerId,
+        enrollment.courseId,
+        enrollment.courseName,
+        enrollment.programId,
+        enrollment.semester,
+        enrollment.academicYear,
+      ].some((value) => String(value).toLowerCase().includes(term)));
+  }, [enrollments, search]);
 
   return (
     <div className="dashboard-page">
-      <header className="flex min-h-20 items-center border-b border-[#2b3139] pl-14 pr-4 sm:px-6 lg:px-8">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#707a8a]">
-            Academic records
-          </p>
-          <h1 className="mt-1 text-lg font-semibold tracking-tight text-white">
-            {isStudent ? "My Enrollments" : "Enrollments"}
-          </h1>
-        </div>
-      </header>
+      <DataPageHeader
+        title={isStudent ? "My Enrollments" : "Enrollments"}
+        description="Rows are restricted by your Oracle identity and VPD policy."
+        icon={GraduationCap}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search student, lecturer, course, program, or term"
+        searchDisabled={enrollments === null}
+      />
 
       <div className="dashboard-content">
-        <section className="mb-6 flex items-center gap-4">
-          <div className="flex size-11 items-center justify-center rounded-md bg-[#2b3139] text-[#fcd535]">
-            <GraduationCap className="size-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-white">
-              Enrollment results
-            </h2>
-            <p className="mt-1 text-sm text-[#929aa5]">
-              Rows are restricted by your Oracle identity and VPD policy.
-            </p>
-          </div>
-        </section>
-
         {error && (
           <div role="alert" className="rounded-lg border border-[#3f4650] bg-[#1e2329] p-5 text-sm text-[#eaecef]">
             {error}
@@ -99,7 +103,7 @@ export default function Enrollments() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {enrollments.map((enrollment) => (
+                {visibleEnrollments.map((enrollment) => (
                   <TableRow
                     key={`${enrollment.studentId}-${enrollment.lecturerId}-${enrollment.courseId}-${enrollment.semester}-${enrollment.academicYear}-${enrollment.programId}`}
                     className="border-[#2b3139] hover:bg-[#2b3139]/40"
@@ -140,7 +144,7 @@ export default function Enrollments() {
               </TableBody>
             </Table>
 
-            {enrollments.length === 0 && (
+            {visibleEnrollments.length === 0 && (
               <p className="p-8 text-center text-sm text-[#929aa5]">
                 No enrollments are visible to this identity.
               </p>

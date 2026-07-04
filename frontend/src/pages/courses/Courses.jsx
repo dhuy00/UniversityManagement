@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BookOpen } from "lucide-react";
 
 import { getCourses } from "@/api/courseApi";
+import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
   Table,
@@ -15,6 +16,7 @@ import {
 export default function Courses() {
   const [courses, setCourses] = useState(null);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -32,32 +34,29 @@ export default function Courses() {
     };
   }, []);
 
+  const visibleCourses = useMemo(() => {
+    if (!courses) return [];
+    const term = search.trim().toLowerCase();
+    if (!term) return courses;
+
+    return courses.filter((course) =>
+      [course.courseId, course.courseName, course.unitId]
+        .some((value) => value.toLowerCase().includes(term)));
+  }, [courses, search]);
+
   return (
     <div className="dashboard-page">
-      <header className="flex min-h-20 items-center border-b border-[#2b3139] pl-14 pr-4 sm:px-6 lg:px-8">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#707a8a]">
-            Academic catalog
-          </p>
-          <h1 className="mt-1 text-lg font-semibold tracking-tight text-white">
-            Courses
-          </h1>
-        </div>
-      </header>
+      <DataPageHeader
+        title="Courses"
+        description="Read-only course information available to your Oracle role."
+        icon={BookOpen}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search by code, name, or unit"
+        searchDisabled={courses === null}
+      />
 
       <div className="dashboard-content">
-        <section className="mb-6 flex items-center gap-4">
-          <div className="flex size-11 items-center justify-center rounded-md bg-[#2b3139] text-[#fcd535]">
-            <BookOpen className="size-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-white">Course catalog</h2>
-            <p className="mt-1 text-sm text-[#929aa5]">
-              Read-only course information available to your Oracle role.
-            </p>
-          </div>
-        </section>
-
         {error && (
           <div role="alert" className="rounded-lg border border-[#3f4650] bg-[#1e2329] p-5 text-sm text-[#eaecef]">
             {error}
@@ -85,7 +84,7 @@ export default function Courses() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {courses.map((course) => (
+                {visibleCourses.map((course) => (
                   <TableRow
                     key={course.courseId}
                     className="border-[#2b3139] hover:bg-[#2b3139]/40"
@@ -116,7 +115,7 @@ export default function Courses() {
               </TableBody>
             </Table>
 
-            {courses.length === 0 && (
+            {visibleCourses.length === 0 && (
               <p className="p-8 text-center text-sm text-[#929aa5]">
                 No courses are available.
               </p>

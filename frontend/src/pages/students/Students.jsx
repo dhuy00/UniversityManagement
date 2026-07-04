@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Search, UsersRound } from "lucide-react";
+import { ChevronLeft, ChevronRight, UsersRound } from "lucide-react";
 
 import { getStudents } from "@/api/studentApi";
+import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -53,8 +53,7 @@ export default function Students() {
     };
   }, [page, search]);
 
-  const handleSearch = (event) => {
-    event.preventDefault();
+  const handleSearch = () => {
     const nextSearch = searchInput.trim();
     if (page === 1 && search === nextSearch) return;
 
@@ -75,48 +74,19 @@ export default function Students() {
 
   return (
     <div className="dashboard-page">
-      <header className="flex min-h-20 items-center border-b border-[#2b3139] pl-14 pr-4 sm:px-6 lg:px-8">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#707a8a]">
-            Student records
-          </p>
-          <h1 className="mt-1 text-lg font-semibold tracking-tight text-white">
-            {isStudent ? "My Student Record" : "Students"}
-          </h1>
-        </div>
-      </header>
+      <DataPageHeader
+        eyebrow="Student records"
+        title={isStudent ? "My Student Record" : "Students"}
+        description="Results are filtered by the Oracle STUDENTS VPD policy."
+        icon={UsersRound}
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        onSearchSubmit={handleSearch}
+        searchPlaceholder="Search by student ID or name"
+        searchDisabled={loading}
+      />
 
       <div className="dashboard-content">
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <section className="flex items-center gap-4">
-            <div className="flex size-11 items-center justify-center rounded-md bg-[#2b3139] text-[#fcd535]">
-              <UsersRound className="size-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-white">
-                {isStudent ? "Personal student data" : "Student directory"}
-              </h2>
-              <p className="mt-1 text-sm text-[#929aa5]">
-                Results are filtered by the Oracle STUDENTS VPD policy.
-              </p>
-            </div>
-          </section>
-
-          <form className="flex w-full max-w-md gap-2" onSubmit={handleSearch}>
-            <Input
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Search by student ID or name"
-              disabled={loading}
-              className="border-[#3f4650] bg-[#0b0e11] text-[#eaecef]"
-            />
-            <Button type="submit" variant="outline" disabled={loading}>
-              <Search />
-              Search
-            </Button>
-          </form>
-        </div>
-
         {error && (
           <div role="alert" className="rounded-lg border border-[#3f4650] bg-[#1e2329] p-5 text-sm text-[#eaecef]">
             {error}

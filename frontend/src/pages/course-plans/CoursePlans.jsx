@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CalendarRange, FileText } from "lucide-react";
 
 import { getCoursePlans } from "@/api/coursePlanApi";
+import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import CoursePlanEnrollmentsDialog from "@/components/enrollments/CoursePlanEnrollmentsDialog";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ export default function CoursePlans() {
   const [plans, setPlans] = useState(null);
   const [error, setError] = useState("");
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [search, setSearch] = useState("");
   const canViewEnrollments = hasAnyRole(session, ENROLLMENT_ROLES);
 
   useEffect(() => {
@@ -46,34 +48,34 @@ export default function CoursePlans() {
     };
   }, []);
 
+  const visiblePlans = useMemo(() => {
+    if (!plans) return [];
+    const term = search.trim().toLowerCase();
+    if (!term) return plans;
+
+    return plans.filter((plan) =>
+      [
+        plan.courseId,
+        plan.courseName,
+        plan.programId,
+        plan.semester,
+        plan.academicYear,
+      ].some((value) => String(value).toLowerCase().includes(term)));
+  }, [plans, search]);
+
   return (
     <div className="dashboard-page">
-      <header className="flex min-h-20 items-center border-b border-[#2b3139] pl-14 pr-4 sm:px-6 lg:px-8">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#707a8a]">
-            Academic catalog
-          </p>
-          <h1 className="mt-1 text-lg font-semibold tracking-tight text-white">
-            Course Plans
-          </h1>
-        </div>
-      </header>
+      <DataPageHeader
+        title="Course Plans"
+        description="Student results are restricted to their program by Oracle VPD."
+        icon={CalendarRange}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search course, program, semester, or year"
+        searchDisabled={plans === null}
+      />
 
       <div className="dashboard-content">
-        <section className="mb-6 flex items-center gap-4">
-          <div className="flex size-11 items-center justify-center rounded-md bg-[#2b3139] text-[#fcd535]">
-            <CalendarRange className="size-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-white">
-              Planned course offerings
-            </h2>
-            <p className="mt-1 text-sm text-[#929aa5]">
-              Student results are restricted to their program by Oracle VPD.
-            </p>
-          </div>
-        </section>
-
         {error && (
           <div role="alert" className="rounded-lg border border-[#3f4650] bg-[#1e2329] p-5 text-sm text-[#eaecef]">
             {error}
@@ -105,7 +107,7 @@ export default function CoursePlans() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {plans.map((plan) => (
+                {visiblePlans.map((plan) => (
                   <TableRow
                     key={`${plan.courseId}-${plan.semester}-${plan.academicYear}-${plan.programId}`}
                     className="border-[#2b3139] hover:bg-[#2b3139]/40"
@@ -148,7 +150,7 @@ export default function CoursePlans() {
               </TableBody>
             </Table>
 
-            {plans.length === 0 && (
+            {visiblePlans.length === 0 && (
               <p className="p-8 text-center text-sm text-[#929aa5]">
                 No course plans are visible to this identity.
               </p>

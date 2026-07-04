@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Presentation } from "lucide-react";
 
 import { getTeachingAssignments } from "@/api/teachingAssignmentApi";
+import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
   Table,
@@ -15,6 +16,7 @@ import {
 export default function TeachingAssignments() {
   const [assignments, setAssignments] = useState(null);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -37,34 +39,36 @@ export default function TeachingAssignments() {
     };
   }, []);
 
+  const visibleAssignments = useMemo(() => {
+    if (!assignments) return [];
+    const term = search.trim().toLowerCase();
+    if (!term) return assignments;
+
+    return assignments.filter((assignment) =>
+      [
+        assignment.lecturerId,
+        assignment.courseId,
+        assignment.courseName,
+        assignment.programId,
+        assignment.semester,
+        assignment.academicYear,
+      ].some((value) => String(value).toLowerCase().includes(term)));
+  }, [assignments, search]);
+
   return (
     <div className="dashboard-page">
-      <header className="flex min-h-20 items-center border-b border-[#2b3139] pl-14 pr-4 sm:px-6 lg:px-8">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#707a8a]">
-            Teaching operations
-          </p>
-          <h1 className="mt-1 text-lg font-semibold tracking-tight text-white">
-            Teaching Assignments
-          </h1>
-        </div>
-      </header>
+      <DataPageHeader
+        eyebrow="Teaching operations"
+        title="Teaching Assignments"
+        description="Rows are restricted by your Oracle role and VPD context."
+        icon={Presentation}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search lecturer, course, program, or term"
+        searchDisabled={assignments === null}
+      />
 
       <div className="dashboard-content">
-        <section className="mb-6 flex items-center gap-4">
-          <div className="flex size-11 items-center justify-center rounded-md bg-[#2b3139] text-[#fcd535]">
-            <Presentation className="size-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-white">
-              Assigned classes
-            </h2>
-            <p className="mt-1 text-sm text-[#929aa5]">
-              Rows are restricted by your Oracle role and VPD context.
-            </p>
-          </div>
-        </section>
-
         {error && (
           <div role="alert" className="rounded-lg border border-[#3f4650] bg-[#1e2329] p-5 text-sm text-[#eaecef]">
             {error}
@@ -91,7 +95,7 @@ export default function TeachingAssignments() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {assignments.map((assignment) => (
+                {visibleAssignments.map((assignment) => (
                   <TableRow
                     key={`${assignment.lecturerId}-${assignment.courseId}-${assignment.semester}-${assignment.academicYear}-${assignment.programId}`}
                     className="border-[#2b3139] hover:bg-[#2b3139]/40"
@@ -119,7 +123,7 @@ export default function TeachingAssignments() {
               </TableBody>
             </Table>
 
-            {assignments.length === 0 && (
+            {visibleAssignments.length === 0 && (
               <p className="p-8 text-center text-sm text-[#929aa5]">
                 No teaching assignments are visible to this identity.
               </p>
