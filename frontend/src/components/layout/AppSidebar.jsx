@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   UserRound,
   Users,
+  UsersRound,
 } from "lucide-react";
 
 import { useLocation, useNavigate } from "react-router-dom";
@@ -74,6 +75,13 @@ export default function AppSidebar() {
       title: "Course Plans",
       url: "/course-plans",
       icon: CalendarRange,
+    },
+    {
+      title: session?.roleCode === "STUDENT"
+        ? "My Student Record"
+        : "Students",
+      url: "/students",
+      icon: UsersRound,
     },
     ...(hasAnyRole(session, TEACHING_ASSIGNMENT_ROLES)
       ? [

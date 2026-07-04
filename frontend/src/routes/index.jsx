@@ -12,6 +12,7 @@ import Courses from "../pages/courses/Courses";
 import CoursePlans from "../pages/course-plans/CoursePlans";
 import TeachingAssignments from "../pages/teaching-assignments/TeachingAssignments";
 import Enrollments from "../pages/enrollments/Enrollments";
+import Students from "../pages/students/Students";
 import Forbidden from "../pages/Forbidden";
 import Login from "../pages/auth/Login";
 import Users from "../pages/users/Users";
@@ -37,6 +38,7 @@ export default function AppRoutes() {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/courses" element={<Courses />} />
                     <Route path="/course-plans" element={<CoursePlans />} />
+                    <Route path="/students" element={<Students />} />
                     <Route path="/forbidden" element={<Forbidden />} />
                     <Route element={<RoleRoute allowedRoles={TEACHING_ASSIGNMENT_ROLES} />}>
                         <Route
