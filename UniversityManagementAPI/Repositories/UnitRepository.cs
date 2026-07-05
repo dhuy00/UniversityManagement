@@ -67,20 +67,22 @@ public sealed class UnitRepository : IUnitRepository
         command.BindByName = true;
         command.CommandType = CommandType.Text;
         command.CommandText = """
-            INSERT INTO UNIVERSITY_APP.UNITS (
-                UNIT_ID,
-                UNIT_NAME,
-                HEAD_STAFF_ID
-            ) VALUES (
-                :unit_id,
-                :unit_name,
-                NULL
-            )
+            BEGIN
+                UNIVERSITY_APP.UNIT_WORKFLOW_PKG.CREATE_UNIT(
+                    :unit_id,
+                    :unit_name,
+                    :head_staff_id
+                );
+            END;
             """;
         command.Parameters.Add("unit_id", OracleDbType.Varchar2).Value =
             request.UnitId.Trim().ToUpperInvariant();
         command.Parameters.Add("unit_name", OracleDbType.Varchar2).Value =
             request.UnitName.Trim();
+        command.Parameters.Add("head_staff_id", OracleDbType.Varchar2).Value =
+            string.IsNullOrWhiteSpace(request.HeadStaffId)
+                ? DBNull.Value
+                : request.HeadStaffId.Trim().ToUpperInvariant();
 
         await command.ExecuteNonQueryAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);

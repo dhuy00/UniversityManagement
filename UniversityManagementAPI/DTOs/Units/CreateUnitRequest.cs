@@ -9,4 +9,7 @@ public sealed class CreateUnitRequest
     [Required]
     [StringLength(150)]
     public string UnitName { get; init; } = string.Empty;
+
+    [StringLength(20)]
+    public string? HeadStaffId { get; init; }
 }

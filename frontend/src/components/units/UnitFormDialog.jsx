@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 export default function UnitFormDialog({ mode, unit, onClose, onSaved }) {
   const isEdit = mode === "edit";
@@ -44,18 +45,19 @@ export default function UnitFormDialog({ mode, unit, onClose, onSaved }) {
         await createUnit({
           unitId: normalizedId,
           unitName: normalizedName,
+          headStaffId: headStaffId.trim().toUpperCase() || null,
         });
       }
-      await onSaved();
+      await onSaved(isEdit ? null : normalizedId);
       toast.success(isEdit ? "Unit updated" : "Unit created", {
         description: `${normalizedId} · ${normalizedName}`,
       });
       onClose();
     } catch (requestError) {
-      setError(
-        requestError.response?.data?.title ||
+      setError(getApiErrorMessage(
+        requestError,
         "Unable to save the unit. Check its ID and head staff.",
-      );
+      ));
     } finally {
       setSaving(false);
     }
@@ -74,7 +76,7 @@ export default function UnitFormDialog({ mode, unit, onClose, onSaved }) {
                 {isEdit ? "Edit unit" : "Create unit"}
               </DialogTitle>
               <DialogDescription className="mt-1 text-[#929aa5]">
-                Create a unit first, then add staff and assign its head.
+                A selected head is reassigned to this unit atomically.
               </DialogDescription>
             </div>
           </div>
@@ -105,21 +107,21 @@ export default function UnitFormDialog({ mode, unit, onClose, onSaved }) {
               className="border-[#3f4650] bg-[#0b0e11] text-[#eaecef]"
             />
           </label>
-          {isEdit && (
-            <label className="space-y-2 sm:col-span-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.1em] text-[#929aa5]">
-                Head staff ID
-              </span>
-              <Input
-                value={headStaffId}
-                onChange={(event) => setHeadStaffId(event.target.value)}
-                disabled={saving}
-                maxLength={20}
-                placeholder="Optional; staff must belong to this unit"
-                className="border-[#3f4650] bg-[#0b0e11] text-[#eaecef]"
-              />
-            </label>
-          )}
+          <label className="space-y-2 sm:col-span-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.1em] text-[#929aa5]">
+              Head staff ID
+            </span>
+            <Input
+              value={headStaffId}
+              onChange={(event) => setHeadStaffId(event.target.value)}
+              disabled={saving}
+              maxLength={20}
+              placeholder={isEdit
+                ? "Optional; staff must belong to this unit"
+                : "Optional; selected head will move to this unit"}
+              className="border-[#3f4650] bg-[#0b0e11] text-[#eaecef]"
+            />
+          </label>
         </div>
 
         {error && (

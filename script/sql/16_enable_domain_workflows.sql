@@ -63,6 +63,176 @@ BEGIN
 END;
 /
 
+-- Academic Affairs can create a unit and select its head in one atomic
+-- operation. The trusted workflow context broadens STAFF UPDATE VPD only while
+-- this definer-rights package moves the selected head into the new unit.
+CREATE OR REPLACE PACKAGE UNIT_WORKFLOW_PKG
+AUTHID DEFINER
+AS
+    PROCEDURE CREATE_UNIT(
+        p_unit_id      IN VARCHAR2,
+        p_unit_name    IN VARCHAR2,
+        p_head_staff_id IN VARCHAR2
+    );
+END UNIT_WORKFLOW_PKG;
+/
+
+CREATE OR REPLACE PACKAGE BODY UNIT_WORKFLOW_PKG
+AS
+    PROCEDURE SET_WORKFLOW_ACTIVE(p_active IN VARCHAR2)
+    IS
+    BEGIN
+        DBMS_SESSION.SET_CONTEXT(
+            'UNIVERSITY_UNIT_WORKFLOW_CTX',
+            'ACTIVE',
+            p_active
+        );
+    END SET_WORKFLOW_ACTIVE;
+
+    PROCEDURE CREATE_UNIT(
+        p_unit_id       IN VARCHAR2,
+        p_unit_name     IN VARCHAR2,
+        p_head_staff_id IN VARCHAR2
+    )
+    IS
+        v_unit_id       VARCHAR2(20) := UPPER(TRIM(p_unit_id));
+        v_unit_name     VARCHAR2(150) := TRIM(p_unit_name);
+        v_head_staff_id VARCHAR2(20) := UPPER(TRIM(p_head_staff_id));
+    BEGIN
+        INSERT INTO UNITS (
+            UNIT_ID,
+            UNIT_NAME,
+            HEAD_STAFF_ID
+        ) VALUES (
+            v_unit_id,
+            v_unit_name,
+            NULL
+        );
+
+        IF v_head_staff_id IS NOT NULL THEN
+            SET_WORKFLOW_ACTIVE('Y');
+
+            -- A staff member can head only one unit. Reassignment leaves the
+            -- previous unit without a head instead of violating its FK.
+            UPDATE UNITS
+            SET HEAD_STAFF_ID = NULL
+            WHERE HEAD_STAFF_ID = v_head_staff_id;
+
+            UPDATE STAFF
+            SET UNIT_ID = v_unit_id
+            WHERE STAFF_ID = v_head_staff_id
+              AND ROLE_CODE IN ('UNIT_HEAD', 'DEAN');
+
+            IF SQL%ROWCOUNT <> 1 THEN
+                RAISE_APPLICATION_ERROR(
+                    -20602,
+                    'Head staff must exist and have UNIT_HEAD or DEAN role.'
+                );
+            END IF;
+
+            UPDATE UNITS
+            SET HEAD_STAFF_ID = v_head_staff_id
+            WHERE UNIT_ID = v_unit_id;
+
+            SET_WORKFLOW_ACTIVE(NULL);
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            SET_WORKFLOW_ACTIVE(NULL);
+            RAISE;
+    END CREATE_UNIT;
+END UNIT_WORKFLOW_PKG;
+/
+
+SHOW ERRORS PACKAGE UNIT_WORKFLOW_PKG
+SHOW ERRORS PACKAGE BODY UNIT_WORKFLOW_PKG
+
+GRANT EXECUTE ON UNIT_WORKFLOW_PKG TO RL_ACADEMIC_AFFAIRS;
+
+CREATE OR REPLACE PACKAGE STAFF_WORKFLOW_POLICY_PKG
+AUTHID DEFINER
+AS
+    FUNCTION UPDATE_PREDICATE(
+        p_object_schema IN VARCHAR2,
+        p_object_name   IN VARCHAR2
+    ) RETURN VARCHAR2;
+END STAFF_WORKFLOW_POLICY_PKG;
+/
+
+CREATE OR REPLACE PACKAGE BODY STAFF_WORKFLOW_POLICY_PKG
+AS
+    FUNCTION UPDATE_PREDICATE(
+        p_object_schema IN VARCHAR2,
+        p_object_name   IN VARCHAR2
+    ) RETURN VARCHAR2
+    IS
+        v_role_code VARCHAR2(30);
+        v_staff_id  VARCHAR2(20);
+    BEGIN
+        IF UPPER(SYS_CONTEXT('USERENV', 'SESSION_USER'))
+           IN ('UNIVERSITY_APP', 'SYS') THEN
+            RETURN '1=1';
+        END IF;
+
+        v_role_code := SYS_CONTEXT('UNIVERSITY_CTX', 'ROLE_CODE');
+        v_staff_id := SYS_CONTEXT('UNIVERSITY_CTX', 'STAFF_ID');
+
+        IF v_role_code = 'DEAN' THEN
+            RETURN '1=1';
+        ELSIF v_role_code = 'ACADEMIC_AFFAIRS'
+              AND SYS_CONTEXT(
+                  'UNIVERSITY_UNIT_WORKFLOW_CTX',
+                  'ACTIVE'
+              ) = 'Y' THEN
+            RETURN '1=1';
+        ELSIF v_role_code IN (
+            'BASIC_STAFF',
+            'LECTURER',
+            'ACADEMIC_AFFAIRS',
+            'UNIT_HEAD'
+        ) AND v_staff_id IS NOT NULL THEN
+            RETURN
+                'STAFF_ID = ' ||
+                DBMS_ASSERT.ENQUOTE_LITERAL(v_staff_id);
+        END IF;
+
+        RETURN '1=0';
+    END UPDATE_PREDICATE;
+END STAFF_WORKFLOW_POLICY_PKG;
+/
+
+SHOW ERRORS PACKAGE STAFF_WORKFLOW_POLICY_PKG
+SHOW ERRORS PACKAGE BODY STAFF_WORKFLOW_POLICY_PKG
+
+BEGIN
+    FOR policy_record IN (
+        SELECT POLICY_NAME
+        FROM USER_POLICIES
+        WHERE OBJECT_NAME = 'STAFF'
+          AND POLICY_NAME = 'P2_STAFF_UPDATE'
+    )
+    LOOP
+        DBMS_RLS.DROP_POLICY(
+            object_schema => USER,
+            object_name   => 'STAFF',
+            policy_name   => policy_record.POLICY_NAME
+        );
+    END LOOP;
+
+    DBMS_RLS.ADD_POLICY(
+        object_schema   => USER,
+        object_name     => 'STAFF',
+        policy_name     => 'P2_STAFF_UPDATE',
+        function_schema => USER,
+        policy_function =>
+            'STAFF_WORKFLOW_POLICY_PKG.UPDATE_PREDICATE',
+        statement_types => 'UPDATE',
+        update_check    => TRUE,
+        policy_type     => DBMS_RLS.DYNAMIC
+    );
+END;
+/
+
 -- Students need the assignment key to create an enrollment. VPD below exposes
 -- only assignments for the student's own program.
 GRANT SELECT ON TEACHING_ASSIGNMENTS TO RL_STUDENT;
@@ -222,8 +392,11 @@ END;
 /
 
 DECLARE
-    v_error_count  PLS_INTEGER;
-    v_policy_count PLS_INTEGER;
+    v_error_count        PLS_INTEGER;
+    v_policy_count       PLS_INTEGER;
+    v_unit_error_count   PLS_INTEGER;
+    v_staff_error_count  PLS_INTEGER;
+    v_staff_policy_count PLS_INTEGER;
 BEGIN
     SELECT COUNT(*)
     INTO v_error_count
@@ -237,7 +410,28 @@ BEGIN
       AND POLICY_NAME = 'P2_ASSIGNMENT_SELECT'
       AND ENABLE = 'YES';
 
-    IF v_error_count <> 0 OR v_policy_count <> 1 THEN
+    SELECT COUNT(*)
+    INTO v_unit_error_count
+    FROM USER_ERRORS
+    WHERE NAME = 'UNIT_WORKFLOW_PKG';
+
+    SELECT COUNT(*)
+    INTO v_staff_error_count
+    FROM USER_ERRORS
+    WHERE NAME = 'STAFF_WORKFLOW_POLICY_PKG';
+
+    SELECT COUNT(*)
+    INTO v_staff_policy_count
+    FROM USER_POLICIES
+    WHERE OBJECT_NAME = 'STAFF'
+      AND POLICY_NAME = 'P2_STAFF_UPDATE'
+      AND ENABLE = 'YES';
+
+    IF v_error_count <> 0
+       OR v_policy_count <> 1
+       OR v_unit_error_count <> 0
+       OR v_staff_error_count <> 0
+       OR v_staff_policy_count <> 1 THEN
         RAISE_APPLICATION_ERROR(
             -20601,
             'Domain workflow migration verification failed.'
@@ -245,7 +439,7 @@ BEGIN
     END IF;
 
     DBMS_OUTPUT.PUT_LINE(
-        'Verified nullable unit heads and student assignment visibility.'
+        'Verified unit creation workflow and assignment visibility.'
     );
 END;
 /

@@ -44,6 +44,20 @@ BEGIN
     EXECUTE IMMEDIATE
         'CREATE CONTEXT UNIVERSITY_CTX' ||
         ' USING UNIVERSITY_APP.SECURITY_CONTEXT_PKG';
+
+    SELECT COUNT(*)
+    INTO v_context_count
+    FROM DBA_CONTEXT
+    WHERE NAMESPACE = 'UNIVERSITY_UNIT_WORKFLOW_CTX';
+
+    IF v_context_count > 0 THEN
+        EXECUTE IMMEDIATE
+            'DROP CONTEXT UNIVERSITY_UNIT_WORKFLOW_CTX';
+    END IF;
+
+    EXECUTE IMMEDIATE
+        'CREATE CONTEXT UNIVERSITY_UNIT_WORKFLOW_CTX' ||
+        ' USING UNIVERSITY_APP.UNIT_WORKFLOW_PKG';
 END;
 /
 
@@ -70,7 +84,10 @@ BEGIN
     SELECT COUNT(*)
     INTO v_context_count
     FROM DBA_CONTEXT
-    WHERE NAMESPACE = 'UNIVERSITY_CTX';
+    WHERE NAMESPACE IN (
+        'UNIVERSITY_CTX',
+        'UNIVERSITY_UNIT_WORKFLOW_CTX'
+    );
 
     SELECT COUNT(*)
     INTO v_trigger_count
@@ -78,10 +95,10 @@ BEGIN
     WHERE TRIGGER_NAME = 'TRG_UNIVERSITY_INIT_CTX'
       AND STATUS = 'ENABLED';
 
-    IF v_context_count <> 1 THEN
+    IF v_context_count <> 2 THEN
         RAISE_APPLICATION_ERROR(
             -20311,
-            'UNIVERSITY_CTX was not created correctly.'
+            'Application contexts were not created correctly.'
         );
     END IF;
 
