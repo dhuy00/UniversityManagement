@@ -13,4 +13,15 @@ public interface IEnrollmentRepository
     Task<bool> UpdateScoresAsync(
         UpdateEnrollmentScoresRequest request,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<RegistrationOptionDto>> GetRegistrationOptionsAsync(
+        CancellationToken cancellationToken);
+
+    Task CreateAsync(
+        MaintainEnrollmentRequest request,
+        CancellationToken cancellationToken);
+
+    Task<bool> DeleteAsync(
+        MaintainEnrollmentRequest request,
+        CancellationToken cancellationToken);
 }

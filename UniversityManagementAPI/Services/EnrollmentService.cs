@@ -36,4 +36,25 @@ public sealed class EnrollmentService : IEnrollmentService
             request,
             cancellationToken);
     }
+
+    public Task<IReadOnlyList<RegistrationOptionDto>>
+        GetRegistrationOptionsAsync(CancellationToken cancellationToken)
+    {
+        return _enrollmentRepository.GetRegistrationOptionsAsync(
+            cancellationToken);
+    }
+
+    public Task CreateAsync(
+        MaintainEnrollmentRequest request,
+        CancellationToken cancellationToken)
+    {
+        return _enrollmentRepository.CreateAsync(request, cancellationToken);
+    }
+
+    public Task<bool> DeleteAsync(
+        MaintainEnrollmentRequest request,
+        CancellationToken cancellationToken)
+    {
+        return _enrollmentRepository.DeleteAsync(request, cancellationToken);
+    }
 }

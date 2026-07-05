@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
-[Authorize(Roles = "STUDENT,LECTURER,UNIT_HEAD,DEAN")]
+[Authorize]
 [Route("api/enrollments")]
 public sealed class EnrollmentsController : ControllerBase
 {
@@ -14,6 +14,7 @@ public sealed class EnrollmentsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "STUDENT,LECTURER,UNIT_HEAD,DEAN")]
     public async Task<ActionResult<IReadOnlyList<EnrollmentDto>>> GetAll(
         CancellationToken cancellationToken)
     {
@@ -22,6 +23,7 @@ public sealed class EnrollmentsController : ControllerBase
     }
 
     [HttpGet("course-plan")]
+    [Authorize(Roles = "STUDENT,LECTURER,UNIT_HEAD,DEAN")]
     public async Task<ActionResult<IReadOnlyList<EnrollmentDto>>> GetByCoursePlan(
         [FromQuery] string courseId,
         [FromQuery] int semester,
@@ -60,5 +62,37 @@ public sealed class EnrollmentsController : ControllerBase
             cancellationToken);
 
         return updated ? NoContent() : NotFound();
+    }
+
+    [Authorize(Roles = "STUDENT,ACADEMIC_AFFAIRS")]
+    [HttpGet("registration-options")]
+    public async Task<ActionResult<IReadOnlyList<RegistrationOptionDto>>>
+        GetRegistrationOptions(CancellationToken cancellationToken)
+    {
+        var options = await _enrollmentService.GetRegistrationOptionsAsync(
+            cancellationToken);
+        return Ok(options);
+    }
+
+    [Authorize(Roles = "STUDENT,ACADEMIC_AFFAIRS")]
+    [HttpPost]
+    public async Task<IActionResult> Create(
+        [FromBody] MaintainEnrollmentRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _enrollmentService.CreateAsync(request, cancellationToken);
+        return NoContent();
+    }
+
+    [Authorize(Roles = "STUDENT,ACADEMIC_AFFAIRS")]
+    [HttpDelete]
+    public async Task<IActionResult> Delete(
+        [FromBody] MaintainEnrollmentRequest request,
+        CancellationToken cancellationToken)
+    {
+        var deleted = await _enrollmentService.DeleteAsync(
+            request,
+            cancellationToken);
+        return deleted ? NoContent() : NotFound();
     }
 }

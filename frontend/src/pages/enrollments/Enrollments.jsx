@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { FileText, GraduationCap, Pencil } from "lucide-react";
+import { FileText, GraduationCap, Pencil, Trash2 } from "lucide-react";
 
 import { getEnrollments } from "@/api/enrollmentApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import EnrollmentDetailDialog from "@/components/enrollments/EnrollmentDetailDialog";
+import EnrollmentMaintainDialog from "@/components/enrollments/EnrollmentMaintainDialog";
 import EnrollmentScoreDialog from "@/components/enrollments/EnrollmentScoreDialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,8 @@ export default function Enrollments() {
   const [error, setError] = useState("");
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [scoreEnrollment, setScoreEnrollment] = useState(null);
+  const [maintainMode, setMaintainMode] = useState(null);
+  const [cancelEnrollment, setCancelEnrollment] = useState(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -157,6 +160,20 @@ export default function Enrollments() {
                               Edit
                             </Button>
                           )}
+                        {isStudent && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setCancelEnrollment(enrollment);
+                              setMaintainMode("delete");
+                            }}
+                          >
+                            <Trash2 />
+                            Cancel
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -193,6 +210,20 @@ export default function Enrollments() {
                 item.programId === updatedEnrollment.programId
                   ? updatedEnrollment
                   : item));
+          }}
+        />
+      )}
+      {maintainMode && (
+        <EnrollmentMaintainDialog
+          mode={maintainMode}
+          enrollment={cancelEnrollment}
+          onClose={() => {
+            setMaintainMode(null);
+            setCancelEnrollment(null);
+          }}
+          onSaved={async () => {
+            const data = await getEnrollments();
+            setEnrollments(data);
           }}
         />
       )}

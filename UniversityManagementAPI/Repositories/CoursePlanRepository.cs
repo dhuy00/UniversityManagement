@@ -24,10 +24,18 @@ public sealed class CoursePlanRepository : ICoursePlanRepository
             SELECT
                 cp.COURSE_ID,
                 c.COURSE_NAME,
+                c.UNIT_ID,
                 cp.SEMESTER,
                 cp.ACADEMIC_YEAR,
                 cp.PROGRAM_ID,
-                cp.START_DATE
+                cp.START_DATE,
+                CASE
+                    WHEN TRUNC(SYSDATE)
+                         BETWEEN TRUNC(cp.START_DATE)
+                             AND TRUNC(cp.START_DATE) + 14
+                    THEN 1
+                    ELSE 0
+                END AS REGISTRATION_OPEN
             FROM UNIVERSITY_APP.COURSE_PLANS cp
             JOIN UNIVERSITY_APP.COURSES c
               ON c.COURSE_ID = cp.COURSE_ID
@@ -45,10 +53,13 @@ public sealed class CoursePlanRepository : ICoursePlanRepository
             {
                 CourseId = reader.GetString(reader.GetOrdinal("COURSE_ID")),
                 CourseName = reader.GetString(reader.GetOrdinal("COURSE_NAME")),
+                UnitId = reader.GetString(reader.GetOrdinal("UNIT_ID")),
                 Semester = ReadInt32(reader, "SEMESTER"),
                 AcademicYear = ReadInt32(reader, "ACADEMIC_YEAR"),
                 ProgramId = reader.GetString(reader.GetOrdinal("PROGRAM_ID")),
-                StartDate = reader.GetDateTime(reader.GetOrdinal("START_DATE"))
+                StartDate = reader.GetDateTime(reader.GetOrdinal("START_DATE")),
+                RegistrationOpen =
+                    ReadInt32(reader, "REGISTRATION_OPEN") == 1
             });
         }
 
@@ -162,18 +173,6 @@ public sealed class CoursePlanRepository : ICoursePlanRepository
         command.Parameters.Add("program_id", OracleDbType.Varchar2).Value =
             request.ProgramId.Trim().ToUpperInvariant();
         command.Parameters.Add("start_date", OracleDbType.Date).Value =
-            GetStartDate(request.AcademicYear, request.Semester);
-    }
-
-    private static DateTime GetStartDate(int academicYear, int semester)
-    {
-        var month = semester switch
-        {
-            1 => 1,
-            2 => 5,
-            3 => 9,
-            _ => throw new ArgumentOutOfRangeException(nameof(semester))
-        };
-        return new DateTime(academicYear, month, 1);
+            request.StartDate;
     }
 }

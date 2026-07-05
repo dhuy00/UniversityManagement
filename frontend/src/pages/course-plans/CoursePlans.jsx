@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarRange, FileText, Pencil, Plus } from "lucide-react";
+import {
+  CalendarRange,
+  FileText,
+  GraduationCap,
+  Pencil,
+  Plus,
+} from "lucide-react";
 
 import { getCoursePlans } from "@/api/coursePlanApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import CoursePlanDetailDialog from "@/components/course-plans/CoursePlanDetailDialog";
 import CoursePlanFormDialog from "@/components/course-plans/CoursePlanFormDialog";
+import CoursePlanRegistrationDialog from "@/components/course-plans/CoursePlanRegistrationDialog";
 import CoursePlanEnrollmentsDialog from "@/components/enrollments/CoursePlanEnrollmentsDialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,10 +41,14 @@ export default function CoursePlans() {
   const [plans, setPlans] = useState(null);
   const [error, setError] = useState("");
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [detailPlan, setDetailPlan] = useState(null);
+  const [registrationPlan, setRegistrationPlan] = useState(null);
   const [formMode, setFormMode] = useState(null);
   const [editingPlan, setEditingPlan] = useState(null);
   const [search, setSearch] = useState("");
-  const canViewEnrollments = hasAnyRole(session, ENROLLMENT_ROLES);
+  const isStudent = session?.roleCode === "STUDENT";
+  const canViewEnrollments =
+    !isStudent && hasAnyRole(session, ENROLLMENT_ROLES);
   const canManagePlans = hasAnyRole(session, COURSE_PLAN_WRITE_ROLES);
 
   useEffect(() => {
@@ -123,7 +135,7 @@ export default function CoursePlans() {
                   <TableHead className="px-4 text-right text-[#929aa5]">Year</TableHead>
                   <TableHead className="px-4 text-[#929aa5]">Program</TableHead>
                   <TableHead className="px-4 text-[#929aa5]">Start date</TableHead>
-                  {(canViewEnrollments || canManagePlans) && (
+                  {(isStudent || canViewEnrollments || canManagePlans) && (
                     <TableHead className="px-4 text-right text-[#929aa5]">
                       Action
                     </TableHead>
@@ -154,9 +166,22 @@ export default function CoursePlans() {
                     <TableCell className="px-4 text-[#eaecef]">
                       {formatDate(plan.startDate)}
                     </TableCell>
-                    {(canViewEnrollments || canManagePlans) && (
+                    {(isStudent || canViewEnrollments || canManagePlans) && (
                       <TableCell className="px-4 text-right">
                         <div className="flex justify-end gap-2">
+                          {isStudent && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              aria-label="View course plan details"
+                              title="View course plan details"
+                              onClick={() => setDetailPlan(plan)}
+                            >
+                              <FileText />
+                              Detail
+                            </Button>
+                          )}
                           {canViewEnrollments && (
                             <Button
                               type="button"
@@ -168,6 +193,20 @@ export default function CoursePlans() {
                             >
                               <FileText />
                               Detail
+                            </Button>
+                          )}
+                          {isStudent && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={!plan.registrationOpen}
+                              title={plan.registrationOpen
+                                ? "Register this course"
+                                : "The registration window is closed"}
+                              onClick={() => setRegistrationPlan(plan)}
+                            >
+                              <GraduationCap />
+                              Register
                             </Button>
                           )}
                           {canManagePlans && (
@@ -206,6 +245,22 @@ export default function CoursePlans() {
         <CoursePlanEnrollmentsDialog
           plan={selectedPlan}
           onClose={() => setSelectedPlan(null)}
+        />
+      )}
+      {detailPlan && (
+        <CoursePlanDetailDialog
+          plan={detailPlan}
+          onClose={() => setDetailPlan(null)}
+          onRegister={() => {
+            setRegistrationPlan(detailPlan);
+            setDetailPlan(null);
+          }}
+        />
+      )}
+      {registrationPlan && (
+        <CoursePlanRegistrationDialog
+          plan={registrationPlan}
+          onClose={() => setRegistrationPlan(null)}
         />
       )}
       {formMode && (

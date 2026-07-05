@@ -88,6 +88,137 @@ public sealed class EnrollmentRepository : IEnrollmentRepository
         return updated;
     }
 
+    public async Task<IReadOnlyList<RegistrationOptionDto>>
+        GetRegistrationOptionsAsync(CancellationToken cancellationToken)
+    {
+        var options = new List<RegistrationOptionDto>();
+
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandType = CommandType.Text;
+        command.CommandText = """
+            SELECT
+                ta.LECTURER_ID,
+                ta.COURSE_ID,
+                c.COURSE_NAME,
+                ta.SEMESTER,
+                ta.ACADEMIC_YEAR,
+                ta.PROGRAM_ID,
+                cp.START_DATE,
+                CASE
+                    WHEN TRUNC(SYSDATE)
+                         BETWEEN TRUNC(cp.START_DATE)
+                             AND TRUNC(cp.START_DATE) + 14
+                    THEN 1
+                    ELSE 0
+                END AS REGISTRATION_OPEN
+            FROM UNIVERSITY_APP.TEACHING_ASSIGNMENTS ta
+            JOIN UNIVERSITY_APP.COURSE_PLANS cp
+              ON cp.COURSE_ID = ta.COURSE_ID
+             AND cp.SEMESTER = ta.SEMESTER
+             AND cp.ACADEMIC_YEAR = ta.ACADEMIC_YEAR
+             AND cp.PROGRAM_ID = ta.PROGRAM_ID
+            JOIN UNIVERSITY_APP.COURSES c
+              ON c.COURSE_ID = ta.COURSE_ID
+            ORDER BY
+                ta.ACADEMIC_YEAR,
+                ta.SEMESTER,
+                ta.COURSE_ID,
+                ta.LECTURER_ID
+            """;
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            options.Add(new RegistrationOptionDto
+            {
+                LecturerId = reader.GetString(reader.GetOrdinal("LECTURER_ID")),
+                CourseId = reader.GetString(reader.GetOrdinal("COURSE_ID")),
+                CourseName = reader.GetString(reader.GetOrdinal("COURSE_NAME")),
+                Semester = ReadInt32(reader, "SEMESTER"),
+                AcademicYear = ReadInt32(reader, "ACADEMIC_YEAR"),
+                ProgramId = reader.GetString(reader.GetOrdinal("PROGRAM_ID")),
+                StartDate = reader.GetDateTime(reader.GetOrdinal("START_DATE")),
+                RegistrationOpen =
+                    ReadInt32(reader, "REGISTRATION_OPEN") == 1
+            });
+        }
+
+        return options;
+    }
+
+    public async Task CreateAsync(
+        MaintainEnrollmentRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = connection.BeginTransaction();
+
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.BindByName = true;
+        command.CommandType = CommandType.Text;
+        command.CommandText = """
+            INSERT INTO UNIVERSITY_APP.ENROLLMENTS (
+                STUDENT_ID,
+                LECTURER_ID,
+                COURSE_ID,
+                SEMESTER,
+                ACADEMIC_YEAR,
+                PROGRAM_ID
+            ) VALUES (
+                :student_id,
+                :lecturer_id,
+                :course_id,
+                :semester,
+                :academic_year,
+                :program_id
+            )
+            """;
+        AddEnrollmentKeyParameters(command, request);
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<bool> DeleteAsync(
+        MaintainEnrollmentRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = connection.BeginTransaction();
+
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.BindByName = true;
+        command.CommandType = CommandType.Text;
+        command.CommandText = """
+            DELETE FROM UNIVERSITY_APP.ENROLLMENTS
+            WHERE STUDENT_ID = :student_id
+              AND LECTURER_ID = :lecturer_id
+              AND COURSE_ID = :course_id
+              AND SEMESTER = :semester
+              AND ACADEMIC_YEAR = :academic_year
+              AND PROGRAM_ID = :program_id
+            """;
+        AddEnrollmentKeyParameters(command, request);
+
+        var deleted = await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+        if (deleted)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
+        else
+        {
+            await transaction.RollbackAsync(cancellationToken);
+        }
+
+        return deleted;
+    }
+
     private async Task<IReadOnlyList<EnrollmentDto>> QueryAsync(
         CoursePlanFilter? filter,
         CancellationToken cancellationToken)
@@ -194,5 +325,23 @@ public sealed class EnrollmentRepository : IEnrollmentRepository
     {
         command.Parameters.Add(name, OracleDbType.Decimal).Value =
             value.HasValue ? value.Value : DBNull.Value;
+    }
+
+    private static void AddEnrollmentKeyParameters(
+        OracleCommand command,
+        MaintainEnrollmentRequest request)
+    {
+        command.Parameters.Add("student_id", OracleDbType.Varchar2).Value =
+            request.StudentId.Trim().ToUpperInvariant();
+        command.Parameters.Add("lecturer_id", OracleDbType.Varchar2).Value =
+            request.LecturerId.Trim().ToUpperInvariant();
+        command.Parameters.Add("course_id", OracleDbType.Varchar2).Value =
+            request.CourseId.Trim().ToUpperInvariant();
+        command.Parameters.Add("semester", OracleDbType.Int32).Value =
+            request.Semester;
+        command.Parameters.Add("academic_year", OracleDbType.Int32).Value =
+            request.AcademicYear;
+        command.Parameters.Add("program_id", OracleDbType.Varchar2).Value =
+            request.ProgramId.Trim().ToUpperInvariant();
     }
 }

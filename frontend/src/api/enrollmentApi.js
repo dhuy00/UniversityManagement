@@ -20,3 +20,16 @@ export const getCoursePlanEnrollments = async (plan) => {
 export const updateEnrollmentScores = async (request) => {
   await api.put("/enrollments/scores", request);
 };
+
+export const getRegistrationOptions = async () => {
+  const response = await api.get("/enrollments/registration-options");
+  return response.data;
+};
+
+export const createEnrollment = async (request) => {
+  await api.post("/enrollments", request);
+};
+
+export const deleteEnrollment = async (request) => {
+  await api.delete("/enrollments", { data: request });
+};

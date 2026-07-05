@@ -47,6 +47,8 @@ export default function CoursePlanFormDialog({
     courseName: plan?.courseName ?? "",
     semester: String(plan?.semester ?? 1),
     academicYear: plan?.academicYear ?? new Date().getFullYear(),
+    startDate:
+      plan?.startDate?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
     programId: plan?.programId ?? "REGULAR",
   });
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -62,6 +64,7 @@ export default function CoursePlanFormDialog({
       courseId: form.courseId.trim().toUpperCase(),
       semester: Number(form.semester),
       academicYear: Number(form.academicYear),
+      startDate: form.startDate,
       programId: form.programId,
     };
 
@@ -112,7 +115,7 @@ export default function CoursePlanFormDialog({
                 {isEdit ? "Edit course plan" : "Create course plan"}
               </DialogTitle>
               <DialogDescription className="mt-1 text-[#929aa5]">
-                Start date is derived automatically from semester and year.
+                Start date controls the 14-day enrollment adjustment window.
               </DialogDescription>
             </div>
           </div>
@@ -209,6 +212,18 @@ export default function CoursePlanFormDialog({
               value={form.academicYear}
               onChange={(event) =>
                 updateField("academicYear", event.target.value)}
+              disabled={saving}
+              className="border-[#3f4650] bg-[#0b0e11] text-[#eaecef]"
+            />
+          </label>
+          <label className="space-y-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.1em] text-[#929aa5]">
+              Start date
+            </span>
+            <Input
+              type="date"
+              value={form.startDate}
+              onChange={(event) => updateField("startDate", event.target.value)}
               disabled={saving}
               className="border-[#3f4650] bg-[#0b0e11] text-[#eaecef]"
             />
