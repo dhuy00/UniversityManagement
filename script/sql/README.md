@@ -24,10 +24,15 @@ Run:
 runners/01_sys_bootstrap.sql
 ```
 
-Save both generated passwords shown in Script Output:
+Save the generated password shown in Script Output:
 
 - `UNIVERSITY_APP`
-- Shared demo-user password
+
+The local demo-user password is fixed to:
+
+```text
+123
+```
 
 ### 2. Install as application owner
 
@@ -53,8 +58,21 @@ For an existing installation that must keep its data, connect as
 16_enable_domain_workflows.sql
 ```
 
-Then reconnect all demo-user sessions. This migration enables student
-assignment visibility through VPD and the create-unit-then-assign-head workflow.
+Then reconnect as `SYS AS SYSDBA` and rerun:
+
+```text
+12b_create_context_and_logon_trigger.sql
+```
+
+This creates the trusted context used by the atomic create-unit-and-assign-head
+workflow. Reconnect all demo-user sessions afterward.
+
+To provision Oracle accounts for all existing `STAFF` and `STUDENTS` rows,
+reconnect as `SYS AS SYSDBA` and run:
+
+```text
+12d_provision_all_data_users.sql
+```
 
 ### 3. Finalize as SYS
 
@@ -66,8 +84,12 @@ Run:
 runners/03_sys_finalize.sql
 ```
 
-The secure context and database logon trigger are now active. Reconnect demo
-users before verification.
+Runner 3 creates or updates an Oracle account for every seeded staff member and
+student, grants the role matching their application identity, and sets the
+local-demo password to `123`. It then activates the secure context and database
+logon trigger. Provisioning thousands of local users can take some time.
+
+Reconnect data users before verification.
 
 ## Verification
 
