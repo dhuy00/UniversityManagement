@@ -239,6 +239,7 @@ AS
         v_role_code VARCHAR2(30);
         v_staff_id  VARCHAR2(20);
         v_unit_id   VARCHAR2(20);
+        v_program_id VARCHAR2(20);
     BEGIN
         IF OWNER_BYPASS THEN
             RETURN '1=1';
@@ -247,13 +248,21 @@ AS
         v_role_code := CONTEXT_VALUE('ROLE_CODE');
         v_staff_id := CONTEXT_VALUE('STAFF_ID');
         v_unit_id := CONTEXT_VALUE('UNIT_ID');
+        v_program_id := CONTEXT_VALUE('PROGRAM_ID');
 
         IF v_role_code IN ('ACADEMIC_AFFAIRS', 'DEAN') THEN
             RETURN '1=1';
         ELSIF v_role_code = 'UNIT_HEAD' THEN
-            RETURN STAFF_IDS_IN_UNIT('LECTURER_ID', v_unit_id);
+            RETURN
+                '(' ||
+                STAFF_IDS_IN_UNIT('LECTURER_ID', v_unit_id) ||
+                ' OR ' ||
+                COURSE_IDS_IN_UNIT('COURSE_ID', v_unit_id) ||
+                ')';
         ELSIF v_role_code = 'LECTURER' AND v_staff_id IS NOT NULL THEN
             RETURN 'LECTURER_ID = ' || QUOTED_VALUE(v_staff_id);
+        ELSIF v_role_code = 'STUDENT' AND v_program_id IS NOT NULL THEN
+            RETURN 'PROGRAM_ID = ' || QUOTED_VALUE(v_program_id);
         END IF;
 
         RETURN '1=0';

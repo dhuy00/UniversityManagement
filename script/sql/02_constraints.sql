@@ -125,16 +125,11 @@ ALTER TABLE COURSE_PLANS ADD CONSTRAINT CK_COURSE_PLANS_PROGRAM
         )
     );
 
--- Semester 1, 2, and 3 start on January 1, May 1, and September 1.
+-- The actual semester start date is managed by Academic Affairs. It must stay
+-- inside the declared academic year because it controls the 14-day window.
 ALTER TABLE COURSE_PLANS ADD CONSTRAINT CK_COURSE_PLANS_START_DATE
     CHECK (
         EXTRACT(YEAR FROM START_DATE) = ACADEMIC_YEAR
-        AND EXTRACT(DAY FROM START_DATE) = 1
-        AND (
-            (SEMESTER = 1 AND EXTRACT(MONTH FROM START_DATE) = 1)
-            OR (SEMESTER = 2 AND EXTRACT(MONTH FROM START_DATE) = 5)
-            OR (SEMESTER = 3 AND EXTRACT(MONTH FROM START_DATE) = 9)
-        )
     );
 
 ALTER TABLE TEACHING_ASSIGNMENTS
@@ -194,15 +189,14 @@ ALTER TABLE NOTIFICATIONS ADD CONSTRAINT CK_NOTIFICATIONS_CREATED_BY
 
 -- Relational constraints
 
--- The two deferred constraints below resolve the intentional cycle:
+-- The two deferred constraints below preserve the intentional relationship:
 -- UNITS.HEAD_STAFF_ID -> STAFF and STAFF.UNIT_ID -> UNITS.
--- A unit and its first staff/head records must be created in one transaction.
+-- HEAD_STAFF_ID stays nullable so a unit can be created before the dean adds
+-- its first staff record; Academic Affairs assigns the head afterwards.
 ALTER TABLE STAFF ADD CONSTRAINT FK_STAFF_UNIT
     FOREIGN KEY (UNIT_ID)
     REFERENCES UNITS (UNIT_ID)
     DEFERRABLE INITIALLY DEFERRED;
-
-ALTER TABLE UNITS MODIFY (HEAD_STAFF_ID NOT NULL);
 
 ALTER TABLE UNITS ADD CONSTRAINT FK_UNITS_HEAD_IN_UNIT
     FOREIGN KEY (HEAD_STAFF_ID, UNIT_ID)

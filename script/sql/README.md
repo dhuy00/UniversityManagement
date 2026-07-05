@@ -46,6 +46,16 @@ runners/02_app_install.sql
 
 Warning: this runner drops and recreates application tables.
 
+For an existing installation that must keep its data, connect as
+`UNIVERSITY_APP` and run only:
+
+```text
+16_enable_domain_workflows.sql
+```
+
+Then reconnect all demo-user sessions. This migration enables student
+assignment visibility through VPD and the create-unit-then-assign-head workflow.
+
 ### 3. Finalize as SYS
 
 Reconnect as `SYS AS SYSDBA` to `XEPDB1`.

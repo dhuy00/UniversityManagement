@@ -32,6 +32,7 @@ PROMPT --- Phase 3: CS#6
 @@../20_grant_student_privileges.sql
 @@../21_vpd_students_course_plans.sql
 @@../22_vpd_student_enrollments.sql
+@@../16_enable_domain_workflows.sql
 
 PROMPT ============================================================
 PROMPT Application installation completed.

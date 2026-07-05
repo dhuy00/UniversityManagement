@@ -293,9 +293,11 @@ BEGIN
         'Student cannot read STAFF',
         'SELECT COUNT(*) FROM UNIVERSITY_APP.STAFF'
     );
-    assert_query_denied(
-        'Student cannot read TEACHING_ASSIGNMENTS',
-        'SELECT COUNT(*) FROM UNIVERSITY_APP.TEACHING_ASSIGNMENTS'
+    assert_query_count(
+        'Student sees no assignment outside own program',
+        'SELECT COUNT(*) FROM UNIVERSITY_APP.TEACHING_ASSIGNMENTS ' ||
+        'WHERE PROGRAM_ID <> ' || quoted(v_program_id),
+        0
     );
 
     -- Allowed and denied profile updates
