@@ -22,6 +22,7 @@ import {
   Presentation,
   ShieldCheck,
   UserRound,
+  UserCog,
   Users,
   UsersRound,
 } from "lucide-react";
@@ -36,6 +37,8 @@ import {
 import { logout } from "@/api/authApi";
 import {
   ENROLLMENT_ROLES,
+  ENROLLMENT_MAINTENANCE_ROLES,
+  DEAN_ROLES,
   STAFF_ROLES,
   TEACHING_ASSIGNMENT_ROLES,
 } from "@/lib/roles";
@@ -87,6 +90,15 @@ export default function AppSidebar() {
           },
         ]
       : []),
+    ...(hasAnyRole(session, DEAN_ROLES)
+      ? [
+          {
+            title: "Staff",
+            url: "/staff",
+            icon: UserCog,
+          },
+        ]
+      : []),
     {
       title: session?.roleCode === "STUDENT"
         ? "My Student Record"
@@ -110,6 +122,15 @@ export default function AppSidebar() {
               ? "My Enrollments"
               : "Enrollments",
             url: "/enrollments",
+            icon: GraduationCap,
+          },
+        ]
+      : []),
+    ...(hasAnyRole(session, ENROLLMENT_MAINTENANCE_ROLES)
+      ? [
+          {
+            title: "Enrollment Requests",
+            url: "/enrollment-management",
             icon: GraduationCap,
           },
         ]

@@ -13,13 +13,17 @@ import Units from "../pages/units/Units";
 import CoursePlans from "../pages/course-plans/CoursePlans";
 import TeachingAssignments from "../pages/teaching-assignments/TeachingAssignments";
 import Enrollments from "../pages/enrollments/Enrollments";
+import EnrollmentManagement from "../pages/enrollment-management/EnrollmentManagement";
 import Students from "../pages/students/Students";
+import Staff from "../pages/staff/Staff";
 import Forbidden from "../pages/Forbidden";
 import Login from "../pages/auth/Login";
 import Users from "../pages/users/Users";
 import Roles from "../pages/roles/Roles";
 import {
     ENROLLMENT_ROLES,
+    ENROLLMENT_MAINTENANCE_ROLES,
+    DEAN_ROLES,
     STAFF_ROLES,
     TEACHING_ASSIGNMENT_ROLES,
 } from "@/lib/roles";
@@ -45,6 +49,9 @@ export default function AppRoutes() {
                     <Route element={<RoleRoute allowedRoles={STAFF_ROLES} />}>
                         <Route path="/units" element={<Units />} />
                     </Route>
+                    <Route element={<RoleRoute allowedRoles={DEAN_ROLES} />}>
+                        <Route path="/staff" element={<Staff />} />
+                    </Route>
                     <Route element={<RoleRoute allowedRoles={TEACHING_ASSIGNMENT_ROLES} />}>
                         <Route
                             path="/teaching-assignments"
@@ -53,6 +60,12 @@ export default function AppRoutes() {
                     </Route>
                     <Route element={<RoleRoute allowedRoles={ENROLLMENT_ROLES} />}>
                         <Route path="/enrollments" element={<Enrollments />} />
+                    </Route>
+                    <Route element={<RoleRoute allowedRoles={ENROLLMENT_MAINTENANCE_ROLES} />}>
+                        <Route
+                            path="/enrollment-management"
+                            element={<EnrollmentManagement />}
+                        />
                     </Route>
                     <Route element={<SystemAdminRoute />}>
                         <Route path="/users" element={<Users />} />
