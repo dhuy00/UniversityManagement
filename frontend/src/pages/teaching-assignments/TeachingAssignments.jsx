@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Presentation } from "lucide-react";
+import { Pencil, Plus, Presentation, Trash2 } from "lucide-react";
 
 import { getTeachingAssignments } from "@/api/teachingAssignmentApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import TeachingAssignmentDeleteDialog from "@/components/teaching-assignments/TeachingAssignmentDeleteDialog";
+import TeachingAssignmentFormDialog from "@/components/teaching-assignments/TeachingAssignmentFormDialog";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,11 +15,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getAuthSession, hasAnyRole } from "@/lib/auth";
+import {
+  ASSIGNMENT_CREATE_DELETE_ROLES,
+  ASSIGNMENT_UPDATE_ROLES,
+} from "@/lib/roles";
 
 export default function TeachingAssignments() {
+  const session = getAuthSession();
   const [assignments, setAssignments] = useState(null);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [formMode, setFormMode] = useState(null);
+  const [editingAssignment, setEditingAssignment] = useState(null);
+  const [deletingAssignment, setDeletingAssignment] = useState(null);
+  const canCreateDelete = hasAnyRole(
+    session,
+    ASSIGNMENT_CREATE_DELETE_ROLES,
+  );
+  const canUpdate = hasAnyRole(session, ASSIGNMENT_UPDATE_ROLES);
+  const canManageAssignment = (assignment) => {
+    if (session?.roleCode === "UNIT_HEAD") {
+      return assignment.unitId === session.unitId;
+    }
+    return assignment.unitId === "OFFICE";
+  };
 
   useEffect(() => {
     let active = true;
@@ -38,6 +61,11 @@ export default function TeachingAssignments() {
       active = false;
     };
   }, []);
+
+  const refreshAssignments = async () => {
+    const data = await getTeachingAssignments();
+    setAssignments(data);
+  };
 
   const visibleAssignments = useMemo(() => {
     if (!assignments) return [];
@@ -66,6 +94,18 @@ export default function TeachingAssignments() {
         onSearchChange={setSearch}
         searchPlaceholder="Search lecturer, course, program, or term"
         searchDisabled={assignments === null}
+        actions={canCreateDelete && (
+          <Button
+            type="button"
+            onClick={() => {
+              setEditingAssignment(null);
+              setFormMode("create");
+            }}
+          >
+            <Plus />
+            Create assignment
+          </Button>
+        )}
       />
 
       <div className="dashboard-content">
@@ -92,6 +132,11 @@ export default function TeachingAssignments() {
                   <TableHead className="px-4 text-right text-[#929aa5]">Semester</TableHead>
                   <TableHead className="px-4 text-right text-[#929aa5]">Year</TableHead>
                   <TableHead className="px-4 text-[#929aa5]">Program</TableHead>
+                  {(canUpdate || canCreateDelete) && (
+                    <TableHead className="px-4 text-right text-[#929aa5]">
+                      Action
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -118,6 +163,38 @@ export default function TeachingAssignments() {
                     <TableCell className="px-4 text-[#eaecef]">
                       {assignment.programId}
                     </TableCell>
+                    {(canUpdate || canCreateDelete) && (
+                      <TableCell className="px-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          {canUpdate && canManageAssignment(assignment) && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingAssignment(assignment);
+                                setFormMode("edit");
+                              }}
+                            >
+                              <Pencil />
+                              Edit
+                            </Button>
+                          )}
+                          {canCreateDelete &&
+                            canManageAssignment(assignment) && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setDeletingAssignment(assignment)}
+                            >
+                              <Trash2 />
+                              Delete
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -131,6 +208,24 @@ export default function TeachingAssignments() {
           </div>
         )}
       </div>
+      {formMode && (
+        <TeachingAssignmentFormDialog
+          mode={formMode}
+          assignment={editingAssignment}
+          onClose={() => {
+            setFormMode(null);
+            setEditingAssignment(null);
+          }}
+          onSaved={refreshAssignments}
+        />
+      )}
+      {deletingAssignment && (
+        <TeachingAssignmentDeleteDialog
+          assignment={deletingAssignment}
+          onClose={() => setDeletingAssignment(null)}
+          onDeleted={refreshAssignments}
+        />
+      )}
     </div>
   );
 }

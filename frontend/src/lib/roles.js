@@ -26,6 +26,18 @@ export const STUDENT_WRITE_ROLES = ["ACADEMIC_AFFAIRS"];
 
 export const UNIT_WRITE_ROLES = ["ACADEMIC_AFFAIRS"];
 
+export const ASSIGNMENT_CREATE_DELETE_ROLES = ["UNIT_HEAD", "DEAN"];
+
+export const ASSIGNMENT_UPDATE_ROLES = [
+  "ACADEMIC_AFFAIRS",
+  "UNIT_HEAD",
+  "DEAN",
+];
+
+export const ENROLLMENT_MAINTENANCE_ROLES = ["ACADEMIC_AFFAIRS"];
+
+export const DEAN_ROLES = ["DEAN"];
+
 export const STAFF_ROLES = [
   "BASIC_STAFF",
   "LECTURER",
