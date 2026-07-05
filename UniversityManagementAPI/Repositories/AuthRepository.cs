@@ -42,7 +42,11 @@ public sealed class AuthRepository : IAuthRepository
                     SYS_CONTEXT('UNIVERSITY_CTX', 'IDENTITY_TYPE') AS IDENTITY_TYPE,
                     SYS_CONTEXT('UNIVERSITY_CTX', 'ROLE_CODE') AS ROLE_CODE,
                     SYS_CONTEXT('UNIVERSITY_CTX', 'STAFF_ID') AS STAFF_ID,
-                    SYS_CONTEXT('UNIVERSITY_CTX', 'STUDENT_ID') AS STUDENT_ID
+                    SYS_CONTEXT('UNIVERSITY_CTX', 'STUDENT_ID') AS STUDENT_ID,
+                    SYS_CONTEXT('UNIVERSITY_CTX', 'UNIT_ID') AS UNIT_ID,
+                    SYS_CONTEXT('UNIVERSITY_CTX', 'PROGRAM_ID') AS PROGRAM_ID,
+                    SYS_CONTEXT('UNIVERSITY_CTX', 'MAJOR_ID') AS MAJOR_ID,
+                    SYS_CONTEXT('UNIVERSITY_CTX', 'CAMPUS_ID') AS CAMPUS_ID
                 FROM DUAL
                 """;
             command.CommandType = CommandType.Text;
@@ -72,7 +76,11 @@ public sealed class AuthRepository : IAuthRepository
                 identityType!,
                 roleCode!,
                 ReadNullableString(reader, "STAFF_ID"),
-                ReadNullableString(reader, "STUDENT_ID"));
+                ReadNullableString(reader, "STUDENT_ID"),
+                ReadNullableString(reader, "UNIT_ID"),
+                ReadNullableString(reader, "PROGRAM_ID"),
+                ReadNullableString(reader, "MAJOR_ID"),
+                ReadNullableString(reader, "CAMPUS_ID"));
 
             return new OracleLoginResult(user, connectionString);
         }

@@ -32,6 +32,10 @@ export const saveAuthSession = ({ accessToken, expiresAt, user }) => {
     roleCode: user.roleCode,
     staffId: user.staffId,
     studentId: user.studentId,
+    unitId: user.unitId,
+    programId: user.programId,
+    majorId: user.majorId,
+    campusId: user.campusId,
   };
 
   localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));

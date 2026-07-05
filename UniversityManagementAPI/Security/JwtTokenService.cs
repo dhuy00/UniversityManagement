@@ -40,6 +40,26 @@ public sealed class JwtTokenService : IJwtTokenService
             claims.Add(new Claim("student_id", user.StudentId));
         }
 
+        if (user.UnitId is not null)
+        {
+            claims.Add(new Claim("unit_id", user.UnitId));
+        }
+
+        if (user.ProgramId is not null)
+        {
+            claims.Add(new Claim("program_id", user.ProgramId));
+        }
+
+        if (user.MajorId is not null)
+        {
+            claims.Add(new Claim("major_id", user.MajorId));
+        }
+
+        if (user.CampusId is not null)
+        {
+            claims.Add(new Claim("campus_id", user.CampusId));
+        }
+
         var credentials = new SigningCredentials(
             new SymmetricSecurityKey(_signingKeyProvider.Key),
             SecurityAlgorithms.HmacSha256);

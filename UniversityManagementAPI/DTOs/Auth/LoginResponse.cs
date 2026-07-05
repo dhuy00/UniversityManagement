@@ -8,4 +8,8 @@ public sealed record AuthenticatedUser(
     string IdentityType,
     string RoleCode,
     string? StaffId,
-    string? StudentId);
+    string? StudentId,
+    string? UnitId,
+    string? ProgramId,
+    string? MajorId,
+    string? CampusId);
