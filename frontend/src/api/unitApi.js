@@ -8,3 +8,7 @@ export const getUnits = async () => {
 export const updateUnit = async (unitId, request) => {
   await api.put(`/units/${encodeURIComponent(unitId)}`, request);
 };
+
+export const createUnit = async (request) => {
+  await api.post("/units", request);
+};

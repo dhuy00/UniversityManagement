@@ -35,13 +35,16 @@ public sealed class UnitRepository : IUnitRepository
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {
+            var headStaffIdOrdinal = reader.GetOrdinal("HEAD_STAFF_ID");
             var headStaffNameOrdinal = reader.GetOrdinal("HEAD_STAFF_NAME");
 
             units.Add(new UnitDto
             {
                 UnitId = reader.GetString(reader.GetOrdinal("UNIT_ID")),
                 UnitName = reader.GetString(reader.GetOrdinal("UNIT_NAME")),
-                HeadStaffId = reader.GetString(reader.GetOrdinal("HEAD_STAFF_ID")),
+                HeadStaffId = reader.IsDBNull(headStaffIdOrdinal)
+                    ? null
+                    : reader.GetString(headStaffIdOrdinal),
                 HeadStaffName = reader.IsDBNull(headStaffNameOrdinal)
                     ? null
                     : reader.GetString(headStaffNameOrdinal)
@@ -49,6 +52,38 @@ public sealed class UnitRepository : IUnitRepository
         }
 
         return units;
+    }
+
+    public async Task CreateAsync(
+        CreateUnitRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = connection.BeginTransaction();
+
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.BindByName = true;
+        command.CommandType = CommandType.Text;
+        command.CommandText = """
+            INSERT INTO UNIVERSITY_APP.UNITS (
+                UNIT_ID,
+                UNIT_NAME,
+                HEAD_STAFF_ID
+            ) VALUES (
+                :unit_id,
+                :unit_name,
+                NULL
+            )
+            """;
+        command.Parameters.Add("unit_id", OracleDbType.Varchar2).Value =
+            request.UnitId.Trim().ToUpperInvariant();
+        command.Parameters.Add("unit_name", OracleDbType.Varchar2).Value =
+            request.UnitName.Trim();
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task<bool> UpdateAsync(
@@ -66,11 +101,17 @@ public sealed class UnitRepository : IUnitRepository
         command.CommandType = CommandType.Text;
         command.CommandText = """
             UPDATE UNIVERSITY_APP.UNITS
-            SET UNIT_NAME = :unit_name
+            SET
+                UNIT_NAME = :unit_name,
+                HEAD_STAFF_ID = :head_staff_id
             WHERE UNIT_ID = :unit_id
             """;
         command.Parameters.Add("unit_name", OracleDbType.Varchar2).Value =
             request.UnitName.Trim();
+        command.Parameters.Add("head_staff_id", OracleDbType.Varchar2).Value =
+            string.IsNullOrWhiteSpace(request.HeadStaffId)
+                ? DBNull.Value
+                : request.HeadStaffId.Trim().ToUpperInvariant();
         command.Parameters.Add("unit_id", OracleDbType.Varchar2).Value =
             unitId.Trim().ToUpperInvariant();
 

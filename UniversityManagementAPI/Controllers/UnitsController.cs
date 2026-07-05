@@ -22,6 +22,16 @@ public sealed class UnitsController : ControllerBase
     }
 
     [Authorize(Roles = "ACADEMIC_AFFAIRS")]
+    [HttpPost]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateUnitRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _unitService.CreateAsync(request, cancellationToken);
+        return NoContent();
+    }
+
+    [Authorize(Roles = "ACADEMIC_AFFAIRS")]
     [HttpPut("{unitId}")]
     public async Task<IActionResult> Update(
         [FromRoute] string unitId,

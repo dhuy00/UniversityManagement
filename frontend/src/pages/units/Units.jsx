@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Pencil } from "lucide-react";
+import { Building2, Pencil, Plus } from "lucide-react";
 
 import { getUnits } from "@/api/unitApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
@@ -23,6 +23,7 @@ export default function Units() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [editingUnit, setEditingUnit] = useState(null);
+  const [formMode, setFormMode] = useState(null);
   const canManageUnits = hasAnyRole(session, UNIT_WRITE_ROLES);
 
   useEffect(() => {
@@ -69,6 +70,18 @@ export default function Units() {
         onSearchChange={setSearch}
         searchPlaceholder="Search by code, unit, or head name"
         searchDisabled={units === null}
+        actions={canManageUnits && (
+          <Button
+            type="button"
+            onClick={() => {
+              setEditingUnit(null);
+              setFormMode("create");
+            }}
+          >
+            <Plus />
+            Create unit
+          </Button>
+        )}
       />
 
       <div className="dashboard-content">
@@ -120,7 +133,7 @@ export default function Units() {
                       {unit.unitName}
                     </TableCell>
                     <TableCell className="px-4 text-[#eaecef]">
-                      {unit.headStaffId}
+                      {unit.headStaffId || "—"}
                     </TableCell>
                     <TableCell className="px-4 text-[#eaecef]">
                       {unit.headStaffName || "—"}
@@ -133,7 +146,10 @@ export default function Units() {
                           size="sm"
                           aria-label={`Edit ${unit.unitId}`}
                           title="Edit unit"
-                          onClick={() => setEditingUnit(unit)}
+                          onClick={() => {
+                            setEditingUnit(unit);
+                            setFormMode("edit");
+                          }}
                         >
                           <Pencil />
                           Edit
@@ -153,10 +169,14 @@ export default function Units() {
           </div>
         )}
       </div>
-      {editingUnit && (
+      {formMode && (
         <UnitFormDialog
+          mode={formMode}
           unit={editingUnit}
-          onClose={() => setEditingUnit(null)}
+          onClose={() => {
+            setEditingUnit(null);
+            setFormMode(null);
+          }}
           onSaved={refreshUnits}
         />
       )}
