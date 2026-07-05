@@ -4,9 +4,10 @@
 -- Run as a security administrator with CREATE USER, ALTER USER, and
 -- GRANT CREATE SESSION privileges. Do not run this script in CDB$ROOT.
 --
--- All demo users receive one randomly generated password for local testing.
--- The password is printed once at the end of the script. These accounts receive
--- only CREATE SESSION here; application roles are granted in a later phase.
+-- All bootstrap demo users receive the fixed password 123 for local testing.
+-- This intentionally weak password is suitable only for the demo environment.
+-- These accounts receive only CREATE SESSION here; application roles are
+-- granted in a later phase.
 
 SET SERVEROUTPUT ON
 SET VERIFY OFF
@@ -14,7 +15,7 @@ WHENEVER SQLERROR EXIT FAILURE ROLLBACK
 
 DECLARE
     v_container_name  VARCHAR2(128);
-    v_password        VARCHAR2(64);
+    v_password        CONSTANT VARCHAR2(64) := '123';
     v_user_count      PLS_INTEGER;
 
     PROCEDURE ensure_demo_user(p_username IN VARCHAR2)
@@ -57,11 +58,6 @@ BEGIN
         );
     END IF;
 
-    v_password :=
-        'Demo#' ||
-        DBMS_RANDOM.STRING('X', 16) ||
-        'a1';
-
     ensure_demo_user('DEAN01');
 
     ensure_demo_user('HEAD_IS01');
@@ -84,8 +80,8 @@ BEGIN
     ensure_demo_user('STUDENT02');
 
     DBMS_OUTPUT.PUT_LINE('Created or updated 15 demo users in ' || v_container_name || '.');
-    DBMS_OUTPUT.PUT_LINE('Temporary demo password: ' || v_password);
-    DBMS_OUTPUT.PUT_LINE('Store it securely; rerunning this script rotates it.');
+    DBMS_OUTPUT.PUT_LINE('Demo password: ' || v_password);
+    DBMS_OUTPUT.PUT_LINE('WARNING: Use this password only in the local demo environment.');
 END;
 /
 

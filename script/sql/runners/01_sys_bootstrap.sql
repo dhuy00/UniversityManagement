@@ -3,9 +3,9 @@
 --
 -- Outputs:
 --   - a generated UNIVERSITY_APP password
---   - one generated password shared by the 15 demo users
+--   - the fixed local-demo password shared by the 15 bootstrap users
 --
--- Save both passwords from Script Output.
+-- Save the generated UNIVERSITY_APP password from Script Output.
 
 SET ECHO ON
 SET SERVEROUTPUT ON
@@ -26,7 +26,8 @@ GRANT EXECUTE ON SYS.DBMS_RLS TO UNIVERSITY_APP;
 
 PROMPT ============================================================
 PROMPT SYS bootstrap completed.
-PROMPT Save the generated UNIVERSITY_APP and demo-user passwords.
+PROMPT Save the generated UNIVERSITY_APP password.
+PROMPT Bootstrap demo-user password: 123
 PROMPT Next: reconnect as UNIVERSITY_APP and run 02_app_install.sql.
 PROMPT ============================================================
 
