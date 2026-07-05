@@ -51,6 +51,10 @@ builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 
+// Staff
+builder.Services.AddScoped<IStaffService, StaffService>();
+builder.Services.AddScoped<IStaffRepository, StaffRepository>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendDomain", policy =>
