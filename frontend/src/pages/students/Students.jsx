@@ -36,7 +36,6 @@ export default function Students() {
   const session = getAuthSession();
   const [result, setResult] = useState(null);
   const [page, setPage] = useState(1);
-  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -64,14 +63,11 @@ export default function Students() {
     };
   }, [page, search]);
 
-  const handleSearch = () => {
-    const nextSearch = searchInput.trim();
-    if (page === 1 && search === nextSearch) return;
-
+  const handleSearchChange = (value) => {
     setLoading(true);
     setError("");
     setPage(1);
-    setSearch(nextSearch);
+    setSearch(value);
   };
 
   const changePage = (nextPage) => {
@@ -80,9 +76,33 @@ export default function Students() {
     setPage(nextPage);
   };
 
-  const refreshStudents = async () => {
+  const refreshStudents = async (createdStudentId) => {
     const data = await getStudents({ page, pageSize: PAGE_SIZE, search });
-    setResult(data);
+    if (!createdStudentId) {
+      setResult(data);
+      return;
+    }
+
+    const createdResult = await getStudents({
+      page: 1,
+      pageSize: 1,
+      search: createdStudentId,
+    });
+    const createdStudent = createdResult.items?.find(
+      (student) => student.studentId === createdStudentId,
+    );
+
+    setResult(createdStudent
+      ? {
+        ...data,
+        items: [
+          createdStudent,
+          ...data.items.filter(
+            (student) => student.studentId !== createdStudentId,
+          ),
+        ].slice(0, PAGE_SIZE),
+      }
+      : data);
   };
 
   const students = result?.items ?? [];
@@ -95,11 +115,10 @@ export default function Students() {
         title={isStudent ? "My Student Record" : "Students"}
         description="Results are filtered by the Oracle STUDENTS VPD policy."
         icon={UsersRound}
-        searchValue={searchInput}
-        onSearchChange={setSearchInput}
-        onSearchSubmit={handleSearch}
+        searchValue={search}
+        onSearchChange={handleSearchChange}
         searchPlaceholder="Search by student ID or name"
-        searchDisabled={loading}
+        searchDisabled={result === null}
         actions={canManageStudents && (
           <Button
             type="button"

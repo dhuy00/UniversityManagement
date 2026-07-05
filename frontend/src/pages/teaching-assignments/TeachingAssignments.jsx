@@ -20,6 +20,10 @@ import {
   ASSIGNMENT_CREATE_DELETE_ROLES,
   ASSIGNMENT_UPDATE_ROLES,
 } from "@/lib/roles";
+import { prioritizeItem } from "@/lib/prioritizeItem";
+
+const assignmentKey = (assignment) =>
+  `${assignment.lecturerId}|${assignment.courseId}|${assignment.semester}|${assignment.academicYear}|${assignment.programId}`;
 
 export default function TeachingAssignments() {
   const session = getAuthSession();
@@ -62,9 +66,13 @@ export default function TeachingAssignments() {
     };
   }, []);
 
-  const refreshAssignments = async () => {
+  const refreshAssignments = async (createdAssignmentKey) => {
     const data = await getTeachingAssignments();
-    setAssignments(data);
+    setAssignments(prioritizeItem(
+      data,
+      createdAssignmentKey,
+      assignmentKey,
+    ));
   };
 
   const visibleAssignments = useMemo(() => {

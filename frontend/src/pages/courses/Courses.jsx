@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { getAuthSession, hasAnyRole } from "@/lib/auth";
 import { COURSE_WRITE_ROLES } from "@/lib/roles";
+import { prioritizeItem } from "@/lib/prioritizeItem";
 
 export default function Courses() {
   const session = getAuthSession();
@@ -42,9 +43,13 @@ export default function Courses() {
     };
   }, []);
 
-  const refreshCourses = async () => {
+  const refreshCourses = async (createdCourseId) => {
     const data = await getCourses();
-    setCourses(data);
+    setCourses(prioritizeItem(
+      data,
+      createdCourseId,
+      (course) => course.courseId,
+    ));
   };
 
   const visibleCourses = useMemo(() => {

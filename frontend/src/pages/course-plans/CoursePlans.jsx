@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { getCoursePlans } from "@/api/coursePlanApi";
+import { getTeachingAssignments } from "@/api/teachingAssignmentApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import CoursePlanDetailDialog from "@/components/course-plans/CoursePlanDetailDialog";
@@ -28,6 +29,7 @@ import {
   COURSE_PLAN_WRITE_ROLES,
   ENROLLMENT_ROLES,
 } from "@/lib/roles";
+import { prioritizeItem } from "@/lib/prioritizeItem";
 
 const formatDate = (value) =>
   new Intl.DateTimeFormat("en-GB", {
@@ -35,6 +37,9 @@ const formatDate = (value) =>
     month: "2-digit",
     year: "numeric",
   }).format(new Date(value));
+
+const planKey = (plan) =>
+  `${plan.courseId}|${plan.semester}|${plan.academicYear}|${plan.programId}`;
 
 export default function CoursePlans() {
   const session = getAuthSession();
@@ -46,6 +51,7 @@ export default function CoursePlans() {
   const [formMode, setFormMode] = useState(null);
   const [editingPlan, setEditingPlan] = useState(null);
   const [search, setSearch] = useState("");
+  const [detailPlanKeys, setDetailPlanKeys] = useState(new Set());
   const isStudent = session?.roleCode === "STUDENT";
   const canViewEnrollments =
     !isStudent && hasAnyRole(session, ENROLLMENT_ROLES);
@@ -67,9 +73,28 @@ export default function CoursePlans() {
     };
   }, []);
 
-  const refreshPlans = async () => {
+  useEffect(() => {
+    if (!canViewEnrollments) return undefined;
+
+    let active = true;
+    getTeachingAssignments()
+      .then((assignments) => {
+        if (active) {
+          setDetailPlanKeys(new Set(assignments.map(planKey)));
+        }
+      })
+      .catch(() => {
+        if (active) setDetailPlanKeys(new Set());
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [canViewEnrollments]);
+
+  const refreshPlans = async (createdPlanKey) => {
     const data = await getCoursePlans();
-    setPlans(data);
+    setPlans(prioritizeItem(data, createdPlanKey, planKey));
   };
 
   const visiblePlans = useMemo(() => {
@@ -182,7 +207,8 @@ export default function CoursePlans() {
                               Detail
                             </Button>
                           )}
-                          {canViewEnrollments && (
+                          {canViewEnrollments &&
+                            detailPlanKeys.has(planKey(plan)) && (
                             <Button
                               type="button"
                               variant="outline"
@@ -235,7 +261,9 @@ export default function CoursePlans() {
 
             {visiblePlans.length === 0 && (
               <p className="p-8 text-center text-sm text-[#929aa5]">
-                No course plans are visible to this identity.
+                {search.trim()
+                  ? "No course plans match the current search."
+                  : "No course plans are visible to this identity."}
               </p>
             )}
           </div>

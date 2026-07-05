@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { prioritizeItem } from "@/lib/prioritizeItem";
 import { getAuthSession, hasAnyRole } from "@/lib/auth";
 import { SCORE_EDIT_ROLES } from "@/lib/roles";
 
@@ -221,9 +222,30 @@ export default function Enrollments() {
             setMaintainMode(null);
             setCancelEnrollment(null);
           }}
-          onSaved={async () => {
+          onSaved={async (createdEnrollment) => {
             const data = await getEnrollments();
-            setEnrollments(data);
+            const createdKey = createdEnrollment
+              ? [
+                createdEnrollment.studentId,
+                createdEnrollment.lecturerId,
+                createdEnrollment.courseId,
+                createdEnrollment.semester,
+                createdEnrollment.academicYear,
+                createdEnrollment.programId,
+              ].join("|")
+              : null;
+            setEnrollments(prioritizeItem(
+              data,
+              createdKey,
+              (item) => [
+                item.studentId,
+                item.lecturerId,
+                item.courseId,
+                item.semester,
+                item.academicYear,
+                item.programId,
+              ].join("|"),
+            ));
           }}
         />
       )}

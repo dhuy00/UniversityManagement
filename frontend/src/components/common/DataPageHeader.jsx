@@ -42,18 +42,25 @@ export default function DataPageHeader({
 
         <div className="flex w-full flex-col gap-2 sm:flex-row lg:max-w-2xl lg:justify-end">
           {actions}
-          <form className="flex w-full max-w-md gap-2" onSubmit={handleSubmit}>
+          <form className="relative flex w-full max-w-md" onSubmit={handleSubmit}>
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#707a8a]" />
             <Input
               value={searchValue}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder={searchPlaceholder}
               disabled={searchDisabled}
-              className="border-[#3f4650] bg-[#0b0e11] text-[#eaecef]"
+              className="border-[#3f4650] bg-[#0b0e11] pl-9 text-[#eaecef]"
             />
-            <Button type="submit" variant="outline" disabled={searchDisabled}>
-              <Search />
-              Search
-            </Button>
+            {onSearchSubmit && (
+              <Button
+                type="submit"
+                variant="outline"
+                disabled={searchDisabled}
+                className="ml-2"
+              >
+                Search
+              </Button>
+            )}
           </form>
         </div>
       </div>

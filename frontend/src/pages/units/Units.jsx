@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { getAuthSession, hasAnyRole } from "@/lib/auth";
 import { UNIT_WRITE_ROLES } from "@/lib/roles";
+import { prioritizeItem } from "@/lib/prioritizeItem";
 
 export default function Units() {
   const session = getAuthSession();
@@ -42,9 +43,13 @@ export default function Units() {
     };
   }, []);
 
-  const refreshUnits = async () => {
+  const refreshUnits = async (createdUnitId) => {
     const data = await getUnits();
-    setUnits(data);
+    setUnits(prioritizeItem(
+      data,
+      createdUnitId,
+      (item) => item.unitId,
+    ));
   };
 
   const visibleUnits = useMemo(() => {

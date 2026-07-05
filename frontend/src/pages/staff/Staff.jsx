@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { prioritizeItem } from "@/lib/prioritizeItem";
 
 export default function Staff() {
   const [staff, setStaff] = useState(null);
@@ -24,9 +25,13 @@ export default function Staff() {
   const [editingStaff, setEditingStaff] = useState(null);
   const [deletingStaff, setDeletingStaff] = useState(null);
 
-  const loadStaff = async () => {
+  const loadStaff = async (createdStaffId) => {
     const data = await getStaff();
-    setStaff(data);
+    setStaff(prioritizeItem(
+      data,
+      createdStaffId,
+      (item) => item.staffId,
+    ));
   };
 
   useEffect(() => {
