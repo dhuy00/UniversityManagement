@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 const programs = [
   "REGULAR",
@@ -81,16 +82,18 @@ export default function CoursePlanFormDialog({
       } else {
         await createCoursePlan(request);
       }
-      await onSaved();
+      await onSaved(isEdit
+        ? null
+        : `${request.courseId}|${request.semester}|${request.academicYear}|${request.programId}`);
       toast.success(isEdit ? "Course plan updated" : "Course plan created", {
         description: `${request.courseId} · Semester ${request.semester}/${request.academicYear}`,
       });
       onClose();
     } catch (requestError) {
-      setError(
-        requestError.response?.data?.title ||
+      setError(getApiErrorMessage(
+        requestError,
         "Unable to save the course plan. Check its key and references.",
-      );
+      ));
     } finally {
       setSaving(false);
     }

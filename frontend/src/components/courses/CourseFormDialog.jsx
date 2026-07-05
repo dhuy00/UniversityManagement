@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 export default function CourseFormDialog({
   mode,
@@ -96,16 +97,16 @@ export default function CourseFormDialog({
         await createCourse(request);
       }
 
-      await onSaved();
+      await onSaved(isEdit ? null : request.courseId);
       toast.success(isEdit ? "Course updated" : "Course created", {
         description: `${request.courseId} · ${request.courseName}`,
       });
       onClose();
     } catch (requestError) {
-      setError(
-        requestError.response?.data?.title ||
+      setError(getApiErrorMessage(
+        requestError,
         "Unable to save the course. Check its values and unit.",
-      );
+      ));
     } finally {
       setSaving(false);
     }

@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 const selectOptions = {
   gender: ["MALE", "FEMALE", "OTHER"],
@@ -121,16 +122,16 @@ export default function StudentFormDialog({
         });
       }
 
-      await onSaved();
+      await onSaved(isEdit ? null : form.studentId.trim().toUpperCase());
       toast.success(isEdit ? "Student updated" : "Student created", {
         description: `${form.studentId.trim().toUpperCase()} · ${commonRequest.fullName}`,
       });
       onClose();
     } catch (requestError) {
-      setError(
-        requestError.response?.data?.title ||
+      setError(getApiErrorMessage(
+        requestError,
         "Unable to save the student. Check IDs and field values.",
-      );
+      ));
     } finally {
       setSaving(false);
     }
@@ -160,7 +161,14 @@ export default function StudentFormDialog({
         step={step}
         maxLength={maxLength}
         value={form[key]}
-        onChange={(event) => updateField(key, event.target.value)}
+        onChange={(event) => updateField(
+          key,
+          key === "phone"
+            ? event.target.value.replace(/\D/g, "")
+            : event.target.value,
+        )}
+        inputMode={key === "phone" ? "numeric" : undefined}
+        pattern={key === "phone" ? "[0-9]*" : undefined}
         disabled={saving || disabled}
         className="border-[#3f4650] bg-[#0b0e11] text-[#eaecef]"
       />

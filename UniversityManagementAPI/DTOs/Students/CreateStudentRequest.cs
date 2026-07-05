@@ -20,6 +20,7 @@ public sealed class CreateStudentRequest
     public string? Address { get; init; }
 
     [StringLength(20)]
+    [RegularExpression(@"^\d*$", ErrorMessage = "Phone must contain digits only.")]
     public string? Phone { get; init; }
 
     [Required]

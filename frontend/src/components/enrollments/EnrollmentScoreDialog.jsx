@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 const scoreFields = [
   ["practiceScore", "Practice score"],
@@ -71,9 +72,10 @@ export default function EnrollmentScoreDialog({
       setError(
         requestError.response?.status === 404
           ? "This enrollment is not editable by your Oracle identity."
-          : requestError.response?.data?.title ||
-            requestError.message ||
-            "Unable to update scores.",
+          : getApiErrorMessage(
+            requestError,
+            requestError.message || "Unable to update scores.",
+          ),
       );
     } finally {
       setSaving(false);

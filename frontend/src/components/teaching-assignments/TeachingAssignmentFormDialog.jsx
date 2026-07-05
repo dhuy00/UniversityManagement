@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getAuthSession } from "@/lib/auth";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 const planKey = (plan) =>
   `${plan.courseId}|${plan.semester}|${plan.academicYear}|${plan.programId}`;
@@ -104,17 +105,19 @@ export default function TeachingAssignmentFormDialog({
       } else {
         await createTeachingAssignment(request);
       }
-      await onSaved();
+      await onSaved(isEdit
+        ? null
+        : `${request.lecturerId}|${planKey(request)}`);
       toast.success(
         isEdit ? "Teaching assignment updated" : "Teaching assignment created",
         { description: `${request.lecturerId} · ${request.courseId}` },
       );
       onClose();
     } catch (requestError) {
-      setError(
-        requestError.response?.data?.title ||
+      setError(getApiErrorMessage(
+        requestError,
         "Unable to save the assignment. Check the role, unit, and references.",
-      );
+      ));
     } finally {
       setSaving(false);
     }

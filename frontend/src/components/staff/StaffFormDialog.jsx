@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 const options = {
   gender: ["MALE", "FEMALE", "OTHER"],
@@ -125,16 +126,16 @@ export default function StaffFormDialog({ mode, staff, onClose, onSaved }) {
           oracleUsername: form.oracleUsername.trim().toUpperCase(),
         });
       }
-      await onSaved();
+      await onSaved(isEdit ? null : form.staffId.trim().toUpperCase());
       toast.success(isEdit ? "Staff updated" : "Staff created", {
         description: `${form.staffId.trim().toUpperCase()} · ${request.fullName}`,
       });
       onClose();
     } catch (requestError) {
-      setError(
-        requestError.response?.data?.title ||
+      setError(getApiErrorMessage(
+        requestError,
         "Unable to save staff. Check references and unique values.",
-      );
+      ));
     } finally {
       setSaving(false);
     }
@@ -148,7 +149,14 @@ export default function StaffFormDialog({ mode, staff, onClose, onSaved }) {
       <Input
         {...props}
         value={form[key]}
-        onChange={(event) => setField(key, event.target.value)}
+        onChange={(event) => setField(
+          key,
+          key === "phone"
+            ? event.target.value.replace(/\D/g, "")
+            : event.target.value,
+        )}
+        inputMode={key === "phone" ? "numeric" : undefined}
+        pattern={key === "phone" ? "[0-9]*" : undefined}
         disabled={saving || props.disabled}
         className="border-[#3f4650] bg-[#0b0e11] text-[#eaecef]"
       />

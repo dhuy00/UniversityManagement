@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 export default function ProfileContactDialog({ profile, onClose, onSaved }) {
   const isStudent = profile.identityType === "STUDENT";
@@ -45,10 +46,10 @@ export default function ProfileContactDialog({ profile, onClose, onSaved }) {
       toast.success("Contact information updated");
       onClose();
     } catch (requestError) {
-      setError(
-        requestError.response?.data?.title ||
+      setError(getApiErrorMessage(
+        requestError,
         "Unable to update contact information.",
-      );
+      ));
     } finally {
       setSaving(false);
     }
@@ -86,7 +87,10 @@ export default function ProfileContactDialog({ profile, onClose, onSaved }) {
           </span>
           <Input
             value={phone}
-            onChange={(event) => setPhone(event.target.value)}
+            onChange={(event) =>
+              setPhone(event.target.value.replace(/\D/g, ""))}
+            inputMode="numeric"
+            pattern="[0-9]*"
             maxLength={20}
             disabled={saving}
             className="border-[#3f4650] bg-[#0b0e11] text-[#eaecef]"

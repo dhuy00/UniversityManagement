@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getAuthSession } from "@/lib/auth";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 const matchesPlan = (option, plan) =>
   option.courseId === plan.courseId &&
@@ -78,10 +79,10 @@ export default function CoursePlanRegistrationDialog({ plan, onClose }) {
       });
       onClose();
     } catch (requestError) {
-      setError(
-        requestError.response?.data?.title ||
+      setError(getApiErrorMessage(
+        requestError,
         "Unable to register this course. You may already be enrolled.",
-      );
+      ));
     } finally {
       setSaving(false);
     }

@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getAuthSession } from "@/lib/auth";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 const optionKey = (option) =>
   `${option.lecturerId}|${option.courseId}|${option.semester}|${option.academicYear}|${option.programId}`;
@@ -94,16 +95,16 @@ export default function EnrollmentMaintainDialog({
       } else {
         await createEnrollment(request);
       }
-      await onSaved();
+      await onSaved(isDelete ? null : request);
       toast.success(isDelete ? "Enrollment cancelled" : "Enrollment created", {
         description: `${request.studentId} · ${request.courseId}`,
       });
       onClose();
     } catch (requestError) {
-      setError(
-        requestError.response?.data?.title ||
+      setError(getApiErrorMessage(
+        requestError,
         "Unable to change the enrollment. The registration window may be closed.",
-      );
+      ));
     } finally {
       setSaving(false);
     }
