@@ -28,7 +28,8 @@ public sealed class AuthService : IAuthService
             request.Password,
             cancellationToken);
 
-        if (oracleLogin is null)
+        if (oracleLogin is null ||
+            !UniversityIdentityValidator.IsTrusted(oracleLogin.User))
         {
             return null;
         }

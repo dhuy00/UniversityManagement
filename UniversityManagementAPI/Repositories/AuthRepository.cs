@@ -82,6 +82,11 @@ public sealed class AuthRepository : IAuthRepository
                 ReadNullableString(reader, "MAJOR_ID"),
                 ReadNullableString(reader, "CAMPUS_ID"));
 
+            if (!UniversityIdentityValidator.IsTrusted(user))
+            {
+                return null;
+            }
+
             return new OracleLoginResult(user, connectionString);
         }
         catch (OracleException)
