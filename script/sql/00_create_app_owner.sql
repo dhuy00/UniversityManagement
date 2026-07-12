@@ -25,10 +25,7 @@ BEGIN
         );
     END IF;
 
-    v_password :=
-        'App#' ||
-        DBMS_RANDOM.STRING('X', 20) ||
-        'a1';
+    v_password := '123';
 
     SELECT COUNT(*)
     INTO v_user_count

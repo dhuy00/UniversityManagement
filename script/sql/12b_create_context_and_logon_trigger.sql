@@ -80,6 +80,7 @@ SHOW ERRORS TRIGGER TRG_UNIVERSITY_INIT_CTX
 DECLARE
     v_context_count  PLS_INTEGER;
     v_trigger_count  PLS_INTEGER;
+    v_error_count    PLS_INTEGER;
 BEGIN
     SELECT COUNT(*)
     INTO v_context_count
@@ -91,9 +92,22 @@ BEGIN
 
     SELECT COUNT(*)
     INTO v_trigger_count
-    FROM DBA_TRIGGERS
-    WHERE TRIGGER_NAME = 'TRG_UNIVERSITY_INIT_CTX'
-      AND STATUS = 'ENABLED';
+    FROM DBA_TRIGGERS t
+    JOIN DBA_OBJECTS o
+      ON o.OWNER = t.OWNER
+     AND o.OBJECT_NAME = t.TRIGGER_NAME
+     AND o.OBJECT_TYPE = 'TRIGGER'
+    WHERE t.OWNER = 'SYS'
+      AND t.TRIGGER_NAME = 'TRG_UNIVERSITY_INIT_CTX'
+      AND t.STATUS = 'ENABLED'
+      AND o.STATUS = 'VALID';
+
+    SELECT COUNT(*)
+    INTO v_error_count
+    FROM DBA_ERRORS
+    WHERE OWNER = 'SYS'
+      AND NAME = 'TRG_UNIVERSITY_INIT_CTX'
+      AND TYPE = 'TRIGGER';
 
     IF v_context_count <> 2 THEN
         RAISE_APPLICATION_ERROR(
@@ -102,10 +116,18 @@ BEGIN
         );
     END IF;
 
+    IF v_error_count <> 0 THEN
+        RAISE_APPLICATION_ERROR(
+            -20313,
+            'TRG_UNIVERSITY_INIT_CTX compiled with ' ||
+            v_error_count || ' error(s). Review DBA_ERRORS.'
+        );
+    END IF;
+
     IF v_trigger_count <> 1 THEN
         RAISE_APPLICATION_ERROR(
             -20312,
-            'TRG_UNIVERSITY_INIT_CTX is missing or disabled.'
+            'TRG_UNIVERSITY_INIT_CTX is missing, disabled, or invalid.'
         );
     END IF;
 

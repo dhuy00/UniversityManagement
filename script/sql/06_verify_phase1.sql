@@ -112,6 +112,16 @@ BEGIN
     INTO v_actual
     FROM USER_CONSTRAINTS
     WHERE CONSTRAINT_NAME LIKE 'CK\_%' ESCAPE '\'
+      AND TABLE_NAME IN (
+          'UNITS',
+          'STAFF',
+          'STUDENTS',
+          'COURSES',
+          'COURSE_PLANS',
+          'TEACHING_ASSIGNMENTS',
+          'ENROLLMENTS',
+          'NOTIFICATIONS'
+      )
       AND CONSTRAINT_TYPE = 'C'
       AND STATUS = 'ENABLED'
       AND VALIDATED = 'VALIDATED';
@@ -393,6 +403,16 @@ SELECT
     descend
 FROM USER_IND_COLUMNS
 WHERE INDEX_NAME LIKE 'IX\_%' ESCAPE '\'
+  AND TABLE_NAME IN (
+      'UNITS',
+      'STAFF',
+      'STUDENTS',
+      'COURSES',
+      'COURSE_PLANS',
+      'TEACHING_ASSIGNMENTS',
+      'ENROLLMENTS',
+      'NOTIFICATIONS'
+  )
 ORDER BY index_name, column_position;
 
 PROMPT Phase 1 - Step 6 completed successfully.

@@ -26,9 +26,10 @@ ALTER TABLE STAFF ADD CONSTRAINT UQ_STAFF_ORACLE_USERNAME
 -- Required by the composite foreign key that guarantees a unit head belongs
 -- to the same unit. STAFF_ID is already unique, but Oracle requires the exact
 -- referenced column list to have a UNIQUE or PRIMARY KEY constraint.
+-- Defer the uniqueness check until commit for the circular unit-head workflow.
 ALTER TABLE STAFF ADD CONSTRAINT UQ_STAFF_ID_UNIT
     UNIQUE (STAFF_ID, UNIT_ID)
-    DEFERRABLE INITIALLY DEFERRED; -- delay check constraint until commit
+    DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE STUDENTS ADD CONSTRAINT UQ_STUDENTS_ORACLE_USERNAME
     UNIQUE (ORACLE_USERNAME);
