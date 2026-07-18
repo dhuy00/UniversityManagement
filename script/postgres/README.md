@@ -191,6 +191,8 @@ docker compose -f script/docker-compose.postgres.yml up -d
 Get-Content script/postgres/01_schema.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/02_security_context.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/02_verify_security_context.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/03_enable_student_rls.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/03_verify_student_rls.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 ```
 
 The script first executes `DROP SCHEMA university CASCADE`, so it recreates the
@@ -201,6 +203,13 @@ data are separate follow-up steps.
 The verification script creates temporary staff and student identities, tests
 identity, role, and permission resolution, and finishes with `ROLLBACK`. A
 successful run prints `security context verification passed`.
+
+`03_enable_student_rls.sql` enables row-level security on `students`,
+`course_plans`, and `enrollments`. PostgreSQL uses default-deny behavior for a
+non-owner role when RLS is enabled without a matching policy. The next
+migration must add explicit policies before the restricted API role receives
+access to these tables. A successful verification prints
+`student RLS enablement verification passed`.
 
 ## API transaction contract
 
