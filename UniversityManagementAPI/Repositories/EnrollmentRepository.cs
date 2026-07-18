@@ -194,19 +194,17 @@ public sealed class EnrollmentRepository : IEnrollmentRepository
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.BindByName = true;
-        command.CommandType = CommandType.Text;
-        command.CommandText = """
-            DELETE FROM UNIVERSITY_APP.ENROLLMENTS
-            WHERE STUDENT_ID = :student_id
-              AND LECTURER_ID = :lecturer_id
-              AND COURSE_ID = :course_id
-              AND SEMESTER = :semester
-              AND ACADEMIC_YEAR = :academic_year
-              AND PROGRAM_ID = :program_id
-            """;
-        AddEnrollmentKeyParameters(command, request);
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText =
+            "UNIVERSITY_APP.ENROLLMENT_MAINTENANCE_PKG.DELETE_ENROLLMENT";
+        AddEnrollmentKeyParameters(command, request, "p_");
+        var deletedParameter = command.Parameters.Add(
+            "p_deleted",
+            OracleDbType.Int32,
+            ParameterDirection.Output);
 
-        var deleted = await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        var deleted = Convert.ToInt32(deletedParameter.Value.ToString()) == 1;
         if (deleted)
         {
             await transaction.CommitAsync(cancellationToken);
@@ -329,19 +327,32 @@ public sealed class EnrollmentRepository : IEnrollmentRepository
 
     private static void AddEnrollmentKeyParameters(
         OracleCommand command,
-        MaintainEnrollmentRequest request)
+        MaintainEnrollmentRequest request,
+        string parameterPrefix = "")
     {
-        command.Parameters.Add("student_id", OracleDbType.Varchar2).Value =
+        command.Parameters.Add(
+            $"{parameterPrefix}student_id",
+            OracleDbType.Varchar2).Value =
             request.StudentId.Trim().ToUpperInvariant();
-        command.Parameters.Add("lecturer_id", OracleDbType.Varchar2).Value =
+        command.Parameters.Add(
+            $"{parameterPrefix}lecturer_id",
+            OracleDbType.Varchar2).Value =
             request.LecturerId.Trim().ToUpperInvariant();
-        command.Parameters.Add("course_id", OracleDbType.Varchar2).Value =
+        command.Parameters.Add(
+            $"{parameterPrefix}course_id",
+            OracleDbType.Varchar2).Value =
             request.CourseId.Trim().ToUpperInvariant();
-        command.Parameters.Add("semester", OracleDbType.Int32).Value =
+        command.Parameters.Add(
+            $"{parameterPrefix}semester",
+            OracleDbType.Int32).Value =
             request.Semester;
-        command.Parameters.Add("academic_year", OracleDbType.Int32).Value =
+        command.Parameters.Add(
+            $"{parameterPrefix}academic_year",
+            OracleDbType.Int32).Value =
             request.AcademicYear;
-        command.Parameters.Add("program_id", OracleDbType.Varchar2).Value =
+        command.Parameters.Add(
+            $"{parameterPrefix}program_id",
+            OracleDbType.Varchar2).Value =
             request.ProgramId.Trim().ToUpperInvariant();
     }
 }
