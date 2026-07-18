@@ -3,3 +3,10 @@
 /requirement.txt
 /test case.txt
 /PROGRESS.md
+/.vscode/
+/plan_postgre.md
+/UniversityManagementAPI/appsettings.Development.json
+/UniversityManagementAPI/bin/
+/UniversityManagementAPI/obj/
+/frontend/dist/
+/frontend/node_modules/
