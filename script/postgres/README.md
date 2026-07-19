@@ -197,6 +197,8 @@ Get-Content script/postgres/04_student_select_policies.sql | docker exec -i univ
 Get-Content script/postgres/04_verify_student_select_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/05_student_write_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/05_verify_student_write_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/06_staff_self_service_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/06_verify_staff_self_service_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 ```
 
 The script first executes `DROP SCHEMA university CASCADE`, so it recreates the
@@ -242,6 +244,22 @@ The verification covers allowed writes, cross-student denial, protected-column
 denial, score-column denial, missing-context denial, and open/closed
 registration windows. A successful run prints
 `student write policy verification passed`.
+
+`06_staff_self_service_policies.sql` enables RLS on `staff` and implements the
+common CS#1 scope inherited by every staff role. Staff can read only their own
+profile, update only their own phone, and read all students and course plans.
+Use column-level privileges for the restricted API role:
+
+```sql
+GRANT SELECT ON university.staff, university.students,
+    university.course_plans TO university_api;
+GRANT UPDATE (phone) ON university.staff TO university_api;
+```
+
+The rollback-only verification covers own-profile access, read-all academic
+data, own-phone updates, cross-staff and protected-column denial, preservation
+of student isolation, and missing-context fail-closed behavior. A successful
+run prints `staff self-service policy verification passed`.
 
 ## API transaction contract
 
