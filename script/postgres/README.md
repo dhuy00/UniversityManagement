@@ -195,6 +195,8 @@ Get-Content script/postgres/03_enable_student_rls.sql | docker exec -i universit
 Get-Content script/postgres/03_verify_student_rls.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/04_student_select_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/04_verify_student_select_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/05_student_write_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/05_verify_student_write_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 ```
 
 The script first executes `DROP SCHEMA university CASCADE`, so it recreates the
@@ -218,6 +220,28 @@ student can read only their own `students` row, course plans for their own
 program, and their own enrollments. The verification uses two students in
 different programs and also tests a missing security context. A successful run
 prints `student SELECT policy verification passed`.
+
+`05_student_write_policies.sql` permits students to update only their own
+contact information and to create or delete only their own enrollments from
+the course-plan start date through 14 days afterward. Program matching and the
+database-date registration window are enforced by RLS. The restricted API role
+must also use column-level grants so protected student and enrollment score
+columns cannot be supplied:
+
+```sql
+GRANT SELECT ON university.students, university.course_plans,
+    university.enrollments TO university_api;
+GRANT UPDATE (address, phone) ON university.students TO university_api;
+GRANT INSERT (
+    student_id, lecturer_id, course_id, semester, academic_year, program_id
+) ON university.enrollments TO university_api;
+GRANT DELETE ON university.enrollments TO university_api;
+```
+
+The verification covers allowed writes, cross-student denial, protected-column
+denial, score-column denial, missing-context denial, and open/closed
+registration windows. A successful run prints
+`student write policy verification passed`.
 
 ## API transaction contract
 
