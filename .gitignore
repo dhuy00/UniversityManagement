@@ -3,3 +3,7 @@
 /requirement.txt
 /test case.txt
 /PROGRESS.md
+
+# .NET build output
+**/bin/
+**/obj/

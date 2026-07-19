@@ -13,6 +13,7 @@ builder.Services.AddUniversityAuthentication(
     builder.Configuration,
     builder.Environment);
 builder.Services.AddScoped<IDbConnectionFactory, OracleConnectionFactory>();
+builder.Services.AddPostgresRequestInfrastructure(builder.Configuration);
 
 // User
 builder.Services.AddScoped<IUserService, UserService>();
@@ -83,6 +84,7 @@ app.UseCors("FrontendDomain");
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+app.UsePostgresRequestTransaction();
 app.UseAuthorization();
 
 app.MapControllers();

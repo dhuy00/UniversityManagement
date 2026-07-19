@@ -28,6 +28,54 @@ Authentication responsibilities are separated as follows:
 - `AuthenticationServiceExtensions` owns JWT validation and dependency
   registration, keeping `Program.cs` limited to application composition.
 
+## PostgreSQL request transaction infrastructure
+
+The incremental PostgreSQL migration uses a scoped
+`IPostgresRequestTransaction`. For an authenticated request carrying the
+server-issued `app_user_id` claim, middleware initializes the transaction and
+commits it after the endpoint completes. A PostgreSQL-backed repository must:
+
+1. Inject the scoped `IPostgresRequestTransaction`.
+2. Use its `Connection` and `Transaction` properties for every command.
+3. Never commit, roll back, or dispose the shared transaction itself.
+
+Initialization reads the positive `app_user_id` claim from the authenticated
+server-validated principal, opens a transaction, and calls
+`university.set_security_context($1)`. IDs from request bodies, route values,
+query strings, or headers must never be passed to the security-context
+function. Because the setting is transaction-local, commit or rollback clears
+it before Npgsql returns the connection to its pool.
+
+Existing Oracle repositories remain on `IDbConnectionFactory` during the
+incremental migration. Do not issue PostgreSQL commands through a separate
+connection after initializing the request transaction.
+
+Configure the restricted environment-specific PostgreSQL login through:
+
+```text
+ConnectionStrings:PostgreSQL
+```
+
+The login should inherit the NOLOGIN `university_api` role and must not use the
+schema owner or PostgreSQL superuser.
+
+Run the unit test suite with:
+
+```powershell
+dotnet test UniversityManagementAPI.Tests\UniversityManagementAPI.Tests.csproj
+```
+
+Database-backed tests also run when these variables are supplied:
+
+```text
+POSTGRES_INTEGRATION_CONNECTION_STRING  restricted test login
+POSTGRES_TEST_ACTIVE_USER_ID            positive active app_users.user_id
+POSTGRES_TEST_INACTIVE_USER_ID          optional inactive app_users.user_id
+```
+
+They verify context initialization, transaction-local cleanup on pooled
+connection reuse, inactive-user rejection, and missing-context default denial.
+
 ## Configuration
 
 Development defaults to:
