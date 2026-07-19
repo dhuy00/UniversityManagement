@@ -201,6 +201,10 @@ Get-Content script/postgres/06_staff_self_service_policies.sql | docker exec -i 
 Get-Content script/postgres/06_verify_staff_self_service_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/07_lecturer_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/07_verify_lecturer_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/08_academic_affairs_assignment_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/08_verify_academic_affairs_assignment_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/09_academic_affairs_enrollment_maintenance.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/09_verify_academic_affairs_enrollment_maintenance.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 ```
 
 The script first executes `DROP SCHEMA university CASCADE`, so it recreates the
@@ -279,6 +283,39 @@ The verification covers assigned and unassigned rows, score updates,
 protected-key denial, preservation of student enrollment isolation, and
 missing-context fail-closed behavior. A successful run prints
 `lecturer policy verification passed`.
+
+`08_academic_affairs_assignment_policies.sql` adds the CS#3 faculty-office
+scope to the protected assignment table. Academic Affairs can read and update
+all teaching assignments, while lecturer access remains self-scoped. The API
+role needs `SELECT, UPDATE` on `university.teaching_assignments`; RLS still
+requires the authenticated user to hold the matching permission.
+
+The verification covers read-all access, assignment reassignment, lecturer
+self-scope after reassignment, lecturer update denial, and missing-context
+fail-closed behavior. A successful run prints
+`Academic Affairs assignment policy verification passed`.
+
+`09_academic_affairs_enrollment_maintenance.sql` implements the CS#3 rule that
+Academic Affairs may add or remove an enrollment on a student's request only
+while registration is open. Trusted definer-rights functions enforce the
+`ENROLLMENT_CREATE_DELETE_ALL` permission, student/program consistency, and
+the course-plan start-date-through-14-days window. Their signatures omit score
+columns, and the API role receives function execution without direct
+`SELECT`, `INSERT`, or `DELETE` privileges on `enrollments`:
+
+```sql
+GRANT EXECUTE ON FUNCTION university.create_enrollment_for_student(
+    varchar, varchar, varchar, smallint, smallint, varchar
+) TO university_api;
+GRANT EXECUTE ON FUNCTION university.delete_enrollment_for_student(
+    varchar, varchar, varchar, smallint, smallint, varchar
+) TO university_api;
+```
+
+The verification covers allowed open-window creation/deletion, closed-window
+denial, program mismatch, absence of direct table privileges, unauthorized
+roles, and missing-context denial. A successful run prints
+`Academic Affairs enrollment maintenance verification passed`.
 
 ## API transaction contract
 
