@@ -14,8 +14,10 @@ public static class PostgresServiceExtensions
         }
 
         services.AddSingleton(_ => NpgsqlDataSource.Create(connectionString));
+        services.AddSingleton<PostgresAuthenticationDataSource>();
         services.AddScoped<IAuthenticatedPostgresUser, HttpContextPostgresUser>();
         services.AddScoped<IPostgresRequestTransaction, PostgresRequestTransaction>();
+        services.AddScoped<IPostgresAuthRepository, PostgresAuthRepository>();
         return services;
     }
 }

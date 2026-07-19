@@ -211,6 +211,9 @@ Get-Content script/postgres/11_dean_global_policies.sql | docker exec -i univers
 Get-Content script/postgres/11_verify_dean_global_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/12_dean_staff_management_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/12_verify_dean_staff_management_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/13_api_role.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/13_verify_api_role.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/14_authentication_lookup.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 ```
 
 The script first executes `DROP SCHEMA university CASCADE`, so it recreates the
@@ -398,3 +401,17 @@ grant `university_api` to it. Do not store its password in this repository.
 Run `13_verify_api_role.sql` to check the role attributes, grants, denied
 student/enrollment columns, absence of password-hash access, and the staff
 guard. A successful run prints `restricted API role verification passed`.
+
+## Authentication lookup role
+
+Apply `14_authentication_lookup.sql` after the restricted API role. It creates
+the separate NOLOGIN `university_authenticator` role and grants it only schema
+usage plus execution of `find_active_authentication_candidate(varchar)`.
+The security-definer function returns an active user's password hash, ordered
+role codes, and staff/student identity metadata without granting direct access
+to `app_users` or bypassing RLS for arbitrary queries.
+
+Create a separate environment-specific LOGIN role for authentication, grant it
+`university_authenticator`, and configure that login only in
+`ConnectionStrings:PostgreSQLAuthentication`. Do not grant the request-data
+login access to this function.

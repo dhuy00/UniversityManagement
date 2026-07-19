@@ -59,6 +59,19 @@ ConnectionStrings:PostgreSQL
 The login should inherit the NOLOGIN `university_api` role and must not use the
 schema owner or PostgreSQL superuser.
 
+Authentication lookup uses a separate connection:
+
+```text
+ConnectionStrings:PostgreSQLAuthentication
+```
+
+Its environment-specific login should inherit only the NOLOGIN
+`university_authenticator` role. That role can execute the trusted active-user
+lookup function but has no direct access to `app_users`, password hashes, or
+RLS-protected identity tables. The repository is registered for the staged
+migration but the active login flow still uses Oracle until the later cutover
+step.
+
 Run the unit test suite with:
 
 ```powershell
