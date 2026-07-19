@@ -193,6 +193,8 @@ Get-Content script/postgres/02_security_context.sql | docker exec -i university-
 Get-Content script/postgres/02_verify_security_context.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/03_enable_student_rls.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/03_verify_student_rls.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/04_student_select_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/04_verify_student_select_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 ```
 
 The script first executes `DROP SCHEMA university CASCADE`, so it recreates the
@@ -210,6 +212,12 @@ non-owner role when RLS is enabled without a matching policy. The next
 migration must add explicit policies before the restricted API role receives
 access to these tables. A successful verification prints
 `student RLS enablement verification passed`.
+
+`04_student_select_policies.sql` adds the first explicit RLS policies. A
+student can read only their own `students` row, course plans for their own
+program, and their own enrollments. The verification uses two students in
+different programs and also tests a missing security context. A successful run
+prints `student SELECT policy verification passed`.
 
 ## API transaction contract
 
