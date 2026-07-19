@@ -205,6 +205,8 @@ Get-Content script/postgres/08_academic_affairs_assignment_policies.sql | docker
 Get-Content script/postgres/08_verify_academic_affairs_assignment_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/09_academic_affairs_enrollment_maintenance.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/09_verify_academic_affairs_enrollment_maintenance.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/10_unit_head_assignment_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/10_verify_unit_head_assignment_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 ```
 
 The script first executes `DROP SCHEMA university CASCADE`, so it recreates the
@@ -316,6 +318,20 @@ The verification covers allowed open-window creation/deletion, closed-window
 denial, program mismatch, absence of direct table privileges, unauthorized
 roles, and missing-context denial. A successful run prints
 `Academic Affairs enrollment maintenance verification passed`.
+
+`10_unit_head_assignment_policies.sql` implements CS#4. A Unit Head can read
+assignments of lecturers belonging to their unit, but can create, update, or
+delete assignments only for courses managed by their unit.
+New or changed lecturers must hold an active teaching role. The API role needs
+`SELECT, INSERT, UPDATE, DELETE` on `university.teaching_assignments`; RLS
+enforces the authenticated Unit Head's organizational scope.
+
+The verification distinguishes lecturer-unit visibility from course-unit
+management, confirms course ownership alone does not widen reads, tests
+allowed create/update/delete operations, rejects management
+of another unit's courses and non-teaching staff, and confirms missing-context
+fail-closed behavior. A successful run prints
+`Unit Head assignment policy verification passed`.
 
 ## API transaction contract
 
