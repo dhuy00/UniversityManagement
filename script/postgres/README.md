@@ -199,6 +199,8 @@ Get-Content script/postgres/05_student_write_policies.sql | docker exec -i unive
 Get-Content script/postgres/05_verify_student_write_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/06_staff_self_service_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/06_verify_staff_self_service_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/07_lecturer_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/07_verify_lecturer_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 ```
 
 The script first executes `DROP SCHEMA university CASCADE`, so it recreates the
@@ -260,6 +262,23 @@ The rollback-only verification covers own-profile access, read-all academic
 data, own-phone updates, cross-staff and protected-column denial, preservation
 of student isolation, and missing-context fail-closed behavior. A successful
 run prints `staff self-service policy verification passed`.
+
+`07_lecturer_policies.sql` enables RLS on `teaching_assignments`. Lecturers can
+read only their own assignments and the enrollments attached to them, and can
+update only score columns for those enrollments. The API role needs:
+
+```sql
+GRANT SELECT ON university.teaching_assignments, university.enrollments
+    TO university_api;
+GRANT UPDATE (
+    practice_score, process_score, final_exam_score, final_score
+) ON university.enrollments TO university_api;
+```
+
+The verification covers assigned and unassigned rows, score updates,
+protected-key denial, preservation of student enrollment isolation, and
+missing-context fail-closed behavior. A successful run prints
+`lecturer policy verification passed`.
 
 ## API transaction contract
 
