@@ -383,3 +383,18 @@ GRANT EXECUTE ON FUNCTION university.set_security_context(bigint)
 
 The API must never accept `userId` directly from a request body, query string,
 or other client-controlled input.
+
+## Restricted API database role
+
+Apply `13_api_role.sql` after all policy scripts. It creates the NOLOGIN
+`university_api` group role, grants the combined minimum privileges required by
+the implemented domain workflows, and installs a staff-column guard. The guard
+is necessary because Dean full-row staff management and ordinary staff
+phone-only self-service share one database role; RLS restricts rows, while the
+trigger preserves the narrower column rule for non-Deans.
+
+Create a separate environment-specific LOGIN role outside source control and
+grant `university_api` to it. Do not store its password in this repository.
+Run `13_verify_api_role.sql` to check the role attributes, grants, denied
+student/enrollment columns, absence of password-hash access, and the staff
+guard. A successful run prints `restricted API role verification passed`.
