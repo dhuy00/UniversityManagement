@@ -209,6 +209,8 @@ Get-Content script/postgres/10_unit_head_assignment_policies.sql | docker exec -
 Get-Content script/postgres/10_verify_unit_head_assignment_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/11_dean_global_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/11_verify_dean_global_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/12_dean_staff_management_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/12_verify_dean_staff_management_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 ```
 
 The script first executes `DROP SCHEMA university CASCADE`, so it recreates the
@@ -347,6 +349,17 @@ The verification covers global visibility, faculty-wide assignment DML,
 non-teaching-staff denial, preservation of lecturer isolation, and
 missing-context fail-closed behavior. A successful run prints
 `Dean global policy verification passed`.
+
+`12_dean_staff_management_policies.sql` completes CS#5 by allowing a Dean to
+create, update, and delete staff across the faculty. The restricted API role
+needs `SELECT, INSERT, UPDATE, DELETE` on `university.staff`; RLS still requires
+the authenticated user to hold `STAFF_MANAGE_ALL`. Database foreign keys remain
+authoritative for user, unit, campus, unit-head, and assignment integrity.
+
+The verification covers full-row updates, faculty-wide create/delete, denial
+for ordinary staff, preservation of staff self-service scope, and
+missing-context fail-closed behavior. A successful run prints
+`Dean staff management policy verification passed`.
 
 ## API transaction contract
 
