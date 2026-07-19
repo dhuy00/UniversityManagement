@@ -78,6 +78,14 @@ missing, incorrect, or malformed values return `false` without exposing hash
 parsing failures. The verifier is registered for the staged migration but is
 not used by the active Oracle login yet.
 
+`PostgresLoginService` now composes the staged lookup and password verifier. It
+requires exactly one effective role, maps staff or student metadata into the
+existing `AuthenticatedUser`, and applies `UniversityIdentityValidator` before
+returning the PostgreSQL `user_id`. Unknown and inactive usernames still run a
+dummy BCrypt verification to reduce username-enumeration timing differences.
+This internal orchestrator is registered independently; the public login
+endpoint continues to use `AuthService` and Oracle until the explicit cutover.
+
 Run the unit test suite with:
 
 ```powershell

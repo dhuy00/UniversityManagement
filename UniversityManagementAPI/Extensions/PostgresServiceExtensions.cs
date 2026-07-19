@@ -19,6 +19,7 @@ public static class PostgresServiceExtensions
         services.AddScoped<IAuthenticatedPostgresUser, HttpContextPostgresUser>();
         services.AddScoped<IPostgresRequestTransaction, PostgresRequestTransaction>();
         services.AddScoped<IPostgresAuthRepository, PostgresAuthRepository>();
+        services.AddScoped<IPostgresLoginService, PostgresLoginService>();
         return services;
     }
 }
