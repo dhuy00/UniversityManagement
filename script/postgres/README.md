@@ -207,6 +207,8 @@ Get-Content script/postgres/09_academic_affairs_enrollment_maintenance.sql | doc
 Get-Content script/postgres/09_verify_academic_affairs_enrollment_maintenance.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/10_unit_head_assignment_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/10_verify_unit_head_assignment_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/11_dean_global_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/11_verify_dean_global_policies.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 ```
 
 The script first executes `DROP SCHEMA university CASCADE`, so it recreates the
@@ -332,6 +334,19 @@ allowed create/update/delete operations, rejects management
 of another unit's courses and non-teaching staff, and confirms missing-context
 fail-closed behavior. A successful run prints
 `Unit Head assignment policy verification passed`.
+
+`11_dean_global_policies.sql` implements the first CS#5 slice. The Dean can
+read every row in all currently RLS-protected tables and can create, update,
+or delete teaching assignments faculty-wide. New or changed lecturers must
+still hold an active teaching role. The restricted API role needs the same
+table privileges used by the protected read and assignment workflows; RLS
+requires the Dean's `DATABASE_READ_ALL` or `ASSIGNMENT_MANAGE_OFFICE`
+permission.
+
+The verification covers global visibility, faculty-wide assignment DML,
+non-teaching-staff denial, preservation of lecturer isolation, and
+missing-context fail-closed behavior. A successful run prints
+`Dean global policy verification passed`.
 
 ## API transaction contract
 
