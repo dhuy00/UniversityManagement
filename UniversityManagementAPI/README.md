@@ -72,6 +72,12 @@ RLS-protected identity tables. The repository is registered for the staged
 migration but the active login flow still uses Oracle until the later cutover
 step.
 
+`BcryptPasswordVerifier` validates the stored hash format and supported work
+factor before calling BCrypt. Correct passwords match case-sensitively;
+missing, incorrect, or malformed values return `false` without exposing hash
+parsing failures. The verifier is registered for the staged migration but is
+not used by the active Oracle login yet.
+
 Run the unit test suite with:
 
 ```powershell

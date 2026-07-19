@@ -15,6 +15,7 @@ public static class PostgresServiceExtensions
 
         services.AddSingleton(_ => NpgsqlDataSource.Create(connectionString));
         services.AddSingleton<PostgresAuthenticationDataSource>();
+        services.AddSingleton<IPasswordVerifier, BcryptPasswordVerifier>();
         services.AddScoped<IAuthenticatedPostgresUser, HttpContextPostgresUser>();
         services.AddScoped<IPostgresRequestTransaction, PostgresRequestTransaction>();
         services.AddScoped<IPostgresAuthRepository, PostgresAuthRepository>();
