@@ -214,6 +214,7 @@ Get-Content script/postgres/12_verify_dean_staff_management_policies.sql | docke
 Get-Content script/postgres/13_api_role.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/13_verify_api_role.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 Get-Content script/postgres/14_authentication_lookup.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
+Get-Content script/postgres/14_verify_authentication_lookup.sql | docker exec -i university-postgres psql -U postgres -d university_management -v ON_ERROR_STOP=1
 ```
 
 The script first executes `DROP SCHEMA university CASCADE`, so it recreates the
@@ -415,3 +416,9 @@ Create a separate environment-specific LOGIN role for authentication, grant it
 `university_authenticator`, and configure that login only in
 `ConnectionStrings:PostgreSQLAuthentication`. Do not grant the request-data
 login access to this function.
+
+`14_verify_authentication_lookup.sql` uses rollback-only fixtures to verify
+case-insensitive active-user lookup, exact password/role/identity mapping,
+unknown and inactive-user rejection, explicit missing-role and malformed-
+identity results, and denial of direct `app_users` reads. A successful run
+prints `authentication lookup verification passed`.

@@ -3,6 +3,21 @@ using Npgsql;
 public sealed class PostgresAuthenticationDataSource : IAsyncDisposable
 {
     public PostgresAuthenticationDataSource(IConfiguration configuration)
+        : this(GetRequiredConnectionString(configuration))
+    {
+    }
+
+    public PostgresAuthenticationDataSource(string connectionString)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
+        DataSource = NpgsqlDataSource.Create(connectionString);
+    }
+
+    public NpgsqlDataSource DataSource { get; }
+
+    public ValueTask DisposeAsync() => DataSource.DisposeAsync();
+
+    private static string GetRequiredConnectionString(IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString(
             "PostgreSQLAuthentication");
@@ -12,10 +27,6 @@ public sealed class PostgresAuthenticationDataSource : IAsyncDisposable
                 "ConnectionStrings:PostgreSQLAuthentication is required.");
         }
 
-        DataSource = NpgsqlDataSource.Create(connectionString);
+        return connectionString;
     }
-
-    public NpgsqlDataSource DataSource { get; }
-
-    public ValueTask DisposeAsync() => DataSource.DisposeAsync();
 }

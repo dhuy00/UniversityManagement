@@ -89,6 +89,22 @@ POSTGRES_TEST_INACTIVE_USER_ID          optional inactive app_users.user_id
 They verify context initialization, transaction-local cleanup on pooled
 connection reuse, inactive-user rejection, and missing-context default denial.
 
+Authentication repository integration tests use these optional settings:
+
+```text
+POSTGRES_AUTH_INTEGRATION_CONNECTION_STRING
+POSTGRES_AUTH_TEST_ACTIVE_USERNAME
+POSTGRES_AUTH_TEST_INACTIVE_USERNAME
+POSTGRES_AUTH_TEST_MISSING_ROLE_USERNAME
+POSTGRES_AUTH_TEST_MALFORMED_IDENTITY_USERNAME
+```
+
+The connection must use an environment login that inherits
+`university_authenticator`. The active username is required to run database
+assertions; the remaining fixture usernames enable their corresponding edge-
+case assertions. The rollback-only SQL verification script creates all five
+cases deterministically when validating the database function itself.
+
 ## Configuration
 
 Development defaults to:
