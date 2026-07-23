@@ -76,7 +76,6 @@ AS
     IS
         v_role_code   VARCHAR2(30);
         v_student_id  VARCHAR2(20);
-        v_window_predicate VARCHAR2(4000);
     BEGIN
         IF UPPER(SYS_CONTEXT('USERENV', 'SESSION_USER'))
            IN ('UNIVERSITY_APP', 'SYS') THEN
@@ -88,21 +87,13 @@ AS
         v_student_id :=
             SYS_CONTEXT('UNIVERSITY_CTX', 'STUDENT_ID');
 
-        v_window_predicate :=
-            '(COURSE_ID, SEMESTER, ACADEMIC_YEAR, PROGRAM_ID) IN (' ||
-            'SELECT cp.COURSE_ID, cp.SEMESTER, cp.ACADEMIC_YEAR, ' ||
-            'cp.PROGRAM_ID FROM UNIVERSITY_APP.COURSE_PLANS cp ' ||
-            'WHERE TRUNC(SYSDATE) BETWEEN TRUNC(cp.START_DATE) ' ||
-            'AND TRUNC(cp.START_DATE) + 14)';
-
         IF v_role_code = 'ACADEMIC_AFFAIRS' THEN
-            RETURN v_window_predicate;
+            RETURN '1=1';
         ELSIF v_role_code = 'STUDENT'
               AND v_student_id IS NOT NULL THEN
             RETURN
                 'STUDENT_ID = ' ||
-                DBMS_ASSERT.ENQUOTE_LITERAL(v_student_id) ||
-                ' AND ' || v_window_predicate;
+                DBMS_ASSERT.ENQUOTE_LITERAL(v_student_id);
         END IF;
 
         RETURN '1=0';
@@ -112,6 +103,58 @@ END BUSINESS_RULE_PKG;
 
 SHOW ERRORS PACKAGE BUSINESS_RULE_PKG
 SHOW ERRORS PACKAGE BODY BUSINESS_RULE_PKG
+
+-- DELETE with a composite-key WHERE clause requires read access to the key
+-- columns. Academic Affairs intentionally has no ENROLLMENTS SELECT grant, so
+-- expose the operation through a definer-rights package instead of broadening
+-- its read privileges. VPD and the row-level window trigger still evaluate the
+-- caller's SESSION_USER and UNIVERSITY_CTX.
+CREATE OR REPLACE PACKAGE ENROLLMENT_MAINTENANCE_PKG
+AUTHID DEFINER
+AS
+    PROCEDURE DELETE_ENROLLMENT(
+        p_student_id    IN VARCHAR2,
+        p_lecturer_id   IN VARCHAR2,
+        p_course_id     IN VARCHAR2,
+        p_semester      IN NUMBER,
+        p_academic_year IN NUMBER,
+        p_program_id    IN VARCHAR2,
+        p_deleted       OUT NUMBER
+    );
+END ENROLLMENT_MAINTENANCE_PKG;
+/
+
+CREATE OR REPLACE PACKAGE BODY ENROLLMENT_MAINTENANCE_PKG
+AS
+    PROCEDURE DELETE_ENROLLMENT(
+        p_student_id    IN VARCHAR2,
+        p_lecturer_id   IN VARCHAR2,
+        p_course_id     IN VARCHAR2,
+        p_semester      IN NUMBER,
+        p_academic_year IN NUMBER,
+        p_program_id    IN VARCHAR2,
+        p_deleted       OUT NUMBER
+    )
+    IS
+    BEGIN
+        DELETE FROM ENROLLMENTS
+        WHERE STUDENT_ID = UPPER(TRIM(p_student_id))
+          AND LECTURER_ID = UPPER(TRIM(p_lecturer_id))
+          AND COURSE_ID = UPPER(TRIM(p_course_id))
+          AND SEMESTER = p_semester
+          AND ACADEMIC_YEAR = p_academic_year
+          AND PROGRAM_ID = UPPER(TRIM(p_program_id));
+
+        p_deleted := SQL%ROWCOUNT;
+    END DELETE_ENROLLMENT;
+END ENROLLMENT_MAINTENANCE_PKG;
+/
+
+SHOW ERRORS PACKAGE ENROLLMENT_MAINTENANCE_PKG
+SHOW ERRORS PACKAGE BODY ENROLLMENT_MAINTENANCE_PKG
+
+GRANT EXECUTE ON ENROLLMENT_MAINTENANCE_PKG TO RL_ACADEMIC_AFFAIRS;
+GRANT EXECUTE ON ENROLLMENT_MAINTENANCE_PKG TO RL_STUDENT;
 
 CREATE OR REPLACE TRIGGER TRG_VALIDATE_ASSIGNMENT_LECTURER
 BEFORE INSERT OR UPDATE OF LECTURER_ID
@@ -233,7 +276,11 @@ SHOW ERRORS TRIGGER TRG_VALIDATE_ASSIGNMENT_LECTURER
 SHOW ERRORS TRIGGER TRG_VALIDATE_ENROLLMENT_PROGRAM
 SHOW ERRORS TRIGGER TRG_ENROLLMENT_WINDOW
 
--- Add VPD checks for both existing rows (DELETE) and proposed rows (INSERT).
+-- VPD restricts enrollment maintenance to the authorized identity/rows. The
+-- TRG_ENROLLMENT_WINDOW trigger above enforces the 14-day rule for both INSERT
+-- and DELETE. Keeping the date lookup in the definer-rights trigger avoids a
+-- COURSE_PLANS subquery in the DELETE VPD predicate, which would require
+-- Academic Affairs to receive broader direct read privileges.
 BEGIN
     FOR policy_record IN (
         SELECT OBJECT_NAME, POLICY_NAME
@@ -286,6 +333,7 @@ BEGIN
     FROM USER_ERRORS
     WHERE NAME IN (
         'BUSINESS_RULE_PKG',
+        'ENROLLMENT_MAINTENANCE_PKG',
         'TRG_VALIDATE_ASSIGNMENT_LECTURER',
         'TRG_VALIDATE_ENROLLMENT_PROGRAM',
         'TRG_ENROLLMENT_WINDOW'
