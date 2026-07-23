@@ -1,4 +1,6 @@
 using Npgsql;
+using UniversityManagementAPI.Repositories;
+using UniversityManagementAPI.Repositories.Interfaces;
 
 public static class PostgresServiceExtensions
 {
@@ -20,6 +22,7 @@ public static class PostgresServiceExtensions
         services.AddScoped<IPostgresRequestTransaction, PostgresRequestTransaction>();
         services.AddScoped<IPostgresAuthRepository, PostgresAuthRepository>();
         services.AddScoped<IPostgresLoginService, PostgresLoginService>();
+        services.AddScoped<IPostgresProfileRepository, PostgresProfileRepository>();
         return services;
     }
 }
