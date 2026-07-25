@@ -30,6 +30,9 @@ public static class PostgresServiceExtensions
         services.AddScoped<IPostgresUnitRepository, PostgresUnitRepository>();
         services.AddScoped<IPostgresStudentRepository, PostgresStudentRepository>();
         services.AddScoped<IPostgresStaffRepository, PostgresStaffRepository>();
+        services.AddScoped<IPostgresUserRepository, PostgresUserRepository>();
+        services.AddScoped<IPostgresRoleRepository, PostgresRoleRepository>();
+        services.AddScoped<IPostgresPermissionRepository, PostgresPermissionRepository>();
         return services;
     }
 }
