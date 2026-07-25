@@ -25,6 +25,7 @@ public static class PostgresServiceExtensions
         services.AddScoped<IPostgresProfileRepository, PostgresProfileRepository>();
         services.AddScoped<IPostgresCourseRepository, PostgresCourseRepository>();
         services.AddScoped<IPostgresCoursePlanRepository, PostgresCoursePlanRepository>();
+        services.AddScoped<IPostgresEnrollmentRepository, PostgresEnrollmentRepository>();
         return services;
     }
 }
