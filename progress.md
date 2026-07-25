@@ -41,7 +41,6 @@ Completed work:
   Enrollment, TeachingAssignment, Unit, Student, Staff
 
 Remaining work:
-- Add PostgreSQL-backed API controllers
 - Build/verify PostgreSQL frontend integration
 - Data migration, backup/restore, WAL archiving, PITR
 
@@ -274,7 +273,8 @@ Suggested order of migration:
 4. ✅ EnrollmentRepository (done)
 5. ✅ TeachingAssignmentRepository (done)
 6. ✅ Remaining repositories (done — user, role, permission)
-7. API controllers
+7. ✅ API controllers (done — PostgresUserController, PostgresRoleController,
+   PostgresPermissionController)
 8. Frontend integration
 
 ## 10. Known issues
