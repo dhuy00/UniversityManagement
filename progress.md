@@ -41,7 +41,7 @@ Completed work:
   Enrollment, TeachingAssignment, Unit, Student, Staff
 
 Remaining work:
-- Data migration, backup/restore, WAL archiving, PITR
+- (none — see completed operational tooling below)
 
 ## 3. Current architecture
 
@@ -276,6 +276,10 @@ Suggested order of migration:
    PostgresPermissionController)
 8. ✅ Frontend integration (done — pgUserApi.js, pgRoleApi.js,
    pgPermissionApi.js, PostgresIntegration.jsx)
+9. ✅ Data migration, backup/restore, WAL archiving, PITR (done —
+   15_seed_demo_data.sql, 16_bootstrap_admin.sql, backup.ps1,
+   restore.ps1, postgresql.wal.conf + wal-archive.sh,
+   pitr-procedure.md, migration-guide.md)
 
 ## 10. Known issues
 
@@ -286,6 +290,34 @@ Suggested order of migration:
    surface for manual end-to-end checks)
 
 ## 11. Changelog
+
+### 2026-07-25 (operational tooling batch)
+
+Closed out the remaining work in the PostgreSQL roadmap with eight new
+files plus a docker-compose update (`8cc1cf3`):
+
+**Data seeding**
+- `15_seed_demo_data.sql` — idempotent reference data and full RBAC
+  catalogue (campuses, programs, majors, units, permissions,
+  role_permissions); keep-last wipes via commented TRUNCATE
+- `16_bootstrap_admin.sql` — first API login with placeholder BCrypt
+  hash; rotates on first login
+
+**Backup / restore**
+- `backup.ps1` — pg_dump via docker into `./backups/<timestamp>/`,
+  retains last 7 by default
+- `restore.ps1` — drops/recreates the database, then pg_restore; refuses
+  to run without `-Force`
+
+**WAL archiving + PITR**
+- `postgresql.wal.conf` — `archive_mode = on`, `archive_command = bash
+  /var/lib/postgresql/wal-archive.sh %p %f`, performance hints
+- `wal-archive.sh` — minimal local archive hook with optional retention
+- `pitr-procedure.md` — full pg_basebackup + recovery.signal +
+  `ALTER SYSTEM recovery_target_time` step-by-step
+- `migration-guide.md` — Oracle-to-Postgres cutover procedure
+- `script/docker-compose.postgres.yml` — mounts WAL archive dir + config
+  snippets into the container
 
 ### 2026-07-25 (frontend integration batch)
 
