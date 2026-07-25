@@ -25,6 +25,7 @@ import {
   UserCog,
   Users,
   UsersRound,
+  Wand2,
 } from "lucide-react";
 
 import { useLocation, useNavigate } from "react-router-dom";
@@ -146,6 +147,11 @@ export default function AppSidebar() {
             title: "Roles",
             url: "/roles",
             icon: ShieldCheck,
+          },
+          {
+            title: "Postgres Integration",
+            url: "/admin/postgres",
+            icon: Wand2,
           },
         ]
       : []),

@@ -20,6 +20,7 @@ import Forbidden from "../pages/Forbidden";
 import Login from "../pages/auth/Login";
 import Users from "../pages/users/Users";
 import Roles from "../pages/roles/Roles";
+import PostgresIntegration from "../pages/admin/PostgresIntegration";
 import {
     ENROLLMENT_ROLES,
     ENROLLMENT_MAINTENANCE_ROLES,
@@ -70,6 +71,7 @@ export default function AppRoutes() {
                     <Route element={<SystemAdminRoute />}>
                         <Route path="/users" element={<Users />} />
                         <Route path="/roles" element={<Roles />} />
+                        <Route path="/admin/postgres" element={<PostgresIntegration />} />
                     </Route>
                 </Route>
             </Route>
