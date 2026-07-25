@@ -41,7 +41,6 @@ Completed work:
   Enrollment, TeachingAssignment, Unit, Student, Staff
 
 Remaining work:
-- Build/verify PostgreSQL frontend integration
 - Data migration, backup/restore, WAL archiving, PITR
 
 ## 3. Current architecture
@@ -275,15 +274,35 @@ Suggested order of migration:
 6. ✅ Remaining repositories (done — user, role, permission)
 7. ✅ API controllers (done — PostgresUserController, PostgresRoleController,
    PostgresPermissionController)
-8. Frontend integration
+8. ✅ Frontend integration (done — pgUserApi.js, pgRoleApi.js,
+   pgPermissionApi.js, PostgresIntegration.jsx)
 
 ## 10. Known issues
 
 1. Docker runtime verification unavailable in tool environment
 2. Integration tests skip when environment variables not set
-3. Frontend has not been migrated to PostgreSQL endpoints yet
+3. Frontend tables/forms still read from the legacy Oracle endpoints
+   (the Postgres Integration page validates the new `/api/pg/...`
+   surface for manual end-to-end checks)
 
 ## 11. Changelog
+
+### 2026-07-25 (frontend integration batch)
+
+Wired the new Postgres endpoints into the frontend:
+
+- `frontend/src/api/pgUserApi.js` — page/create/delete/status/password
+- `frontend/src/api/pgRoleApi.js` — list/create/grant/revoke/delete
+- `frontend/src/api/pgPermissionApi.js` — list/by-role/assign/revoke
+- `frontend/src/pages/admin/PostgresIntegration.jsx` — SystemAdmin-only
+  verification page that hits each channel and renders the raw JSON
+  for end-to-end validation
+- `frontend/src/routes/index.jsx` — new `/admin/postgres` route under
+  `SystemAdminRoute`
+- `frontend/src/components/layout/AppSidebar.jsx` — new "Postgres
+  Integration" sidebar entry
+
+Frontend builds clean; backend 89 tests still pass.
 
 ### 2026-07-25 (auth/permission repositories batch)
 
