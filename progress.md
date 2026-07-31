@@ -1,6 +1,6 @@
 # Project Progress
 
-Last updated: 2026-07-25
+Last updated: 2026-07-31
 Workspace: `D:\SourceCode\ReactJS\.NET`
 
 ## 1. Purpose of this file
@@ -20,13 +20,13 @@ Starting after the prompt that established this rule:
 
 Current batch counter: **0/20**
 
-## 2. Current session status (2026-07-25)
+## 2. Current session status (2026-07-31)
 
 **Major change**: The `main` branch now contains the PostgreSQL migration. The
 original Oracle/React implementation is preserved in branch
 `backup-postgres-feature-from-main`.
 
-### PostgreSQL Migration Status: In Progress
+### PostgreSQL Migration Status: Feature-complete
 
 Completed work:
 - PostgreSQL 16 schema with full university domain model
@@ -41,7 +41,7 @@ Completed work:
   Enrollment, TeachingAssignment, Unit, Student, Staff
 
 Remaining work:
-- (none — see completed operational tooling below)
+- (none — all repository migrations, API controllers, and frontend integrations complete)
 
 ## 3. Current architecture
 
@@ -255,41 +255,36 @@ psql -h localhost -U postgres -d university -f script/postgres/14_authentication
 
 ## 9. Recommended next task
 
-Migrate the next repository to PostgreSQL:
+All repository migrations, API controllers, frontend integrations, and
+operational tooling are complete. The PostgreSQL feature set is fully delivered.
 
-```text
-1. Create IPostgresXxxRepository interface
-2. Implement using IPostgresRequestTransaction
-3. Register in PostgresServiceExtensions
-4. Add unit tests and integration test stubs
-5. Build and run tests
-```
-
-Suggested order of migration:
-1. ✅ ProfileRepository (done)
-2. ✅ CourseRepository (done)
-3. ✅ CoursePlanRepository (done)
-4. ✅ EnrollmentRepository (done)
-5. ✅ TeachingAssignmentRepository (done)
-6. ✅ Remaining repositories (done — user, role, permission)
-7. ✅ API controllers (done — PostgresUserController, PostgresRoleController,
-   PostgresPermissionController)
-8. ✅ Frontend integration (done — pgUserApi.js, pgRoleApi.js,
-   pgPermissionApi.js, PostgresIntegration.jsx)
-9. ✅ Data migration, backup/restore, WAL archiving, PITR (done —
-   15_seed_demo_data.sql, 16_bootstrap_admin.sql, backup.ps1,
-   restore.ps1, postgresql.wal.conf + wal-archive.sh,
-   pitr-procedure.md, migration-guide.md)
+Remaining considerations (non-blocking):
+- Performance testing and load testing with real data
+- Endpoint-by-endpoint integration testing via the `/admin/postgres` page
+- Consider disabling or archiving the Oracle API controllers if Postgres is
+  the sole target going forward
 
 ## 10. Known issues
 
 1. Docker runtime verification unavailable in tool environment
 2. Integration tests skip when environment variables not set
-3. Frontend tables/forms still read from the legacy Oracle endpoints
-   (the Postgres Integration page validates the new `/api/pg/...`
-   surface for manual end-to-end checks)
 
 ## 11. Changelog
+
+### 2026-07-31 (frontend Postgres wiring batch)
+
+Switched the Users and Roles pages from Oracle API calls to the Postgres API
+clients, completing the frontend migration:
+
+- `Users.jsx` — now uses `pgUserApi` and `pgRoleApi`; adds search support
+- `UserDialog.jsx` — removed Oracle-specific privilege/table-grant UI; uses
+  `pgRoleApi` for role management
+- `Roles.jsx` — uses `pgRoleApi` for all role operations
+- `UserHeader.jsx`, `SearchBar.jsx`, `UserBasicForm.jsx` — search wiring
+- `RoleDialog.jsx`, `RoleEditDialog.jsx` — updated to Postgres endpoints
+- `components/ui/textarea.jsx` — new textarea UI component
+
+All 89 backend tests pass; frontend builds clean. Known issue #3 closed.
 
 ### 2026-07-25 (operational tooling batch)
 
