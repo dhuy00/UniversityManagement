@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { UserCog } from "lucide-react";
 import { toast } from "sonner";
 
-import { createStaff, updateStaff } from "@/api/staffApi";
+import { createPgStaff, updatePgStaff } from "@/api/pgStaffApi";
 import { getUnits } from "@/api/unitApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
@@ -118,9 +118,9 @@ export default function StaffFormDialog({ mode, staff, onClose, onSaved }) {
       setSaving(true);
       setError("");
       if (isEdit) {
-        await updateStaff(staff.staffId, request);
+        await updatePgStaff(staff.staffId, request);
       } else {
-        await createStaff({
+        await createPgStaff({
           ...request,
           staffId: form.staffId.trim().toUpperCase(),
           oracleUsername: form.oracleUsername.trim().toUpperCase(),

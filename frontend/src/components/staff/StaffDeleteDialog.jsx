@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { deleteStaff } from "@/api/staffApi";
+import { deletePgStaff } from "@/api/pgStaffApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +21,7 @@ export default function StaffDeleteDialog({ staff, onClose, onDeleted }) {
     try {
       setDeleting(true);
       setError("");
-      await deleteStaff(staff.staffId);
+      await deletePgStaff(staff.staffId);
       await onDeleted();
       toast.success("Staff deleted");
       onClose();

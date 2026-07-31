@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Pencil, Plus, Trash2, UserCog } from "lucide-react";
 
-import { getStaff } from "@/api/staffApi";
+import { getPgStaff } from "@/api/pgStaffApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import StaffDeleteDialog from "@/components/staff/StaffDeleteDialog";
@@ -26,7 +26,7 @@ export default function Staff() {
   const [deletingStaff, setDeletingStaff] = useState(null);
 
   const loadStaff = async (createdStaffId) => {
-    const data = await getStaff();
+    const data = await getPgStaff();
     setStaff(prioritizeItem(
       data,
       createdStaffId,
@@ -36,7 +36,7 @@ export default function Staff() {
 
   useEffect(() => {
     let active = true;
-    getStaff()
+    getPgStaff()
       .then((data) => {
         if (active) setStaff(data);
       })
@@ -65,7 +65,7 @@ export default function Staff() {
     <div className="dashboard-page">
       <DataPageHeader
         title="Staff Management"
-        description="Dean-only staff records protected by Oracle VPD."
+        description="Dean-only staff records."
         icon={UserCog}
         searchValue={search}
         onSearchChange={setSearch}
