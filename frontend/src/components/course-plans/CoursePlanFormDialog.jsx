@@ -3,9 +3,9 @@ import { BookOpen, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import {
-  createCoursePlan,
-  updateCoursePlan,
-} from "@/api/coursePlanApi";
+  createPgCoursePlan,
+  updatePgCoursePlan,
+} from "@/api/pgCoursePlanApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import CoursePickerDialog from "@/components/course-plans/CoursePickerDialog";
 import { Button } from "@/components/ui/button";
@@ -78,9 +78,9 @@ export default function CoursePlanFormDialog({
       setSaving(true);
       setError("");
       if (isEdit) {
-        await updateCoursePlan(plan, request);
+        await updatePgCoursePlan(plan, request);
       } else {
-        await createCoursePlan(request);
+        await createPgCoursePlan(request);
       }
       await onSaved(isEdit
         ? null

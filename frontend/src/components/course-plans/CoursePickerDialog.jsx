@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Search } from "lucide-react";
 
-import { getCourses } from "@/api/courseApi";
+import { getPgCourses } from "@/api/pgCourseApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +33,7 @@ export default function CoursePickerDialog({
   useEffect(() => {
     let active = true;
 
-    getCourses()
+    getPgCourses()
       .then((data) => {
         if (active) setCourses(data);
       })

@@ -7,7 +7,7 @@ import {
   Plus,
 } from "lucide-react";
 
-import { getCoursePlans } from "@/api/coursePlanApi";
+import { getPgCoursePlans } from "@/api/pgCoursePlanApi";
 import { getTeachingAssignments } from "@/api/teachingAssignmentApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -60,7 +60,7 @@ export default function CoursePlans() {
   useEffect(() => {
     let active = true;
 
-    getCoursePlans()
+    getPgCoursePlans()
       .then((data) => {
         if (active) setPlans(data);
       })
@@ -93,7 +93,7 @@ export default function CoursePlans() {
   }, [canViewEnrollments]);
 
   const refreshPlans = async (createdPlanKey) => {
-    const data = await getCoursePlans();
+    const data = await getPgCoursePlans();
     setPlans(prioritizeItem(data, createdPlanKey, planKey));
   };
 
@@ -116,7 +116,7 @@ export default function CoursePlans() {
     <div className="dashboard-page">
       <DataPageHeader
         title="Course Plans"
-        description="Student results are restricted to their program by Oracle VPD."
+        description="Student results are restricted to their program."
         icon={CalendarRange}
         searchValue={search}
         onSearchChange={setSearch}
