@@ -128,7 +128,7 @@ export default function EnrollmentMaintainDialog({
                 {isDelete ? "Cancel enrollment" : "Register course"}
               </DialogTitle>
               <DialogDescription className="mt-1 text-[#929aa5]">
-                Oracle enforces the program match and 14-day adjustment window.
+                The program match and 14-day adjustment window will be enforced.
               </DialogDescription>
             </div>
           </div>

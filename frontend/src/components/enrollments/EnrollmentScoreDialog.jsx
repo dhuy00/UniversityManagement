@@ -71,7 +71,7 @@ export default function EnrollmentScoreDialog({
     } catch (requestError) {
       setError(
         requestError.response?.status === 404
-          ? "This enrollment is not editable by your Oracle identity."
+          ? "This enrollment is not editable by your role."
           : getApiErrorMessage(
             requestError,
             requestError.message || "Unable to update scores.",

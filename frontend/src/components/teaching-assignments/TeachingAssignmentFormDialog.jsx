@@ -141,7 +141,7 @@ export default function TeachingAssignmentFormDialog({
                 {isEdit ? "Edit assignment" : "Create assignment"}
               </DialogTitle>
               <DialogDescription className="mt-1 text-[#929aa5]">
-                Oracle VPD enforces the course unit you are allowed to manage.
+                The course unit you are allowed to manage is enforced by your role.
               </DialogDescription>
             </div>
           </div>

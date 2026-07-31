@@ -106,7 +106,7 @@ export default function CoursePlanRegistrationDialog({ plan, onClose }) {
                 Confirm course registration
               </DialogTitle>
               <DialogDescription className="text-[#929aa5]">
-                Oracle will validate your program and registration window.
+                Your program and registration window will be validated.
               </DialogDescription>
             </div>
           </div>
