@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Building2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { createUnit, updateUnit } from "@/api/unitApi";
+import { createPgUnit, updatePgUnit } from "@/api/pgUnitApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,12 +37,12 @@ export default function UnitFormDialog({ mode, unit, onClose, onSaved }) {
       setSaving(true);
       setError("");
       if (isEdit) {
-        await updateUnit(unit.unitId, {
+        await updatePgUnit(unit.unitId, {
           unitName: normalizedName,
           headStaffId: headStaffId.trim().toUpperCase() || null,
         });
       } else {
-        await createUnit({
+        await createPgUnit({
           unitId: normalizedId,
           unitName: normalizedName,
           headStaffId: headStaffId.trim().toUpperCase() || null,

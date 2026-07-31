@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Building2, Pencil, Plus } from "lucide-react";
 
-import { getUnits } from "@/api/unitApi";
+import { getPgUnits } from "@/api/pgUnitApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import UnitFormDialog from "@/components/units/UnitFormDialog";
@@ -30,7 +30,7 @@ export default function Units() {
   useEffect(() => {
     let active = true;
 
-    getUnits()
+    getPgUnits()
       .then((data) => {
         if (active) setUnits(data);
       })
@@ -44,7 +44,7 @@ export default function Units() {
   }, []);
 
   const refreshUnits = async (createdUnitId) => {
-    const data = await getUnits();
+    const data = await getPgUnits();
     setUnits(prioritizeItem(
       data,
       createdUnitId,
@@ -69,7 +69,7 @@ export default function Units() {
     <div className="dashboard-page">
       <DataPageHeader
         title="Units"
-        description="Read-only academic unit information available to staff."
+        description="Academic unit information available to your role."
         icon={Building2}
         searchValue={search}
         onSearchChange={setSearch}
