@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { UsersRound } from "lucide-react";
 
-import { getCoursePlanEnrollments } from "@/api/enrollmentApi";
+import { getPgCoursePlanEnrollments } from "@/api/pgEnrollmentApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
   Dialog,
@@ -28,7 +28,7 @@ export default function CoursePlanEnrollmentsDialog({ plan, onClose }) {
 
     let active = true;
 
-    getCoursePlanEnrollments(plan)
+    getPgCoursePlanEnrollments(plan)
       .then((data) => {
         if (active) setEnrollments(data);
       })

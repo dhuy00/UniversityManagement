@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FileText, GraduationCap, Pencil, Trash2 } from "lucide-react";
 
-import { getEnrollments } from "@/api/enrollmentApi";
+import { getPgEnrollments } from "@/api/pgEnrollmentApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import EnrollmentDetailDialog from "@/components/enrollments/EnrollmentDetailDialog";
@@ -33,7 +33,7 @@ export default function Enrollments() {
   useEffect(() => {
     let active = true;
 
-    getEnrollments()
+    getPgEnrollments()
       .then((data) => {
         if (active) setEnrollments(data);
       })
@@ -75,7 +75,7 @@ export default function Enrollments() {
     <div className="dashboard-page">
       <DataPageHeader
         title={isStudent ? "My Enrollments" : "Enrollments"}
-        description="Rows are restricted by your Oracle identity and VPD policy."
+        description="Rows are restricted by your role and security context."
         icon={GraduationCap}
         searchValue={search}
         onSearchChange={setSearch}
@@ -223,7 +223,7 @@ export default function Enrollments() {
             setCancelEnrollment(null);
           }}
           onSaved={async (createdEnrollment) => {
-            const data = await getEnrollments();
+            const data = await getPgEnrollments();
             const createdKey = createdEnrollment
               ? [
                 createdEnrollment.studentId,

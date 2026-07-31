@@ -2,7 +2,7 @@ import { useState } from "react";
 import { PencilLine } from "lucide-react";
 import { toast } from "sonner";
 
-import { updateEnrollmentScores } from "@/api/enrollmentApi";
+import { updatePgEnrollmentScores } from "@/api/pgEnrollmentApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,7 +54,7 @@ export default function EnrollmentScoreDialog({
       );
 
       setSaving(true);
-      await updateEnrollmentScores({
+      await updatePgEnrollmentScores({
         studentId: enrollment.studentId,
         lecturerId: enrollment.lecturerId,
         courseId: enrollment.courseId,

@@ -3,10 +3,10 @@ import { GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 
 import {
-  createEnrollment,
-  deleteEnrollment,
-  getRegistrationOptions,
-} from "@/api/enrollmentApi";
+  createPgEnrollment,
+  deletePgEnrollment,
+  getPgRegistrationOptions,
+} from "@/api/pgEnrollmentApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,7 +54,7 @@ export default function EnrollmentMaintainDialog({
     if (enrollment) return undefined;
 
     let active = true;
-    getRegistrationOptions()
+    getPgRegistrationOptions()
       .then((data) => {
         if (active) setOptions(data);
       })
@@ -91,9 +91,9 @@ export default function EnrollmentMaintainDialog({
       setSaving(true);
       setError("");
       if (isDelete) {
-        await deleteEnrollment(request);
+        await deletePgEnrollment(request);
       } else {
-        await createEnrollment(request);
+        await createPgEnrollment(request);
       }
       await onSaved(isDelete ? null : request);
       toast.success(isDelete ? "Enrollment cancelled" : "Enrollment created", {
