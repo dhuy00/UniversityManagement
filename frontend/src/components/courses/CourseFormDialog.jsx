@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { BookPlus } from "lucide-react";
 import { toast } from "sonner";
 
-import { createCourse, updateCourse } from "@/api/courseApi";
-import { getUnits } from "@/api/unitApi";
+import { createPgCourse, updatePgCourse } from "@/api/pgCourseApi";
+import { getPgUnits } from "@/api/pgUnitApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,7 +49,7 @@ export default function CourseFormDialog({
   useEffect(() => {
     let active = true;
 
-    getUnits()
+    getPgUnits()
       .then((data) => {
         if (active) setUnits(data);
       })
@@ -92,9 +92,9 @@ export default function CourseFormDialog({
       setError("");
 
       if (isEdit) {
-        await updateCourse(course.courseId, request);
+        await updatePgCourse(course.courseId, request);
       } else {
-        await createCourse(request);
+        await createPgCourse(request);
       }
 
       await onSaved(isEdit ? null : request.courseId);

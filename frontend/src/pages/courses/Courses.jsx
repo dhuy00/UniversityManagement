@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Pencil, Plus } from "lucide-react";
 
-import { getCourses } from "@/api/courseApi";
+import { getPgCourses } from "@/api/pgCourseApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import CourseFormDialog from "@/components/courses/CourseFormDialog";
@@ -30,7 +30,7 @@ export default function Courses() {
   useEffect(() => {
     let active = true;
 
-    getCourses()
+    getPgCourses()
       .then((data) => {
         if (active) setCourses(data);
       })
@@ -44,7 +44,7 @@ export default function Courses() {
   }, []);
 
   const refreshCourses = async (createdCourseId) => {
-    const data = await getCourses();
+    const data = await getPgCourses();
     setCourses(prioritizeItem(
       data,
       createdCourseId,
@@ -66,7 +66,7 @@ export default function Courses() {
     <div className="dashboard-page">
       <DataPageHeader
         title="Courses"
-        description="Read-only course information available to your Oracle role."
+        description="Course information available to your role."
         icon={BookOpen}
         searchValue={search}
         onSearchChange={setSearch}
