@@ -7,7 +7,7 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import { getStudents } from "@/api/studentApi";
+import { getPgStudents } from "@/api/pgStudentApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import StudentFormDialog from "@/components/students/StudentFormDialog";
@@ -47,7 +47,7 @@ export default function Students() {
   useEffect(() => {
     let active = true;
 
-    getStudents({ page, pageSize: PAGE_SIZE, search })
+    getPgStudents({ page, pageSize: PAGE_SIZE, search })
       .then((data) => {
         if (active) setResult(data);
       })
@@ -77,13 +77,13 @@ export default function Students() {
   };
 
   const refreshStudents = async (createdStudentId) => {
-    const data = await getStudents({ page, pageSize: PAGE_SIZE, search });
+    const data = await getPgStudents({ page, pageSize: PAGE_SIZE, search });
     if (!createdStudentId) {
       setResult(data);
       return;
     }
 
-    const createdResult = await getStudents({
+    const createdResult = await getPgStudents({
       page: 1,
       pageSize: 1,
       search: createdStudentId,
@@ -113,7 +113,7 @@ export default function Students() {
       <DataPageHeader
         eyebrow="Student records"
         title={isStudent ? "My Student Record" : "Students"}
-        description="Results are filtered by the Oracle STUDENTS VPD policy."
+        description="Results are filtered by your role and security context."
         icon={UsersRound}
         searchValue={search}
         onSearchChange={handleSearchChange}

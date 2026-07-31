@@ -2,7 +2,7 @@ import { useState } from "react";
 import { UserRoundPlus } from "lucide-react";
 import { toast } from "sonner";
 
-import { createStudent, updateStudent } from "@/api/studentApi";
+import { createPgStudent, updatePgStudent } from "@/api/pgStudentApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -113,9 +113,9 @@ export default function StudentFormDialog({
       setError("");
 
       if (isEdit) {
-        await updateStudent(student.studentId, commonRequest);
+        await updatePgStudent(student.studentId, commonRequest);
       } else {
-        await createStudent({
+        await createPgStudent({
           ...commonRequest,
           studentId: form.studentId.trim().toUpperCase(),
           oracleUsername: form.oracleUsername.trim().toUpperCase(),
