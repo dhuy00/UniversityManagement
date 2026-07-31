@@ -6,46 +6,19 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "../ui/button";
 import UserBasicForm from "./UserBasicForm";
-import UserPrivileges from "./UserPrivileges";
 import { useCallback, useEffect, useState } from "react";
-import { grantRoleToUser, getRoles, revokeRoleFromUser } from "@/api/roleApi";
-import {
-  createUser,
-  getUserPrivileges,
-  updateUserPassword,
-  updateUserStatus,
-} from "@/api/userApi";
-import {
-  getSystemPrivileges,
-  getTables,
-  grantPermission,
-  grantSystemPrivilege,
-} from "@/api/permissionApi";
+import { getPgRoles } from "@/api/pgRoleApi";
 import UserRoleDialog from "./UserRoleDialog";
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { UserRoundCog, UserRoundPlus } from "lucide-react";
 
-const initialPrivileges = [];
-let dialogMetadataPromise;
+const USERNAME_PATTERN = /^[A-Za-z][A-Za-z0-9_$#]{0,127}$/;
 
-const getDialogMetadata = () => {
-  if (!dialogMetadataPromise) {
-    dialogMetadataPromise = Promise.all([
-      getRoles(),
-      getTables(),
-      getSystemPrivileges(),
-    ]).catch((error) => {
-      dialogMetadataPromise = null;
-      throw error;
-    });
-  }
-
-  return dialogMetadataPromise;
-};
+const getErrorMessage = (error) =>
+  error?.response?.data?.message || error?.message || "Unexpected error";
 
 const splitRoles = (role) => {
   if (!role || role === "No Role") return [];
@@ -60,227 +33,66 @@ const splitRoles = (role) => {
     .filter(Boolean);
 };
 
-const getEditableStatus = (status) => {
-  const normalizedStatus = status?.toUpperCase() ?? "";
-  return normalizedStatus.includes("LOCKED") ? "LOCKED" : "OPEN";
-};
-
-const getErrorMessage = (error) =>
-  error?.response?.data?.message || error?.message || "Unexpected error";
-
-const USERNAME_PATTERN = /^[A-Za-z][A-Za-z0-9_$#]{0,127}$/;
-
-const buildTablePermissionRequests = (privileges, username) => {
-  return privileges.flatMap((row) => {
-    const requests = [];
-
-    if (row.select) {
-      requests.push({
-        permission_type: "SELECT",
-        table_name: row.tableName,
-        target: username,
-        is_grant_option: 0,
-        list_column: row.selectColumns,
-      });
-    }
-
-    if (row.insert) {
-      requests.push({
-        permission_type: "INSERT",
-        table_name: row.tableName,
-        target: username,
-        is_grant_option: 0,
-        list_column: [],
-      });
-    }
-
-    if (row.update) {
-      requests.push({
-        permission_type: "UPDATE",
-        table_name: row.tableName,
-        target: username,
-        is_grant_option: 0,
-        list_column: row.updateColumns,
-      });
-    }
-
-    if (row.delete) {
-      requests.push({
-        permission_type: "DELETE",
-        table_name: row.tableName,
-        target: username,
-        is_grant_option: 0,
-        list_column: [],
-      });
-    }
-
-    return requests;
-  });
-};
-
-const normalizePrivilegeName = (privilege) =>
-  privilege?.toUpperCase().replaceAll(" ", "_") ?? "";
-
-const getPrivilegeField = (privilege, camelName, pascalName = camelName) =>
-  privilege?.[camelName] ?? privilege?.[pascalName] ?? "";
-
-const buildPrivilegeState = (tables, userPrivileges = []) => {
-  const privilegesByTable = new Map();
-
-  userPrivileges.forEach((privilege) => {
-    const owner = getPrivilegeField(privilege, "owner", "Owner");
-    const tableName = getPrivilegeField(privilege, "tableName", "TableName");
-    const key = `${owner}.${tableName}`;
-    const current = privilegesByTable.get(key) ?? { table: [], column: [] };
-    const privilegeType = getPrivilegeField(
-      privilege,
-      "privilegeType",
-      "PrivilegeType",
-    ).toUpperCase();
-
-    if (privilegeType === "TABLE") current.table.push(privilege);
-    if (privilegeType === "COLUMN") current.column.push(privilege);
-    privilegesByTable.set(key, current);
-  });
-
-  return (tables ?? []).map((table) => {
-    const tableName = `${table.owner}.${table.tableName}`;
-    const matches = privilegesByTable.get(tableName) ?? {
-      table: [],
-      column: [],
-    };
-
-    const hasPrivilege = (privilegeName) =>
-      matches.table.some(
-        (privilege) =>
-          getPrivilegeField(privilege, "privilege", "Privilege").toUpperCase() === privilegeName,
-      );
-    const getPrivilegeColumns = (privilegeName) =>
-      matches.column
-        .filter(
-          (privilege) =>
-            getPrivilegeField(privilege, "privilege", "Privilege").toUpperCase() === privilegeName,
-        )
-        .map((privilege) => getPrivilegeField(privilege, "columnName", "ColumnName"))
-        .filter(Boolean);
-
-    const selectColumns = hasPrivilege("SELECT")
-      ? table.columns ?? []
-      : getPrivilegeColumns("SELECT");
-    const updateColumns = hasPrivilege("UPDATE")
-      ? table.columns ?? []
-      : getPrivilegeColumns("UPDATE");
-
-    return {
-      tableName,
-      columns: table.columns ?? [],
-      select: hasPrivilege("SELECT") || selectColumns.length > 0,
-      selectColumns,
-      update: hasPrivilege("UPDATE") || updateColumns.length > 0,
-      updateColumns,
-      insert: hasPrivilege("INSERT"),
-      delete: hasPrivilege("DELETE"),
-    };
-  });
-};
-
-const buildCommonPrivilegeState = (systemPrivileges, userPrivileges = []) => {
-  const grantedSystemPrivileges = new Set(
-    userPrivileges
-      .filter((privilege) => privilege.privilegeType === "SYSTEM" || privilege.PrivilegeType === "SYSTEM")
-      .map((privilege) =>
-        normalizePrivilegeName(getPrivilegeField(privilege, "privilege", "Privilege")),
-      ),
-  );
-
-  return Object.fromEntries(
-    (systemPrivileges ?? []).map((privilege) => [
-      privilege,
-      grantedSystemPrivileges.has(privilege),
-    ]),
-  );
-};
-
 const createInitialFormData = (user = null) => ({
-  name: user?.username ?? "",
+  username: user?.username ?? "",
   password: "",
   confirmPassword: "",
   roles: splitRoles(user?.role),
   originalRoles: splitRoles(user?.role),
-  selectedRole: "",
-  status: user ? getEditableStatus(user.status) : "LOCKED",
-
-  privileges: initialPrivileges,
-
-  commonPrivileges: {
-  },
+  status: user?.status?.toUpperCase() === "OPEN" ? "OPEN" : "EXPIRED",
 });
 
-const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) => {
+const UserDialog = ({
+  open,
+  setOpen,
+  mode = "create",
+  user = null,
+  onSaved,
+  onSave,
+}) => {
   const isEditMode = mode === "edit";
   const [formData, setFormData] = useState(createInitialFormData(user));
   const [roles, setRoles] = useState([]);
-  const [systemPrivileges, setSystemPrivileges] = useState([]);
   const [openRoleDialog, setOpenRoleDialog] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [loadingData, setLoadingData] = useState(true);
-  const [activeTab, setActiveTab] = useState("basic-info");
+  const [loadingRoles, setLoadingRoles] = useState(true);
 
   useEffect(() => {
     if (!open) return;
 
     let cancelled = false;
 
-    const fetchDialogData = async () => {
+    const loadRoles = async () => {
       try {
-        const [[rolesRes, tablesRes, systemPrivilegesRes], userPrivilegesRes] = await Promise.all([
-          getDialogMetadata(),
-          isEditMode && user?.username
-            ? getUserPrivileges(user.username)
-            : Promise.resolve({ data: [] }),
-        ]);
-
+        const res = await getPgRoles();
         if (cancelled) return;
-
-        setRoles(rolesRes.data ?? []);
-        setSystemPrivileges(systemPrivilegesRes.data ?? []);
-        setFormData((prev) => ({
-          ...prev,
-          privileges: buildPrivilegeState(
-            tablesRes.data ?? [],
-            userPrivilegesRes.data ?? [],
-          ),
-          commonPrivileges: buildCommonPrivilegeState(
-            systemPrivilegesRes.data ?? [],
-            userPrivilegesRes.data ?? [],
-          ),
-        }));
+        setRoles(res.data ?? []);
       } catch (error) {
         if (cancelled) return;
         console.error(error);
-        toast.error("Failed to load user form data", {
+        toast.error("Failed to load roles", {
           description: getErrorMessage(error),
         });
       } finally {
-        if (!cancelled) setLoadingData(false);
+        if (!cancelled) setLoadingRoles(false);
       }
     };
 
-    fetchDialogData();
+    loadRoles();
     return () => {
       cancelled = true;
     };
-  }, [isEditMode, open, user?.username]);
+  }, [open]);
 
   const handleSubmit = async () => {
-    const username = formData.name.trim().toUpperCase();
+    const username = formData.username.trim().toUpperCase();
 
     if (!username) {
       toast.error("Username is required");
       return;
     }
 
-    if (!USERNAME_PATTERN.test(formData.name.trim())) {
+    if (!USERNAME_PATTERN.test(formData.username.trim())) {
       toast.error("Invalid username", {
         description: "Start with a letter. Use letters, numbers, _, $, # only.",
       });
@@ -297,86 +109,17 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
       return;
     }
 
-    const originalRoles = splitRoles(user?.role).map((role) => role.toUpperCase());
-    const rolesToGrant = formData.roles.filter(
-      (role) => !originalRoles.includes(role.toUpperCase()),
-    );
-    const selectedRoleKeys = formData.roles.map((role) => role.toUpperCase());
-    const rolesToRevoke = splitRoles(user?.role).filter(
-      (role) => !selectedRoleKeys.includes(role.toUpperCase()),
-    );
-    const tablePermissionRequests = buildTablePermissionRequests(
-      formData.privileges,
-      username,
-    );
-    const systemPrivilegeRequests = Object.entries(formData.commonPrivileges)
-      .filter(([, checked]) => checked)
-      .map(([privilegeName]) => ({
-        privilegeName,
-        target: username,
-      }));
-
     try {
       setSaving(true);
 
-      if (isEditMode) {
-        await Promise.all([
-          updateUserStatus({
-            username,
-            status: formData.status,
-          }),
-          ...(formData.password
-            ? [
-                updateUserPassword({
-                  username,
-                  password: formData.password,
-                }),
-              ]
-            : []),
-          ...rolesToGrant.map((role) =>
-            grantRoleToUser({
-              username,
-              rolename: role,
-            }),
-          ),
-          ...rolesToRevoke.map((role) =>
-            revokeRoleFromUser({
-              username,
-              rolename: role,
-            }),
-          ),
-          ...tablePermissionRequests.map((request) =>
-            grantPermission(request),
-          ),
-          ...systemPrivilegeRequests.map((request) =>
-            grantSystemPrivilege(request),
-          ),
-        ]);
-      } else {
-        await createUser({
-          username,
-          password: formData.password,
-        });
-
-        await Promise.all([
-          updateUserStatus({
-            username,
-            status: formData.status,
-          }),
-          ...formData.roles.map((role) =>
-            grantRoleToUser({
-              username,
-              rolename: role,
-            }),
-          ),
-          ...tablePermissionRequests.map((request) =>
-            grantPermission(request),
-          ),
-          ...systemPrivilegeRequests.map((request) =>
-            grantSystemPrivilege(request),
-          ),
-        ]);
-      }
+      await onSave?.({
+        username,
+        password: formData.password,
+        roles: formData.roles,
+        originalRoles: formData.originalRoles,
+        status: formData.status,
+        isEdit: isEditMode,
+      });
 
       await onSaved?.();
       toast.success(isEditMode ? "User updated" : "User created", {
@@ -385,7 +128,7 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
       handleDialogOpenChange(false);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save user changes", {
+      toast.error("Failed to save user", {
         description: getErrorMessage(error),
       });
     } finally {
@@ -393,85 +136,20 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
     }
   };
 
-  const handleSetPrivileges = useCallback((tableName, permission, checked) => {
-    setFormData((prev) => {
-      const privileges = prev.privileges || [];
-
-      const next = privileges.map((row) =>
-        row.tableName === tableName
-          ? {
-              ...row,
-              [permission]: checked,
-
-              ...(permission === "select"
-                ? { selectColumns: checked ? row.columns : [] }
-                : {}),
-
-              ...(permission === "update"
-                ? { updateColumns: checked ? row.columns : [] }
-                : {}),
-            }
-          : row,
-      );
-
-      return {
-        ...prev,
-        privileges: next,
-      };
-    });
-  }, []);
-
-  const handleColumnChange = useCallback((tableName, permissionType, column, checked) => {
-    setFormData((prev) => {
-      const privileges = prev.privileges || [];
-
-      const key =
-        permissionType === "select" ? "selectColumns" : "updateColumns";
-
-      const next = privileges.map((row) => {
-        if (row.tableName !== tableName) return row;
-
-        const currentList = row[key] || [];
-
-        return {
-          ...row,
-          [key]: checked
-            ? [...currentList, column]
-            : currentList.filter((c) => c !== column),
-        };
-      });
-
-      return {
-        ...prev,
-        privileges: next,
-      };
-    });
-  }, []);
-
-  const handleSetCommonPrivileges = useCallback((commonPrivileges) => {
-    setFormData((prev) => ({
-      ...prev,
-      commonPrivileges:
-        typeof commonPrivileges === "function"
-          ? commonPrivileges(prev.commonPrivileges)
-          : commonPrivileges,
-    }));
-  }, []);
-
-  const handleDialogOpenChange = useCallback((nextOpen) => {
-    if (!nextOpen && saving) return;
-
-    if (!nextOpen) {
-      setActiveTab("basic-info");
-      setFormData(createInitialFormData(user));
-      setLoadingData(true);
-    }
-    setOpen(nextOpen);
-  }, [saving, setOpen, user]);
+  const handleDialogOpenChange = useCallback(
+    (nextOpen) => {
+      if (!nextOpen && saving) return;
+      if (!nextOpen) {
+        setFormData(createInitialFormData(user));
+      }
+      setOpen(nextOpen);
+    },
+    [saving, setOpen, user],
+  );
 
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
-      <DialogContent className="max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] !max-w-none overflow-hidden text-[13px] sm:w-[920px]">
+      <DialogContent className="max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] !max-w-none overflow-hidden text-[13px] sm:w-[640px]">
         <DialogHeader>
           <div className="flex items-start gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-[#fcd535] text-[#181a20]">
@@ -489,47 +167,22 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
           </div>
         </DialogHeader>
 
-        {loadingData && (
+        {loadingRoles && (
           <div className="rounded-md border border-[#f0b90b]/30 bg-[#fcd535]/15 px-3 py-2 text-[#181a20]">
-            <LoadingSpinner label="Loading user data..." />
+            <LoadingSpinner label="Loading roles..." />
           </div>
         )}
 
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className={saving ? "pointer-events-none opacity-70" : undefined}
-        >
-          <TabsList className="h-11 w-full justify-start rounded-md bg-[#0b0e11] p-1">
-            <TabsTrigger className="flex-none px-4" value="basic-info">
-              Basic information
-            </TabsTrigger>
-            <TabsTrigger
-              className="flex-none px-4"
-              value="privileges"
-              disabled={loadingData}
-            >
-              Privileges
-            </TabsTrigger>
-          </TabsList>
+        <div className={saving ? "pointer-events-none opacity-70" : undefined}>
           <UserBasicForm
             formData={formData}
             setFormData={setFormData}
             mode={mode}
-            disabled={loadingData || saving}
+            disabled={loadingRoles || saving}
             onManageRoles={() => setOpenRoleDialog(true)}
           />
-          {activeTab === "privileges" && (
-            <UserPrivileges
-              privileges={formData.privileges}
-              setPrivileges={handleSetPrivileges}
-              commonPrivileges={formData.commonPrivileges}
-              systemPrivileges={systemPrivileges}
-              setCommonPrivileges={handleSetCommonPrivileges}
-              onColumnChange={handleColumnChange}
-            />
-          )}
-        </Tabs>
+        </div>
+
         <DialogFooter>
           <DialogClose
             render={<Button variant="outline" disabled={saving}>Cancel</Button>}
@@ -537,7 +190,7 @@ const UserDialog = ({ open, setOpen, mode = "create", user = null, onSaved }) =>
           <Button
             onClick={handleSubmit}
             type="submit"
-            disabled={loadingData || saving}
+            disabled={loadingRoles || saving}
           >
             {saving ? (
               <LoadingSpinner label={isEditMode ? "Updating..." : "Saving..."} />

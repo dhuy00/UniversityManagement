@@ -2,18 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import {
-  getRolePrivileges,
-  revokeRolePrivileges,
-  updateRolePassword,
-} from "@/api/roleApi";
-import {
-  getSystemPrivileges,
-  getTables,
-  grantPermission,
-  grantSystemPrivilege,
-} from "@/api/permissionApi";
+  assignPgPermission,
+  getPgPermissions,
+  getPgPermissionsByRole,
+  revokePgPermission,
+} from "@/api/pgPermissionApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -22,311 +18,92 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import UserPrivileges from "@/components/users/UserPrivileges";
 import { ShieldCheck } from "lucide-react";
-
-const emptyPrivilegeState = {
-  privileges: [],
-  commonPrivileges: {},
-};
 
 const getErrorMessage = (error) =>
   error?.response?.data?.message || error?.message || "Unexpected error";
 
-const getField = (item, camelName, pascalName = camelName) =>
-  item?.[camelName] ?? item?.[pascalName] ?? "";
-
-const normalizePrivilegeName = (privilege) =>
-  privilege?.toUpperCase().replaceAll(" ", "_") ?? "";
-
-const buildPrivilegeState = (tables, rolePrivileges) => {
-  const privilegesByTable = new Map();
-
-  rolePrivileges.forEach((privilege) => {
-    const type = getField(
-      privilege,
-      "privilegeType",
-      "PrivilegeType",
-    ).toUpperCase();
-    if (type !== "TABLE" && type !== "COLUMN") return;
-
-    const key = `${getField(privilege, "owner", "Owner")}.${getField(
-      privilege,
-      "tableName",
-      "TableName",
-    )}`;
-    const current = privilegesByTable.get(key) ?? { table: [], column: [] };
-    current[type.toLowerCase()].push(privilege);
-    privilegesByTable.set(key, current);
-  });
-
-  return tables.map((table) => {
-    const tableName = `${table.owner}.${table.tableName}`;
-    const matches = privilegesByTable.get(tableName) ?? {
-      table: [],
-      column: [],
-    };
-    const hasTablePrivilege = (name) =>
-      matches.table.some(
-        (item) =>
-          getField(item, "privilege", "Privilege").toUpperCase() === name,
-      );
-    const getColumns = (name) =>
-      matches.column
-        .filter(
-          (item) =>
-            getField(item, "privilege", "Privilege").toUpperCase() === name,
-        )
-        .map((item) => getField(item, "columnName", "ColumnName"))
-        .filter(Boolean);
-
-    const selectColumns = hasTablePrivilege("SELECT")
-      ? table.columns ?? []
-      : getColumns("SELECT");
-    const updateColumns = hasTablePrivilege("UPDATE")
-      ? table.columns ?? []
-      : getColumns("UPDATE");
-
-    return {
-      tableName,
-      columns: table.columns ?? [],
-      select: hasTablePrivilege("SELECT") || selectColumns.length > 0,
-      selectColumns,
-      insert: hasTablePrivilege("INSERT"),
-      update: hasTablePrivilege("UPDATE") || updateColumns.length > 0,
-      updateColumns,
-      delete: hasTablePrivilege("DELETE"),
-    };
-  });
-};
-
-const buildCommonPrivilegeState = (systemPrivileges, rolePrivileges) => {
-  const granted = new Set(
-    rolePrivileges
-      .filter(
-        (item) =>
-          getField(item, "privilegeType", "PrivilegeType").toUpperCase() ===
-          "SYSTEM",
-      )
-      .map((item) =>
-        normalizePrivilegeName(getField(item, "privilege", "Privilege")),
-      ),
-  );
-
-  return Object.fromEntries(
-    systemPrivileges.map((privilege) => [
-      privilege,
-      granted.has(normalizePrivilegeName(privilege)),
-    ]),
-  );
-};
-
-const sameColumns = (left = [], right = []) =>
-  left.length === right.length &&
-  left.every((column) => right.includes(column));
-
-const buildPermissionChanges = (initialState, nextState, roleName) => {
-  const initialRows = new Map(
-    initialState.privileges.map((row) => [row.tableName, row]),
-  );
-  const grants = [];
-  const revokes = [];
-
-  nextState.privileges.forEach((row) => {
-    const initial = initialRows.get(row.tableName) ?? {};
-
-    ["select", "insert", "update", "delete"].forEach((permission) => {
-      const columnKey =
-        permission === "select"
-          ? "selectColumns"
-          : permission === "update"
-            ? "updateColumns"
-            : null;
-      const changed =
-        !!initial[permission] !== !!row[permission] ||
-        (columnKey &&
-          row[permission] &&
-          !sameColumns(initial[columnKey], row[columnKey]));
-
-      if (!changed) return;
-
-      if (initial[permission]) {
-        revokes.push({
-          rolename: roleName,
-          table_name: row.tableName,
-          privilege: [permission.toUpperCase()],
-        });
-      }
-
-      if (row[permission]) {
-        grants.push({
-          permission_type: permission.toUpperCase(),
-          table_name: row.tableName,
-          target: roleName,
-          is_grant_option: 0,
-          list_column: columnKey ? row[columnKey] : [],
-        });
-      }
-    });
-  });
-
-  const systemPrivilegeNames = new Set([
-    ...Object.keys(initialState.commonPrivileges),
-    ...Object.keys(nextState.commonPrivileges),
-  ]);
-
-  systemPrivilegeNames.forEach((privilegeName) => {
-    const wasGranted = !!initialState.commonPrivileges[privilegeName];
-    const isGranted = !!nextState.commonPrivileges[privilegeName];
-    if (wasGranted === isGranted) return;
-
-    if (wasGranted) {
-      revokes.push({
-        rolename: roleName,
-        table_name: "",
-        privilege: [privilegeName.replaceAll("_", " ")],
-      });
-    } else {
-      grants.push({
-        privilegeName,
-        target: roleName,
-        system: true,
-      });
-    }
-  });
-
-  return { grants, revokes };
-};
-
 const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
-  const [activeTab, setActiveTab] = useState("basic-info");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [systemPrivileges, setSystemPrivileges] = useState([]);
-  const [privilegeState, setPrivilegeState] = useState(emptyPrivilegeState);
-  const [initialState, setInitialState] = useState(emptyPrivilegeState);
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const roleName = role?.role ?? "";
+  const [allPermissions, setAllPermissions] = useState([]);
+  const [selectedPermissions, setSelectedPermissions] = useState(new Set());
+  const [initialPermissions, setInitialPermissions] = useState(new Set());
+  const [description, setDescription] = useState("");
+
+  const roleCode = role?.role ?? "";
 
   useEffect(() => {
-    if (!open || !roleName) return;
+    if (!open || !roleCode) return;
 
     let cancelled = false;
 
-    Promise.all([
-      getTables(),
-      getSystemPrivileges(),
-      getRolePrivileges(roleName),
-    ])
-      .then(([tablesResponse, systemResponse, rolePrivilegesResponse]) => {
+    const loadData = async () => {
+      try {
+        const [allResponse, roleResponse] = await Promise.all([
+          getPgPermissions(),
+          getPgPermissionsByRole(roleCode),
+        ]);
+
         if (cancelled) return;
+
+        const permissions = allResponse.data ?? [];
+        const rolePermissions = new Set(
+          (roleResponse.data ?? []).map((p) => p.permissionCode),
+        );
+
+        setAllPermissions(permissions);
+        setSelectedPermissions(rolePermissions);
+        setInitialPermissions(rolePermissions);
+        setDescription(role?.description ?? "");
         setLoadError(false);
-
-        const rolePrivileges = rolePrivilegesResponse.data ?? [];
-        const nextState = {
-          privileges: buildPrivilegeState(
-            tablesResponse.data ?? [],
-            rolePrivileges,
-          ),
-          commonPrivileges: buildCommonPrivilegeState(
-            systemResponse.data ?? [],
-            rolePrivileges,
-          ),
-        };
-
-        setSystemPrivileges(systemResponse.data ?? []);
-        setPrivilegeState(nextState);
-        setInitialState(nextState);
-      })
-      .catch((error) => {
+      } catch (error) {
         if (cancelled) return;
         setLoadError(true);
         console.error(error);
-        toast.error("Failed to load role privileges", {
+        toast.error("Failed to load role permissions", {
           description: getErrorMessage(error),
         });
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    };
 
+    loadData();
     return () => {
       cancelled = true;
     };
-  }, [open, roleName]);
+  }, [open, roleCode, role?.description]);
 
   const handleOpenChange = useCallback(
     (nextOpen) => {
       if (!nextOpen && saving) return;
       if (!nextOpen) {
-        setActiveTab("basic-info");
         setLoading(true);
         setLoadError(false);
-        setPrivilegeState(emptyPrivilegeState);
-        setInitialState(emptyPrivilegeState);
-        setPassword("");
-        setConfirmPassword("");
+        setSelectedPermissions(new Set());
+        setInitialPermissions(new Set());
+        setAllPermissions([]);
+        setDescription("");
       }
       setOpen(nextOpen);
     },
     [saving, setOpen],
   );
 
-  const handleSetPrivileges = useCallback((tableName, permission, checked) => {
-    setPrivilegeState((current) => ({
-      ...current,
-      privileges: current.privileges.map((row) =>
-        row.tableName === tableName
-          ? {
-              ...row,
-              [permission]: checked,
-              ...(permission === "select"
-                ? { selectColumns: checked ? row.columns : [] }
-                : {}),
-              ...(permission === "update"
-                ? { updateColumns: checked ? row.columns : [] }
-                : {}),
-            }
-          : row,
-      ),
-    }));
-  }, []);
-
-  const handleColumnChange = useCallback(
-    (tableName, permission, column, checked) => {
-      const key =
-        permission === "select" ? "selectColumns" : "updateColumns";
-
-      setPrivilegeState((current) => ({
-        ...current,
-        privileges: current.privileges.map((row) => {
-          if (row.tableName !== tableName) return row;
-          const columns = row[key] ?? [];
-          return {
-            ...row,
-            [key]: checked
-              ? [...columns, column]
-              : columns.filter((item) => item !== column),
-          };
-        }),
-      }));
-    },
-    [],
-  );
-
-  const handleSetCommonPrivileges = useCallback((value) => {
-    setPrivilegeState((current) => ({
-      ...current,
-      commonPrivileges:
-        typeof value === "function"
-          ? value(current.commonPrivileges)
-          : value,
-    }));
+  const handleTogglePermission = useCallback((permissionCode, checked) => {
+    setSelectedPermissions((current) => {
+      const next = new Set(current);
+      if (checked) {
+        next.add(permissionCode);
+      } else {
+        next.delete(permissionCode);
+      }
+      return next;
+    });
   }, []);
 
   const handleSubmit = async () => {
@@ -337,62 +114,64 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
       return;
     }
 
-    if ((password || confirmPassword) && password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    const { grants, revokes } = buildPermissionChanges(
-      initialState,
-      privilegeState,
-      roleName,
+    const toGrant = [...selectedPermissions].filter(
+      (p) => !initialPermissions.has(p),
+    );
+    const toRevoke = [...initialPermissions].filter(
+      (p) => !selectedPermissions.has(p),
     );
 
-    if (grants.length === 0 && revokes.length === 0 && !password) {
-      toast.info("No role changes to save");
+    if (toGrant.length === 0 && toRevoke.length === 0) {
+      toast.info("No permission changes to save");
       return;
     }
 
     try {
       setSaving(true);
 
-      for (const request of revokes) {
-        await revokeRolePrivileges(request);
+      for (const permissionCode of toGrant) {
+        await assignPgPermission({
+          roleCode,
+          permissionCode,
+        });
       }
-      for (const request of grants) {
-        if (request.system) {
-          await grantSystemPrivilege({
-            privilegeName: request.privilegeName,
-            target: request.target,
-          });
-        } else {
-          await grantPermission(request);
-        }
-      }
-      if (password) {
-        await updateRolePassword({
-          rolename: roleName,
-          password,
+
+      for (const permissionCode of toRevoke) {
+        await revokePgPermission({
+          roleCode,
+          permissionCode,
         });
       }
 
       await onSaved?.();
-      toast.success("Role updated", { description: roleName });
+      toast.success("Role updated", { description: roleCode });
       handleOpenChange(false);
     } catch (error) {
       console.error(error);
       toast.error("Failed to update role", {
-        description: `${getErrorMessage(error)} Reopen the dialog before retrying.`,
+        description: `${getErrorMessage(error)}. Reopen the dialog before retrying.`,
       });
-      handleOpenChange(false);
     } finally {
       setSaving(false);
     }
   };
 
+  // Group permissions by their category prefix (e.g., "USER_" -> "USER", "ROLE_" -> "ROLE")
+  const groupedPermissions = allPermissions.reduce((groups, permission) => {
+    const parts = permission.permissionCode.split("_");
+    const category = parts.length > 1 ? parts[0] : "OTHER";
+    if (!groups[category]) {
+      groups[category] = [];
+    }
+    groups[category].push(permission);
+    return groups;
+  }, {});
+
+  const sortedCategories = Object.keys(groupedPermissions).sort();
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] !max-w-none overflow-hidden text-[13px] sm:w-[920px]">
+      <DialogContent className="max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] !max-w-none overflow-hidden text-[13px] sm:w-[720px]">
         <DialogHeader>
           <div className="flex items-start gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-[#fcd535] text-[#181a20]">
@@ -420,91 +199,86 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
           </div>
         )}
 
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className={saving ? "pointer-events-none opacity-70" : undefined}
+        <div
+          className={
+            saving ? "pointer-events-none opacity-70" : undefined
+          }
         >
-          <TabsList className="h-11 w-full justify-start rounded-md bg-[#0b0e11] p-1">
-            <TabsTrigger className="flex-none px-4" value="basic-info">
-              Basic information
-            </TabsTrigger>
-            <TabsTrigger
-              className="flex-none px-4"
-              value="privileges"
-              disabled={loading || loadError}
-            >
-              Privileges
-            </TabsTrigger>
-          </TabsList>
+          <div className="max-h-[calc(100vh-300px)] overflow-y-auto rounded-lg border border-[#2b3139] bg-[#0b0e11] p-5">
+            <Field className="mb-5">
+              <FieldLabel htmlFor="edit-role-code">Role code</FieldLabel>
+              <Input id="edit-role-code" value={roleCode} disabled />
+            </Field>
 
-          {activeTab === "basic-info" && (
-            <div className="mt-3 max-h-[calc(100vh-300px)] overflow-y-auto rounded-lg border border-[#2b3139] bg-[#0b0e11] p-5">
-              <FieldGroup className="grid gap-5 md:grid-cols-2">
-                <Field className="md:col-span-2">
-                  <FieldLabel htmlFor="edit-role-name">Role name</FieldLabel>
-                  <Input id="edit-role-name" value={roleName} disabled />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="edit-role-authentication">
-                    Authentication
-                  </FieldLabel>
-                  <Input
-                    id="edit-role-authentication"
-                    value={role?.authenticationType || "NONE"}
-                    disabled
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="edit-role-password">
-                    New password
-                  </FieldLabel>
-                  <Input
-                    id="edit-role-password"
-                    type="password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Leave blank to keep current password"
-                    autoComplete="new-password"
-                    disabled={saving}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="edit-role-confirm-password">
-                    Confirm password
-                  </FieldLabel>
-                  <Input
-                    id="edit-role-confirm-password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
-                    autoComplete="new-password"
-                    disabled={saving}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="edit-role-scope">Scope</FieldLabel>
-                  <Input
-                    id="edit-role-scope"
-                    value={role?.common === "YES" ? "COMMON" : "LOCAL"}
-                    disabled
-                  />
-                </Field>
-              </FieldGroup>
-            </div>
-          )}
+            {!loading && !loadError && (
+              <>
+                <div className="mb-4 flex items-center justify-between">
+                  <FieldLabel>Permissions</FieldLabel>
+                  <span className="text-xs text-[#707a8a]">
+                    {selectedPermissions.size} of {allPermissions.length} selected
+                  </span>
+                </div>
 
-          {activeTab === "privileges" && (
-            <UserPrivileges
-              privileges={privilegeState.privileges}
-              setPrivileges={handleSetPrivileges}
-              commonPrivileges={privilegeState.commonPrivileges}
-              systemPrivileges={systemPrivileges}
-              setCommonPrivileges={handleSetCommonPrivileges}
-              onColumnChange={handleColumnChange}
-            />
-          )}
-        </Tabs>
+                {allPermissions.length === 0 ? (
+                  <p className="py-4 text-center text-sm text-[#707a8a]">
+                    No permissions available
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {sortedCategories.map((category) => (
+                      <div key={category}>
+                        <div className="mb-2 flex items-center gap-2">
+                          <span className="text-xs font-semibold uppercase tracking-wider text-[#fcd535]">
+                            {category}
+                          </span>
+                          <div className="h-px flex-1 bg-[#2b3139]" />
+                        </div>
+                        <div className="grid gap-2 pl-2">
+                          {groupedPermissions[category]
+                            .sort((a, b) =>
+                              a.permissionCode.localeCompare(b.permissionCode),
+                            )
+                            .map((permission) => {
+                              const isSelected = selectedPermissions.has(
+                                permission.permissionCode,
+                              );
+                              return (
+                                <label
+                                  key={permission.permissionCode}
+                                  className="flex cursor-pointer items-start gap-3 rounded-md px-2 py-2 hover:bg-[#1e2329]"
+                                >
+                                  <Checkbox
+                                    checked={isSelected}
+                                    onCheckedChange={(checked) =>
+                                      handleTogglePermission(
+                                        permission.permissionCode,
+                                        !!checked,
+                                      )
+                                    }
+                                    className="mt-0.5 shrink-0"
+                                  />
+                                  <div className="min-w-0 flex-1">
+                                    <span className="font-medium text-white">
+                                      {permission.permissionCode}
+                                    </span>
+                                    {permission.permissionDescription && (
+                                      <p className="mt-0.5 text-xs text-[#707a8a]">
+                                        {permission.permissionDescription}
+                                      </p>
+                                    )}
+                                  </div>
+                                </label>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
 
         <DialogFooter>
           <DialogClose
@@ -514,7 +288,11 @@ const RoleEditDialog = ({ open, setOpen, role, onSaved }) => {
             onClick={handleSubmit}
             disabled={loading || loadError || saving}
           >
-            {saving ? <LoadingSpinner label="Updating..." /> : "Update role"}
+            {saving ? (
+              <LoadingSpinner label="Updating..." />
+            ) : (
+              "Update role"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { deleteRole, getRoles } from "@/api/roleApi";
+import { deletePgRole, getPgRoles } from "@/api/pgRoleApi";
 import RoleDeleteDialog from "@/components/roles/RoleDeleteDialog";
 import RoleDialog from "@/components/roles/RoleDialog";
 import RoleEditDialog from "@/components/roles/RoleEditDialog";
@@ -24,7 +24,7 @@ const Roles = () => {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const response = await getRoles();
+      const response = await getPgRoles();
       setRoles(response.data ?? []);
     } catch (error) {
       console.error(error);
@@ -37,26 +37,7 @@ const Roles = () => {
   };
 
   useEffect(() => {
-    let cancelled = false;
-
-    getRoles()
-      .then((response) => {
-        if (!cancelled) setRoles(response.data ?? []);
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        console.error(error);
-        toast.error("Failed to load roles", {
-          description: getErrorMessage(error),
-        });
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    fetchRoles();
   }, []);
 
   const handleDeleteRole = async () => {
@@ -64,7 +45,7 @@ const Roles = () => {
 
     try {
       setDeleting(true);
-      await deleteRole(selectedRole.role);
+      await deletePgRole(selectedRole.role);
       toast.success("Role deleted", { description: selectedRole.role });
       setOpenDeleteDialog(false);
       await fetchRoles();

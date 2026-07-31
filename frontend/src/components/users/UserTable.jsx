@@ -46,7 +46,7 @@ const getStatusMeta = (status) => {
     };
   }
 
-  if (normalizedStatus.includes("LOCKED")) {
+  if (normalizedStatus === "EXPIRED" || normalizedStatus.includes("LOCKED")) {
     return {
       label: normalizedStatus,
       className: "border-[#f6465d]/30 bg-[#f6465d]/10 text-[#f6465d]",

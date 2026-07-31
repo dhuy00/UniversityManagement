@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { createRole } from "@/api/roleApi";
+import { createPgRole } from "@/api/pgRoleApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ShieldPlus } from "lucide-react";
 
 const ROLE_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_$#]{0,127}$/;
@@ -22,9 +23,8 @@ const getErrorMessage = (error) =>
   error?.response?.data?.message || error?.message || "Unexpected error";
 
 const initialFormData = {
-  roleName: "",
-  password: "",
-  confirmPassword: "",
+  roleCode: "",
+  description: "",
 };
 
 const RoleDialog = ({ open, setOpen, onSaved }) => {
@@ -47,38 +47,31 @@ const RoleDialog = ({ open, setOpen, onSaved }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const roleName = formData.roleName.trim().toUpperCase();
+    const roleCode = formData.roleCode.trim().toUpperCase();
 
-    if (!roleName) {
-      toast.error("Role name is required");
+    if (!roleCode) {
+      toast.error("Role code is required");
       return;
     }
 
-    if (!ROLE_NAME_PATTERN.test(formData.roleName.trim())) {
-      toast.error("Invalid role name", {
+    if (!ROLE_NAME_PATTERN.test(formData.roleCode.trim())) {
+      toast.error("Invalid role code", {
         description: "Start with a letter. Use letters, numbers, _, $, # only.",
       });
       return;
     }
 
-    if (!formData.password) {
-      toast.error("Password is required");
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
     try {
       setSaving(true);
-      await createRole({
-        rolename: roleName,
-        password: formData.password,
+      const response = await createPgRole({
+        roleCode,
+        description: formData.description.trim(),
       });
+      if (!response.data?.success) {
+        throw new Error(response.data?.message ?? "Failed to create role");
+      }
       await onSaved?.();
-      toast.success("Role created", { description: roleName });
+      toast.success("Role created", { description: roleCode });
       setFormData(initialFormData);
       setOpen(false);
     } catch (error) {
@@ -93,7 +86,7 @@ const RoleDialog = ({ open, setOpen, onSaved }) => {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] text-[13px] sm:w-[640px]">
+      <DialogContent className="w-[calc(100vw-2rem)] text-[13px] sm:w-[560px]">
         <DialogHeader>
           <div className="flex items-start gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-[#fcd535] text-[#181a20]">
@@ -112,14 +105,14 @@ const RoleDialog = ({ open, setOpen, onSaved }) => {
           className="rounded-lg border border-[#2b3139] bg-[#0b0e11] p-5"
           onSubmit={handleSubmit}
         >
-          <FieldGroup className="grid gap-5 md:grid-cols-2">
-            <Field className="md:col-span-2">
-              <FieldLabel htmlFor="role-name">Role name</FieldLabel>
+          <FieldGroup className="grid gap-5">
+            <Field>
+              <FieldLabel htmlFor="role-code">Role code</FieldLabel>
               <Input
-                id="role-name"
-                value={formData.roleName}
-                onChange={handleChange("roleName")}
-                placeholder="ROLE_NAME"
+                id="role-code"
+                value={formData.roleCode}
+                onChange={handleChange("roleCode")}
+                placeholder="ROLE_CODE"
                 autoComplete="off"
                 disabled={saving}
                 autoFocus
@@ -129,29 +122,15 @@ const RoleDialog = ({ open, setOpen, onSaved }) => {
               </p>
             </Field>
 
-            <Field className="md:col-span-2">
-              <FieldLabel htmlFor="role-password">Password</FieldLabel>
-              <Input
-                id="role-password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange("password")}
-                autoComplete="new-password"
+            <Field>
+              <FieldLabel htmlFor="role-description">Description</FieldLabel>
+              <Textarea
+                id="role-description"
+                value={formData.description}
+                onChange={handleChange("description")}
+                placeholder="Brief summary of the role's purpose"
                 disabled={saving}
-              />
-            </Field>
-
-            <Field className="md:col-span-2">
-              <FieldLabel htmlFor="role-confirm-password">
-                Confirm password
-              </FieldLabel>
-              <Input
-                id="role-confirm-password"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange("confirmPassword")}
-                autoComplete="new-password"
-                disabled={saving}
+                rows={3}
               />
             </Field>
           </FieldGroup>

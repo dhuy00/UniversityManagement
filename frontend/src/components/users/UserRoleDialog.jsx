@@ -74,17 +74,14 @@ const UserRoleDialog = ({
                   Role
                 </TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase text-[#929aa5]">
-                  Authentication
-                </TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase text-[#929aa5]">
-                  Common
+                  Description
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {availableRoles.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center text-[#929aa5]">
+                  <TableCell colSpan={3} className="h-24 text-center text-[#929aa5]">
                     No roles available
                   </TableCell>
                 </TableRow>
@@ -112,9 +109,8 @@ const UserRoleDialog = ({
                       {role.role}
                     </TableCell>
                     <TableCell className="text-[#929aa5]">
-                      {role.authenticationType}
+                      {role.description || "—"}
                     </TableCell>
-                    <TableCell className="text-[#929aa5]">{role.common}</TableCell>
                   </TableRow>
                   );
                 })

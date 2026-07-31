@@ -39,8 +39,8 @@ const UserBasicForm = ({
           <Field className="md:col-span-2">
             <FieldLabel htmlFor="fieldgroup-name">Username</FieldLabel>
             <Input
-              value={formData.name}
-              onChange={(e) => handleInputChange("name", e.target.value)}
+              value={formData.username}
+              onChange={(e) => handleInputChange("username", e.target.value)}
               id="fieldgroup-name"
               placeholder="USER_NAME"
               disabled={isEditMode || disabled}
@@ -127,7 +127,7 @@ const UserBasicForm = ({
               <SelectContent alignItemWithTrigger={false}>
                 <SelectGroup>
                   <SelectItem value="OPEN">OPEN</SelectItem>
-                  <SelectItem value="LOCKED">LOCKED</SelectItem>
+                  <SelectItem value="EXPIRED">EXPIRED</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
