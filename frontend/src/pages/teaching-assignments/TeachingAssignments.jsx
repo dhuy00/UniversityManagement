@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Pencil, Plus, Presentation, Trash2 } from "lucide-react";
 
-import { getTeachingAssignments } from "@/api/teachingAssignmentApi";
+import { getPgTeachingAssignments } from "@/api/pgTeachingAssignmentApi";
 import DataPageHeader from "@/components/common/DataPageHeader";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import TeachingAssignmentDeleteDialog from "@/components/teaching-assignments/TeachingAssignmentDeleteDialog";
@@ -48,7 +48,7 @@ export default function TeachingAssignments() {
   useEffect(() => {
     let active = true;
 
-    getTeachingAssignments()
+    getPgTeachingAssignments()
       .then((data) => {
         if (active) setAssignments(data);
       })
@@ -67,7 +67,7 @@ export default function TeachingAssignments() {
   }, []);
 
   const refreshAssignments = async (createdAssignmentKey) => {
-    const data = await getTeachingAssignments();
+    const data = await getPgTeachingAssignments();
     setAssignments(prioritizeItem(
       data,
       createdAssignmentKey,
@@ -96,7 +96,7 @@ export default function TeachingAssignments() {
       <DataPageHeader
         eyebrow="Teaching operations"
         title="Teaching Assignments"
-        description="Rows are restricted by your Oracle role and VPD context."
+        description="Rows are restricted by your role and security context."
         icon={Presentation}
         searchValue={search}
         onSearchChange={setSearch}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { deleteTeachingAssignment } from "@/api/teachingAssignmentApi";
+import { deletePgTeachingAssignment } from "@/api/pgTeachingAssignmentApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,7 @@ export default function TeachingAssignmentDeleteDialog({
     try {
       setDeleting(true);
       setError("");
-      await deleteTeachingAssignment(assignment);
+      await deletePgTeachingAssignment(assignment);
       await onDeleted();
       toast.success("Teaching assignment deleted");
       onClose();

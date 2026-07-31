@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Presentation } from "lucide-react";
 import { toast } from "sonner";
 
-import { getCoursePlans } from "@/api/coursePlanApi";
+import { getPgCoursePlans } from "@/api/pgCoursePlanApi";
 import {
-  createTeachingAssignment,
-  updateTeachingAssignment,
-} from "@/api/teachingAssignmentApi";
+  createPgTeachingAssignment,
+  updatePgTeachingAssignment,
+} from "@/api/pgTeachingAssignmentApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,7 +53,7 @@ export default function TeachingAssignmentFormDialog({
 
   useEffect(() => {
     let active = true;
-    getCoursePlans()
+    getPgCoursePlans()
       .then((data) => {
         if (active) setPlans(data);
       })
@@ -101,9 +101,9 @@ export default function TeachingAssignmentFormDialog({
       setSaving(true);
       setError("");
       if (isEdit) {
-        await updateTeachingAssignment(assignment, request);
+        await updatePgTeachingAssignment(assignment, request);
       } else {
-        await createTeachingAssignment(request);
+        await createPgTeachingAssignment(request);
       }
       await onSaved(isEdit
         ? null
