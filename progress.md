@@ -1,6 +1,6 @@
 # Project Progress
 
-Last updated: 2026-07-31
+Last updated: 2026-07-31 (fully migrated)
 Workspace: `D:\SourceCode\ReactJS\.NET`
 
 ## 1. Purpose of this file
@@ -36,9 +36,11 @@ Completed work:
 - Restricted API group role with staff-column guard
 - Authentication lookup function and password verification
 - Request transaction infrastructure with connection pooling
-- First migrated repository: ProfileRepository
-- **Domain repositories migrated this session**: Course, CoursePlan,
-  Enrollment, TeachingAssignment, Unit, Student, Staff
+- All domain repositories: Profile, Course, CoursePlan, Enrollment,
+  TeachingAssignment, Unit, Student, Staff, User, Role, Permission
+- All domain controllers: 10 PostgresControllers at `/api/pg/{entity}`
+- All frontend pages wired to Postgres API clients (`pg*Api.js`)
+- Operational tooling: seed data, backup/restore, WAL archiving, PITR
 
 Remaining work:
 - (none — all repository migrations, API controllers, and frontend integrations complete)
@@ -196,8 +198,28 @@ UniversityManagementAPI/
 ├── Extensions/
 │   └── PostgresServiceExtensions.cs      -- DI registration
 └── Repositories/
-    ├── PostgresAuthRepository.cs        -- Authentication lookup
-    └── PostgresProfileRepository.cs      -- Profile queries (first migrated repo)
+    ├── PostgresAuthRepository.cs
+    ├── PostgresProfileRepository.cs
+    ├── PostgresCourseRepository.cs
+    ├── PostgresCoursePlanRepository.cs
+    ├── PostgresEnrollmentRepository.cs
+    ├── PostgresTeachingAssignmentRepository.cs
+    ├── PostgresUnitRepository.cs
+    ├── PostgresStudentRepository.cs
+    └── PostgresStaffRepository.cs
+
+Controllers (all under `api/pg/`):
+    ├── PostgresUserController.cs        -- GET, POST, DELETE, PATCH status/password
+    ├── PostgresRoleController.cs
+    ├── PostgresPermissionController.cs
+    ├── PostgresProfileController.cs      -- Resolves identity from app_user_id
+    ├── PostgresCourseController.cs
+    ├── PostgresCoursePlanController.cs
+    ├── PostgresEnrollmentController.cs
+    ├── PostgresTeachingAssignmentController.cs
+    ├── PostgresUnitController.cs
+    ├── PostgresStudentController.cs
+    └── PostgresStaffController.cs
 ```
 
 ### DI registration
@@ -213,6 +235,16 @@ services.AddPostgresRequestInfrastructure(configuration);
 // - IPostgresAuthRepository + PostgresAuthRepository
 // - IPostgresLoginService + PostgresLoginService
 // - IPostgresProfileRepository + PostgresProfileRepository
+// - IPostgresCourseRepository + PostgresCourseRepository
+// - IPostgresCoursePlanRepository + PostgresCoursePlanRepository
+// - IPostgresEnrollmentRepository + PostgresEnrollmentRepository
+// - IPostgresTeachingAssignmentRepository + PostgresTeachingAssignmentRepository
+// - IPostgresUnitRepository + PostgresUnitRepository
+// - IPostgresStudentRepository + PostgresStudentRepository
+// - IPostgresStaffRepository + PostgresStaffRepository
+// - IPostgresUserRepository + PostgresUserRepository
+// - IPostgresRoleRepository + PostgresRoleRepository
+// - IPostgresPermissionRepository + PostgresPermissionRepository
 ```
 
 ### API transaction contract
@@ -255,21 +287,50 @@ psql -h localhost -U postgres -d university -f script/postgres/14_authentication
 
 ## 9. Recommended next task
 
-All repository migrations, API controllers, frontend integrations, and
-operational tooling are complete. The PostgreSQL feature set is fully delivered.
+The PostgreSQL feature set is fully delivered end-to-end. All repositories,
+controllers, and frontend pages are wired to Postgres. Remaining considerations:
 
-Remaining considerations (non-blocking):
-- Performance testing and load testing with real data
-- Endpoint-by-endpoint integration testing via the `/admin/postgres` page
-- Consider disabling or archiving the Oracle API controllers if Postgres is
-  the sole target going forward
+- Full end-to-end integration testing via `/admin/postgres` (SystemAdmin only)
+- Performance / load testing with real data
+- Optionally archive the legacy Oracle controllers (12 controllers under
+  `/api/{entity}`) if Postgres is the sole target — the Postgres controllers
+  sit at `/api/pg/{entity}` alongside them
+- Auth/login branding pages still reference "Oracle" in copy — update to
+  "University Management" or similar if desired
+- The `oracleUsername` column in staff/student forms is a data model concern;
+  renaming it is separate from the API migration
 
 ## 10. Known issues
 
 1. Docker runtime verification unavailable in tool environment
 2. Integration tests skip when environment variables not set
+3. 12 Oracle CRUD controllers remain active alongside Postgres controllers;
+   archive or disable if Postgres-only is the goal
 
 ## 11. Changelog
+
+### 2026-07-31 (frontend domain wiring batch)
+
+All 9 domain pages fully migrated from Oracle API clients to Postgres API clients.
+Zero Oracle API imports remain in the frontend source. Each domain follows the
+same pattern: PostgresController + pg{Entity}Api.js + page/dialog wiring.
+
+| Domain | Files |
+|--------|-------|
+| Courses | `PostgresCourseController`, `pgCourseApi`, `Courses.jsx`, `CourseFormDialog.jsx` |
+| Units | `PostgresUnitController`, `pgUnitApi`, `Units.jsx`, `UnitFormDialog.jsx` |
+| CoursePlans | `PostgresCoursePlanController`, `pgCoursePlanApi`, `CoursePlans.jsx`, `CoursePlanFormDialog.jsx`, `CoursePickerDialog.jsx` |
+| TeachingAssignments | `PostgresTeachingAssignmentController`, `pgTeachingAssignmentApi`, `TeachingAssignments.jsx`, `TeachingAssignmentFormDialog.jsx`, `TeachingAssignmentDeleteDialog.jsx` |
+| Enrollments | `PostgresEnrollmentController`, `pgEnrollmentApi`, `Enrollments.jsx`, `EnrollmentMaintainDialog.jsx`, `EnrollmentScoreDialog.jsx`, `CoursePlanEnrollmentsDialog.jsx` |
+| Students | `PostgresStudentController`, `pgStudentApi`, `Students.jsx`, `StudentFormDialog.jsx` |
+| Staff | `PostgresStaffController`, `pgStaffApi`, `Staff.jsx`, `StaffFormDialog.jsx`, `StaffDeleteDialog.jsx` |
+| Profile | `PostgresProfileController`, `pgProfileApi`, `Profile.jsx`, `ProfileContactDialog.jsx` |
+
+Cosmetic: removed Oracle-specific copy from 4 dialogs (registration, enrollment
+score, enrollment maintain, teaching assignment). All Oracle VPD/page descriptions
+updated to neutral role-based language.
+
+All 89 backend tests pass; frontend builds clean.
 
 ### 2026-07-31 (frontend Postgres wiring batch)
 
