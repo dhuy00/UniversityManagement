@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, IdCard, Pencil, ShieldCheck } from "lucide-react";
 
-import { getCurrentProfile } from "@/api/profileApi";
+import { getPgCurrentProfile } from "@/api/pgProfileApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import ProfileContactDialog from "@/components/profile/ProfileContactDialog";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ export default function Profile() {
   useEffect(() => {
     let active = true;
 
-    getCurrentProfile()
+    getPgCurrentProfile()
       .then((data) => {
         if (active) setProfile(data);
       })
@@ -48,7 +48,7 @@ export default function Profile() {
         if (!active) return;
         setError(
           requestError.response?.status === 404
-            ? "No profile was found for this Oracle identity."
+            ? "No profile was found for this identity."
             : "Unable to load your profile.",
         );
       });

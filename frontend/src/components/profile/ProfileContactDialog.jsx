@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ContactRound } from "lucide-react";
 import { toast } from "sonner";
 
-import { updateProfileContact } from "@/api/profileApi";
+import { updatePgProfileContact } from "@/api/pgProfileApi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +41,7 @@ export default function ProfileContactDialog({ profile, onClose, onSaved }) {
         phone: phone.trim() || null,
         address: isStudent ? address.trim() || null : null,
       };
-      await updateProfileContact(request);
+      await updatePgProfileContact(request);
       onSaved(request);
       toast.success("Contact information updated");
       onClose();
