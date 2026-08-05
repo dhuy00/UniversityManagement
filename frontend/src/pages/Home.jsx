@@ -22,15 +22,15 @@ const Home = () => {
       <div className="dashboard-content">
         <section className="border-b border-[#2b3139] pb-8">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#fcd535]">
-            Authenticated Oracle session
+            Authenticated session
           </p>
           <h2 className="mt-4 max-w-2xl text-3xl font-semibold leading-tight tracking-[-0.3px] text-white sm:text-4xl">
             Welcome, {session?.username}.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-[#929aa5]">
-            Your data access is evaluated with the Oracle identity and role
-            shown below. Row-level restrictions are enforced by database VPD
-            policies on every connection.
+            Your data access is evaluated with the identity and role
+            shown below. Row-level restrictions are enforced by database
+            security policies on every transaction.
           </p>
         </section>
 
@@ -63,8 +63,8 @@ const Home = () => {
               Database-enforced access
             </h3>
             <p className="mt-2 text-sm leading-6 text-[#929aa5]">
-              API requests reconnect as your Oracle account. Role grants,
-              object privileges, secure context, and VPD determine the rows and
+              API requests use your authenticated account. Role grants,
+              permissions, security context, and row-level policies determine the rows and
               operations available to you.
             </p>
             <div className="mt-5 flex items-center gap-2 text-xs text-[#929aa5]">

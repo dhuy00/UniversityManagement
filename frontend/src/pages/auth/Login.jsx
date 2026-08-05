@@ -73,7 +73,7 @@ const Login = () => {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Unable to sign in. Check the API and Oracle database.",
+          "Unable to sign in. Check the API and database.",
       );
       console.error(err);
     } finally {
@@ -89,9 +89,9 @@ const Login = () => {
             <Database className="size-6" />
           </div>
           <div>
-            <p className="text-lg font-semibold text-white">DB Control</p>
+            <p className="text-lg font-semibold text-white">University Management</p>
             <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#707a8a]">
-              Oracle Administration
+              University Administration
             </p>
           </div>
         </div>
@@ -104,8 +104,8 @@ const Login = () => {
             Manage identities and access with confidence.
           </h1>
           <p className="mt-6 max-w-lg text-base leading-7 text-[#929aa5]">
-            A focused control plane for Oracle users, roles, and granular
-            privileges.
+            A focused control plane for university users, roles, and granular
+            access.
           </p>
         </div>
 
@@ -131,7 +131,7 @@ const Login = () => {
             Welcome back
           </CardTitle>
           <CardDescription className="text-sm text-[#929aa5]">
-            Sign in to continue to DB Control
+            Sign in to continue to University Administration
           </CardDescription>
         </CardHeader>
 

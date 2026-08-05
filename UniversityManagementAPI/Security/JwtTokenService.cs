@@ -72,4 +72,67 @@ public sealed class JwtTokenService : IJwtTokenService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    public string CreateToken(
+        string sessionId,
+        AuthenticatedUser user,
+        DateTimeOffset expiresAt,
+        IEnumerable<Claim>? additionalClaims)
+    {
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, user.Username),
+            new(ClaimTypes.Name, user.Username),
+            new(ClaimTypes.Role, user.RoleCode),
+            new("sid", sessionId),
+            new("identity_type", user.IdentityType)
+        };
+
+        if (user.StaffId is not null)
+        {
+            claims.Add(new Claim("staff_id", user.StaffId));
+        }
+
+        if (user.StudentId is not null)
+        {
+            claims.Add(new Claim("student_id", user.StudentId));
+        }
+
+        if (user.UnitId is not null)
+        {
+            claims.Add(new Claim("unit_id", user.UnitId));
+        }
+
+        if (user.ProgramId is not null)
+        {
+            claims.Add(new Claim("program_id", user.ProgramId));
+        }
+
+        if (user.MajorId is not null)
+        {
+            claims.Add(new Claim("major_id", user.MajorId));
+        }
+
+        if (user.CampusId is not null)
+        {
+            claims.Add(new Claim("campus_id", user.CampusId));
+        }
+
+        if (additionalClaims is not null)
+        {
+            claims.AddRange(additionalClaims);
+        }
+
+        var credentials = new SigningCredentials(
+            new SymmetricSecurityKey(_signingKeyProvider.Key),
+            SecurityAlgorithms.HmacSha256);
+        var token = new JwtSecurityToken(
+            issuer: _options.Issuer,
+            audience: _options.Audience,
+            claims: claims,
+            expires: expiresAt.UtcDateTime,
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 }

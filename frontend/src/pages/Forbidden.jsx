@@ -22,7 +22,7 @@ export default function Forbidden() {
         </h1>
         <p className="mt-4 text-sm leading-6 text-[#929aa5]">
           Your authenticated role does not have permission to open this area.
-          Data access is enforced again by the API and Oracle database.
+          Data access is enforced by the API and database security policies.
         </p>
         {attemptedPath && (
           <p className="mt-3 text-xs text-[#707a8a]">

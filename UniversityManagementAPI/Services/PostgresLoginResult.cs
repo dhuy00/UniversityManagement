@@ -1,3 +1,4 @@
 public sealed record PostgresLoginResult(
-    long UserId,
+    string Token,
+    DateTimeOffset ExpiresAt,
     AuthenticatedUser User);

@@ -295,8 +295,7 @@ controllers, and frontend pages are wired to Postgres. Remaining considerations:
 - Optionally archive the legacy Oracle controllers (12 controllers under
   `/api/{entity}`) if Postgres is the sole target — the Postgres controllers
   sit at `/api/pg/{entity}` alongside them
-- Auth/login branding pages still reference "Oracle" in copy — update to
-  "University Management" or similar if desired
+- ~~Auth/login branding pages still reference "Oracle" in copy~~ — Done: Login, Home, and Forbidden pages all updated to neutral language
 - The `oracleUsername` column in staff/student forms is a data model concern;
   renaming it is separate from the API migration
 
@@ -308,6 +307,16 @@ controllers, and frontend pages are wired to Postgres. Remaining considerations:
    archive or disable if Postgres-only is the goal
 
 ## 11. Changelog
+
+### 2026-07-31 (branding cleanup)
+
+Removed all Oracle references from the auth/login flow and home page:
+
+- `Login.jsx` — "DB Control / Oracle Administration" → "University Management / University Administration"; error message, tagline, and CTA updated
+- `Home.jsx` — "Authenticated Oracle session" → "Authenticated session"; "Oracle identity" → "identity"; "VPD policies" → "database security policies"; "Oracle account" → "authenticated account"; "object privileges" → "permissions"
+- `Forbidden.jsx` — "Oracle database" → "database security policies"
+
+Frontend builds clean.
 
 ### 2026-07-31 (frontend domain wiring batch)
 

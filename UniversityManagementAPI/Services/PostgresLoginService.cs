@@ -1,19 +1,23 @@
+using System.Security.Claims;
+using Microsoft.Extensions.Options;
+
 public sealed class PostgresLoginService : IPostgresLoginService
 {
-    // Valid BCrypt hash used only to keep the password-verification path active
-    // when no active user exists. Its matching plaintext is not used by login.
-    private const string DummyPasswordHash =
-        "$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW";
-
     private readonly IPostgresAuthRepository _authRepository;
     private readonly IPasswordVerifier _passwordVerifier;
+    private readonly IJwtTokenService _jwtTokenService;
+    private readonly int _expirationMinutes;
 
     public PostgresLoginService(
         IPostgresAuthRepository authRepository,
-        IPasswordVerifier passwordVerifier)
+        IPasswordVerifier passwordVerifier,
+        IJwtTokenService jwtTokenService,
+        IOptions<JwtOptions> jwtOptions)
     {
         _authRepository = authRepository;
         _passwordVerifier = passwordVerifier;
+        _jwtTokenService = jwtTokenService;
+        _expirationMinutes = jwtOptions.Value.ExpirationMinutes;
     }
 
     public async Task<PostgresLoginResult?> AuthenticateAsync(
@@ -52,8 +56,21 @@ public sealed class PostgresLoginService : IPostgresLoginService
             candidate.MajorId,
             candidate.CampusId);
 
-        return UniversityIdentityValidator.IsTrusted(user)
-            ? new PostgresLoginResult(candidate.UserId, user)
-            : null;
+        if (!UniversityIdentityValidator.IsTrusted(user))
+        {
+            return null;
+        }
+
+        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(_expirationMinutes);
+        var token = _jwtTokenService.CreateToken(
+            candidate.UserId.ToString(),
+            user,
+            expiresAt,
+            new[] { new Claim(HttpContextPostgresUser.UserIdClaim, candidate.UserId.ToString()) });
+
+        return new PostgresLoginResult(token, expiresAt, user);
     }
+
+    private const string DummyPasswordHash =
+        "$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW";
 }
