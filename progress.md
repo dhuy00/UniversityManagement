@@ -18,7 +18,7 @@ Starting after the prompt that established this rule:
    prerequisites, known issues, and verification results for the whole batch.
 4. Reset the counter after that update and repeat.
 
-Current batch counter: **0/20**
+Current batch counter: **0/20** (last update: 2026-08-05)
 
 ## 2. Current session status (2026-07-31)
 
@@ -292,21 +292,38 @@ controllers, and frontend pages are wired to Postgres. Remaining considerations:
 
 - Full end-to-end integration testing via `/admin/postgres` (SystemAdmin only)
 - Performance / load testing with real data
-- Optionally archive the legacy Oracle controllers (12 controllers under
-  `/api/{entity}`) if Postgres is the sole target — the Postgres controllers
-  sit at `/api/pg/{entity}` alongside them
-- ~~Auth/login branding pages still reference "Oracle" in copy~~ — Done: Login, Home, and Forbidden pages all updated to neutral language
 - The `oracleUsername` column in staff/student forms is a data model concern;
   renaming it is separate from the API migration
+- Frontend chunk size: consider code-splitting to address bundles >500KB
+  (warning from rolldown build)
 
 ## 10. Known issues
 
 1. Docker runtime verification unavailable in tool environment
 2. Integration tests skip when environment variables not set
-3. 12 Oracle CRUD controllers remain active alongside Postgres controllers;
-   archive or disable if Postgres-only is the goal
+3. ~~12 Oracle CRUD controllers remain active alongside Postgres controllers~~
+   — resolved: archived to `Controllers/Legacy/` and removed from root
+4. ~~`Microsoft.OpenApi` 2.4.1 high-severity vulnerability~~ — resolved:
+   upgraded to 2.8.0 (note: 3.x is incompatible with AspNetCore 10.x
+   source generator due to read-only `IOpenApiMediaType.Example` property)
 
 ## 11. Changelog
+
+### 2026-08-05 (cleanup + security patch)
+
+Archived 12 legacy Oracle CRUD controllers to `Controllers/Legacy/`
+and removed originals from `Controllers/`. Added `PostgresAuthController`
+at `/api/pg/auth` (login/logout) with `PostgresLoginRequest` DTO. Updated
+`JwtTokenService`, `PostgresLoginService`, and frontend auth wiring to use
+the new endpoint. Rebranded Login, Home, and Forbidden pages with neutral
+language.
+
+Security: upgraded `Microsoft.OpenApi` 2.4.1 → 2.8.0 and
+`Microsoft.AspNetCore.OpenApi` 10.0.8 → 10.0.10 to patch GHSA-v5pm-xwqc-g5wc.
+Note: OpenApi 3.x is incompatible with AspNetCore 10.0.x source generator
+(read-only `IOpenApiMediaType.Example`), so pinned to 2.x line.
+
+All 89 tests pass; backend and frontend build clean (0 warnings).
 
 ### 2026-07-31 (branding cleanup)
 
