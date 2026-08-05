@@ -20,10 +20,12 @@ public sealed class PostgresUserRepository : IPostgresUserRepository
         CancellationToken cancellationToken = default)
     {
         var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+        var offset = (page - 1) * pageSize;
+        var searchParamIndex = normalizedSearch is not null ? 1 : 0;
         var searchClause = normalizedSearch is null
             ? string.Empty
-            : """
-              WHERE lower(username) LIKE lower('%' || $1 || '%')
+            : $"""
+              WHERE lower(username) LIKE lower('%' || ${searchParamIndex} || '%')
               """;
 
         await using var countCommand = new NpgsqlCommand(
@@ -41,8 +43,6 @@ public sealed class PostgresUserRepository : IPostgresUserRepository
 
         var totalItems = Convert.ToInt32(
             await countCommand.ExecuteScalarAsync(cancellationToken));
-
-        var offset = (page - 1) * pageSize;
 
         await using var command = new NpgsqlCommand(
             $"""
@@ -77,7 +77,7 @@ public sealed class PostgresUserRepository : IPostgresUserRepository
              LEFT JOIN university.role_permissions rp ON r.role_id = rp.role_id
              {searchClause}
              ORDER BY u.user_id
-             LIMIT $2 OFFSET $3
+             LIMIT ${searchParamIndex + 1} OFFSET ${searchParamIndex + 2}
              """,
             _transaction.Connection,
             _transaction.Transaction);

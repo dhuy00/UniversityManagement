@@ -1,13 +1,11 @@
 -- 16_bootstrap_admin.sql
 -- Create the first API login identity so the system is not empty after a
--- fresh schema build.  The plaintext password is hashed by a database trigger
--- at creation time (BCrypt via the application), so this seed uses a
--- pre-computed BCrypt hash for the placeholder password 'ChangeMe!2026'.
+-- fresh schema build.  Default credentials: username=ADMIN, password=Admin123!
 --
 -- THIS IS A ONE-TIME BOOTSTRAP.  Rotate the password on first login.
 --
--- Hash (BCrypt cost 12) for 'ChangeMe!2026':
---   $2a$12$LQ7wI9XGnQvRk6f5jJgKzeYZy4YIA1t3UvA1N9VZ3rkEHOxJrCyAO
+-- Hash (BCrypt cost 11) for 'Admin123!':
+--   $2a$11$E5rroPDeRFFJaLTzED9MO.ne2cVxvS3z7RWxkrUrNnjIsfxFlt1QO
 --
 -- The application hash path uses BCrypt.Net.BCrypt.HashPassword, so any
 -- hash produced by the running API is also valid; this row is supplied here
@@ -16,7 +14,7 @@
 INSERT INTO university.app_users (username, password_hash, is_active)
 VALUES (
     'ADMIN',
-    '$2a$12$LQ7wI9XGnQvRk6f5jJgKzeYZy4YIA1t3UvA1N9VZ3rkEHOxJrCyAO',
+    '$2a$11$E5rroPDeRFFJaLTzED9MO.ne2cVxvS3z7RWxkrUrNnjIsfxFlt1QO',
     TRUE
 )
 ON CONFLICT (lower(username)) DO NOTHING;

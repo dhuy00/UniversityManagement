@@ -71,6 +71,14 @@ public static class AuthenticationServiceExtensions
                 {
                     OnTokenValidated = context =>
                     {
+                        // Oracle session store is only relevant for Oracle-authenticated
+                        // tokens. Postgres tokens carry an app_user_id claim instead.
+                        var appUserId = context.Principal?.FindFirst("app_user_id")?.Value;
+                        if (!string.IsNullOrWhiteSpace(appUserId))
+                        {
+                            return Task.CompletedTask;
+                        }
+
                         var sessionId = context.Principal?.FindFirst("sid")?.Value;
                         var sessions = context.HttpContext.RequestServices
                             .GetRequiredService<IOracleSessionStore>();

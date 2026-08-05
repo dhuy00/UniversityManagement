@@ -21,11 +21,13 @@ public sealed class PostgresStudentRepository : IPostgresStudentRepository
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null
             : search.Trim();
+        var offset = (page - 1) * pageSize;
+        var searchParamIndex = normalizedSearch is not null ? 1 : 0;
         var searchSql = normalizedSearch is null
             ? string.Empty
-            : """
-              WHERE student_id ILIKE '%' || $1 || '%'
-                 OR full_name ILIKE '%' || $1 || '%'
+            : $"""
+              WHERE student_id ILIKE '%' || ${searchParamIndex} || '%'
+                 OR full_name ILIKE '%' || ${searchParamIndex} || '%'
               """;
 
         await using var connection = _transaction.Connection;
@@ -46,7 +48,6 @@ public sealed class PostgresStudentRepository : IPostgresStudentRepository
 
         var totalItems = Convert.ToInt32(
             await countCommand.ExecuteScalarAsync(cancellationToken));
-        var offset = (page - 1) * pageSize;
 
         await using var command = new NpgsqlCommand(
             $"""
@@ -65,7 +66,7 @@ public sealed class PostgresStudentRepository : IPostgresStudentRepository
              FROM university.students
              {searchSql}
              ORDER BY student_id
-             LIMIT $2 OFFSET $3
+             LIMIT ${searchParamIndex + 1} OFFSET ${searchParamIndex + 2}
              """,
             connection,
             transaction);
